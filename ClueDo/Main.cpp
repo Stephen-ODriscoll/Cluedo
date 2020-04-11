@@ -1,8 +1,4 @@
-#include <filesystem>
-#include <iostream>
-#include <fstream>
-#include <string>
-
+#include "pch.h"
 #include "Useful.h"
 #include "Global.h"
 
@@ -11,42 +7,38 @@ namespace fs = std::filesystem;
 
 void loadCards(const fs::path& inputFile)
 {
+    if(!fs::exists(inputFile))
+        throw std::invalid_argument(str("Argument isn't a valid path - ") + inputFile.string());
+
     std::ifstream load(inputFile);
 
     if (!load.is_open())
-    {
-        throw std::invalid_argument(std::string("Failed to load file ") + inputFile.string());
-    }
+        throw std::invalid_argument(str("Failed to load file ") + inputFile.string());
 
-    std::string line;
+    str line;
     std::cout << "Category 1: ";
-    g_cards.push_back(std::vector<Card>());
     for (uint32_t category = 0U; std::getline(load, line);)
     {
+        if (NUM_CATEGORIES <= category)
+            throw std::exception((str("There should be ") + str(NUM_CATEGORIES) + str(" categories.")).c_str());
+
         if (line.empty())
         {
             if (!g_cards[category].empty())
             {
-                g_cards.push_back(std::vector<Card>());
                 ++category;
-
                 std::cout << "\nCategory " << (category + 1) << ": ";
             }
 
             continue;
         }
 
-        g_cards[category].push_back(line);
+        g_cards[category].push_back(Card(line, category));
         std::cout << line << ", ";
     }
 
     load.close();
     std::cout << std::endl;
-
-    if (g_cards.size() != NUM_CATEGORIES)
-    {
-        throw std::exception((std::string("There should be ") + std::to_string(NUM_CATEGORIES) + std::string(" categories.")).c_str());
-    }
 }
 
 
@@ -58,33 +50,31 @@ void startingInfo()
 }
 
 
-void analyse(Player& perspective)
-{
-
-}
-
-
 void playGame()
 {
-    while (true)
+    analysisSetup();
+    str turnsString("Turns:\n");
+    for (auto itNext = g_players.begin(); true;)
     {
-        for (Player& player : g_players)
-        {
-            switch (readInt(std::string("Mode Selected: ") + modeStrings[g_mode]\
-                + std::string("Menu:\n")\
-                + std::string("1.)\t" + player.name + "'s turn")
-                , 1, 1))
-            {
-            case 1:
-                g_turns.push_back(Turn(&player));
-                break;
-            }
+        auto itCurrent = itNext++;
+        if (itNext == g_players.end())
+            itNext = g_players.begin();
 
-            if (g_gameOver)
-            {
-                return;
-            }
+        std::cout << turnsString << std::endl;
+        switch (readInt(str("Mode Selected: ") + modeStrings[g_mode] + str("\n")\
+            + str("Menu:\n")\
+            + str("1.)\t" + itCurrent->name + "'s turn")
+            , 1, 1))
+        {
+        case 1:
+            g_turns.push_back(Turn(&*itCurrent, &*itNext));
+            turnsString += str("\t") + g_turns.back().to_str() + "\n";
+            analyseTurn(g_turns.back());
+            break;
         }
+
+        if (g_gameOver)
+            return;
     }
 }
 
@@ -118,13 +108,11 @@ int main(int argc, char* argv[])
             }
             else if (inputFile.empty())
             {
-                (fs::exists(inputFile)) ?
-                    inputFile = argv[i] :
-                    throw std::invalid_argument(std::string("Argument isn't a valid path - ") + argv[i]);
+                inputFile = argv[i];
             }
             else
             {
-                throw std::invalid_argument(std::string("Unrecognised argument ") + argv[i]);
+                throw std::invalid_argument(str("Unrecognised argument ") + argv[i]);
             }
         }
 
@@ -157,7 +145,7 @@ int main(int argc, char* argv[])
                     << "            -e, --events    Only display events; What was asked by who\n"
                     << "            -s, --show      Display info during the game, including who has what cards\n"
                     << "\n"
-                    << "        path/to/file    Path to details file containing card names"
+                    << "        path/to/file    Path to details file containing card names."
                     << std::endl;
     }
     catch (const std::exception& ex)

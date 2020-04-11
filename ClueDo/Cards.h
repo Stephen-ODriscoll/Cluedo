@@ -1,14 +1,17 @@
 #pragma once
 
+#include "pch.h"
+
 struct Player;
 struct Card
 {
-    std::string name;
-    bool convicted = false;
+    str name;
+    uint32_t category;
     Player* pOwner = nullptr;
 
-    Card(const std::string& name) :
-        name(name)
+    Card(const str& name, const uint32_t category) :
+        name(name),
+        category(category)
     { }
 
     bool locationKnown() { return pOwner == nullptr; }
@@ -16,40 +19,40 @@ struct Card
     bool operator<(const Card& card) { return name < card.name; }
 };
 
-std::vector<std::vector<Card>> g_cards;
+std::vector<std::vector<Card>> g_cards(NUM_CATEGORIES, std::vector<Card>());
 
 
-Card* readCard()
+size_t totalCards()
+{
+    size_t total = 0;
+    for (std::vector<Card>& category : g_cards)
+        total += category.size();
+
+    return total;
+}
+
+
+Card* readCard(size_t number)
 {
     std::vector<Card*> possibleCards;
     while (possibleCards.empty())
     {
-        std::string read = readString(std::string("Enter card name or ") + std::string(BLANK));
+        str read(readStr(str("Enter card ") + str(number) + str(" or ") + str(BLANK)));
         for (std::vector<Card>& category : g_cards)
-        {
             for (Card& card : category)
-            {
-                if (card.name.find(read) != std::string::npos)
-                {
+                if (caseInsensitiveFind(card.name, read))
                     possibleCards.push_back(&card);
-                }
-            }
-        }
 
         if (read == BLANK)
-        {
             return nullptr;
-        }
     }
 
     int index = 0;
     if (possibleCards.size() != 1)
     {
-        std::string message = "Which card?\n";
+        str message = "Which card?\n";
         for (uint32_t i = 0U; i < possibleCards.size(); ++i)
-        {
-            message += std::to_string(i + 1) + ".) " + possibleCards[i]->name + "\n";
-        }
+            message += str(i + 1) + ".) " + possibleCards[i]->name + "\n";
 
         index = readInt(message, 1, (int)possibleCards.size()) - 1;
     }
