@@ -130,8 +130,10 @@
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Analysis.h" />
     <ClInclude Include="Cards.h" />
     <ClInclude Include="Global.h" />
+    <ClInclude Include="pch.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Turn.h" />
     <ClInclude Include="Useful.h" />

@@ -6,9 +6,9 @@ struct Turn;
 struct Player
 {
     bool out;
-    std::string name;
+    str name;
+    str character;      // Unused for now.
     uint32_t numCards;
-    std::string character;
     std::vector<Turn*> pTurns;
     std::set<Card*> pCardsOwned;
 
@@ -23,12 +23,12 @@ struct Player
     void updateName()
     {
         static uint16_t playerCount = 1;
-        this->name = std::string("P") + std::to_string(playerCount++);
+        name = str("P") + str(playerCount++);
 
-        std::string name = readString(std::string("Enter ") + this->name + std::string("'s name or ") + BLANK);
-        if (name != BLANK)
+        str newName = readStr(str("Enter ") + name + str("'s name or ") + BLANK);
+        if (newName != BLANK)
         {
-            this->name = name;
+            name = newName;
         }
     }
 
@@ -36,24 +36,28 @@ struct Player
     {
         numCards = (g_cardsEvenlyDistributed) ?
             (int)g_cards.size() / g_numPlayers :
-            readInt(std::string("How many cards does player ") + name + std::string(" have?"), 0, (int)g_cards.size());
+            readInt(str("How many cards does player ") + name + str(" have?"), 0, (int)g_cards.size());
     }
 
     void updateCardsOwned()
     {
         while (pCardsOwned.size() < numCards)
         {
-            Card* pCard = readCard();
+            Card* pCard = readCard(pCardsOwned.size() + 1);
 
             if (pCard == nullptr)
-            {
                 break;
-            }
 
-            pCardsOwned.insert(pCard);
+            pCardsOwned.insert(pCard);      // I own this card
+            pCard->pOwner = this;           // This card is owned by me
         }
 
         clear();
+    }
+
+    bool operator!=(const Player& player)
+    {
+        return name != player.name;
     }
 };
 

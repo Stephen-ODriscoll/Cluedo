@@ -1,8 +1,6 @@
 #pragma once
 
-#include <iostream>
-#include <string>
-
+#include "pch.h"
 
 void clear()
 {
@@ -16,9 +14,9 @@ void clear()
 }
 
 
-bool readBool(const std::string& message)
+bool readBool(const str& message)
 {
-    std::string read;
+    str read;
     while (true)
     {
         std::cout << message << std::endl;
@@ -35,9 +33,9 @@ bool readBool(const std::string& message)
 }
 
 
-int readInt(const std::string& message, int min, int max)
+int readInt(const str& message, int min, int max)
 {
-    std::string read;
+    str read;
     while (true)
     {
         std::cout << message << std::endl;
@@ -45,11 +43,9 @@ int readInt(const std::string& message, int min, int max)
 
         try
         {
-            int answer = std::stoi(read);
+            int answer = read.toi();
             if (min <= answer || answer <= max)
-            {
                 return answer;
-            }
         }
         catch (const std::invalid_argument&)
         {
@@ -59,10 +55,21 @@ int readInt(const std::string& message, int min, int max)
 }
 
 
-std::string readString(const std::string& message)
+str readStr(const str& message)
 {
-    std::string read;
+    str read;
     std::cout << message << std::endl;
     std::cin >> read;
     return read;
+}
+
+
+bool caseInsensitiveFind(str parent, str child)
+{
+    std::transform(parent.begin(), parent.end(), parent.begin(),
+        [](char c) -> char { return std::tolower(c); });
+    std::transform(child.begin(), child.end(), child.begin(),
+        [](char c) -> char { return std::tolower(c); });
+
+    return (parent.find(child) != str::npos);
 }
