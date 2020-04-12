@@ -33,6 +33,7 @@ void loadCards(const fs::path& inputFile)
             continue;
         }
 
+        ++g_numCards;
         g_cards[category].push_back(Card(line, category));
         std::cout << line << ", ";
     }
@@ -45,7 +46,7 @@ void loadCards(const fs::path& inputFile)
 void startingInfo()
 {
     g_numPlayers = readInt("How many players?", MIN_PLAYERS, MAX_PLAYERS);
-    g_cardsEvenlyDistributed = (g_cards.size() % g_numPlayers) == 0 && readBool("Have the cards been distributed evenly? (y/n)");
+    g_cardsEvenlyDistributed = (g_numCards % g_numPlayers) == 0 && readBool("Have the cards been distributed evenly? (y/n)");
     g_players = std::vector<Player>(g_numPlayers);
 }
 
@@ -60,16 +61,21 @@ void playGame()
         if (itNext == g_players.end())
             itNext = g_players.begin();
 
+        std::cout << "Mode Selected: " << modeStrings[g_mode] << "\n";
         std::cout << turnsString << std::endl;
-        switch (readInt(str("Mode Selected: ") + modeStrings[g_mode] + str("\n")\
-            + str("Menu:\n")\
-            + str("1.)\t" + itCurrent->name + "'s turn")
+        switch (readInt(str("Menu:\n")\
+            + str("1.)\t" + itCurrent->name + "'s turn\n")
+            + str("2.)\tMore info")
             , 1, 1))
         {
         case 1:
             g_turns.push_back(Turn(&*itCurrent, &*itNext));
             turnsString += str("\t") + g_turns.back().to_str() + "\n";
             analyseTurn(g_turns.back());
+            break;
+        case 2:
+            for (Analysis& analysis : g_analysis)
+                std::cout << analysis.to_str() << "\n";
             break;
         }
 
@@ -85,7 +91,7 @@ int main(int argc, char* argv[])
 
     try
     {
-        fs::path inputFile("ClueDo.txt");
+        fs::path inputFile;
         for (int i = 1; i < argc; ++i)
         {
             if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "--hide"))
@@ -115,6 +121,9 @@ int main(int argc, char* argv[])
                 throw std::invalid_argument(str("Unrecognised argument ") + argv[i]);
             }
         }
+
+        if (inputFile.empty())
+            inputFile = "ClueDo.txt";
 
         switch (g_mode)
         {

@@ -35,8 +35,8 @@ struct Player
     void updateNumCards()
     {
         numCards = (g_cardsEvenlyDistributed) ?
-            (int)g_cards.size() / g_numPlayers :
-            readInt(str("How many cards does player ") + name + str(" have?"), 0, (int)g_cards.size());
+            (int)g_numCards / g_numPlayers :
+            readInt(str("How many cards does player ") + name + str(" have?"), 0, (int)g_numCards);
     }
 
     void updateCardsOwned()

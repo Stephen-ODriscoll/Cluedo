@@ -19,6 +19,7 @@ struct Card
     bool operator<(const Card& card) { return name < card.name; }
 };
 
+size_t g_numCards = 0;
 std::vector<std::vector<Card>> g_cards(NUM_CATEGORIES, std::vector<Card>());
 
 

@@ -118,7 +118,8 @@ struct Analysis
         str info = pPlayer->name + str("\n\thas: ");
         for (Card* pCard : has)
             info += pCard->name + str(", ");
-        info.resize(info.size() - 2);
+        if (!has.empty())
+            info.resize(info.size() - 2);
 
         info += str("\n\thas either: ");
         for (std::vector<Card*>& pCards : hasEither)
@@ -129,16 +130,22 @@ struct Analysis
             info.resize(info.size() - 1);
             info += ", ";
         }
-        info.resize(info.size() - 2);
+        if (!hasEither.empty())
+            info.resize(info.size() - 2);
 
         info += "\n\tdoesn't have: ";
         for (Card* pCard : doesntHave)
             info += pCard->name + str(", ");
-        info.resize(info.size() - 2);
+        if (!doesntHave.empty())
+            info.resize(info.size() - 2);
 
         return info;
     }
 
+    bool operator==(const Analysis& a)
+    {
+        return pPlayer == a.pPlayer;
+    }
     bool operator==(const Turn& t)
     {
         return pPlayer == t.pWitness;
@@ -165,9 +172,7 @@ void analyseAsk(Turn& turn)
         {
             cardDeduced = false;
             for (auto aIt = g_analysis.begin(); aIt < g_analysis.end(); ++aIt)
-            {
                 cardDeduced |= aIt->processPossibleCards(g_possibleCards);
-            }
         }
     }
 }
@@ -188,13 +193,23 @@ void analyseTurn(Turn& turn)
 
 void analysisSetup()
 {
-    for (std::vector<Card>& category : g_cards)
-        for (Card& card : category)
-            if (card.pOwner == nullptr)         // Unowned, we suspect it
-                g_possibleCards.insert(&card);
-
     for (Player& player : g_players)
         g_analysis.push_back(&player);
+
+    for (std::vector<Card>& category : g_cards)
+    {
+        for (Card& card : category)
+        {
+            if (card.pOwner == nullptr)         // Unowned, we suspect it
+                g_possibleCards.insert(&card);
+            else
+            {
+                auto it = std::find(g_analysis.begin(), g_analysis.end(), card.pOwner);
+                if (it != g_analysis.end())
+                    it->has.insert(&card);
+            }
+        }
+    }
 }
 
 
