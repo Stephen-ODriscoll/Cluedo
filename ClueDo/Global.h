@@ -31,6 +31,6 @@ Mode g_mode = Mode::NONE;
 bool g_cardsEvenlyDistributed = false;
 
 #include "Cards.h"
-#include "player.h"
+#include "Player.h"
 #include "Turn.h"
 #include "Analysis.h"
