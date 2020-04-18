@@ -1,4 +1,4 @@
-# ClueDo
+# Cluedo
 
 ### Installing QT
 
