@@ -1,6 +1,6 @@
 #pragma once
 
-#include <set>
+#include "stdafx.h"
 
 struct Turn;
 struct Player

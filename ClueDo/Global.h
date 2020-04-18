@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pch.h"
+#include "stdafx.h"
 
 #define BLANK "."
 #define MIN_PLAYERS 2
@@ -30,7 +30,8 @@ bool g_gameOver = false;
 Mode g_mode = Mode::NONE;
 bool g_cardsEvenlyDistributed = false;
 
-#include "Cards.h"
-#include "Player.h"
-#include "Turn.h"
-#include "Analysis.h"
+//#include "Useful.h"
+//#include "Cards.h"
+//#include "Player.h"
+//#include "Turn.h"
+//#include "Analysis.h"

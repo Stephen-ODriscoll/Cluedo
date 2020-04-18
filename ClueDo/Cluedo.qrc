@@ -1,4 +1,5 @@
 <RCC>
-    <qresource prefix="Cluedo">
+    <qresource prefix="/Cluedo">
+        <file>Images/Cluedo.png</file>
     </qresource>
 </RCC>

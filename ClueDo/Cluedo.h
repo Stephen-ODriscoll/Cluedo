@@ -12,4 +12,8 @@ public:
 
 private:
     Ui::CluedoClass ui;
+
+private slots:
+    void singleModeButtonClicked();
+    void groupModeButtonClicked();
 };
