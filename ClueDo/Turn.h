@@ -51,7 +51,7 @@ struct Turn
         switch (action)
         {
         case Action::ASKED:
-            message = pWitness->name + str(outcome ? " has " : " doesn't have ");
+            message = pWitness->name + str(outcome ? " has either " : " doesn't have ");
             break;
         case Action::GUESSED:
             message = pDetective->name + str(" guessed ") + str(outcome ? "correctly " : "incorrectly ");
