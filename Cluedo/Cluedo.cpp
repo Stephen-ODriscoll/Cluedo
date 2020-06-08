@@ -1,31 +1,43 @@
 #include "stdafx.h"
 #include "Cluedo.h"
-#include "Global.h"
 
-Cluedo::Cluedo(QWidget *parent)
-    : QMainWindow(parent)
+Cluedo::Cluedo(QWidget *parent) :
+    QMainWindow(parent),
+    pController(new Controller(this)),
+    pHome(new Home(pController)),
+    pGame(new Game(pController))
+
 {
     ui.setupUi(this);
-
-    QPixmap pixmap(":/Cluedo/Images/Cluedo.png");
-    pixmap = pixmap.scaled(ui.icon->size());
-    ui.icon->setPixmap(pixmap);
-
-    connect(ui.singleModeButton, SIGNAL(clicked()), this, SLOT(singleModeButtonClicked()));
-    connect(ui.groupModeButton, SIGNAL(clicked()), this, SLOT(groupModeButtonClicked()));
-
-    ui.numPlayersBox->setRange(MIN_PLAYERS, MAX_PLAYERS);
-    ui.numPlayersBox->setValue(MIN_PLAYERS);
+    
+    ui.stackedWidget->addWidget(pHome);
+    ui.stackedWidget->addWidget(pGame);
 }
 
-void Cluedo::singleModeButtonClicked()
+Cluedo::~Cluedo()
 {
-    ui.singleModeButton->setDefault(true);
-    ui.groupModeButton->setDefault(false);
+    delete pController;
+    delete pHome;
+    delete pGame;
 }
 
-void Cluedo::groupModeButtonClicked()
+str Cluedo::openCluedoTextFile(const str& issue)
 {
-    ui.groupModeButton->setDefault(true);
-    ui.singleModeButton->setDefault(false);
+    QMessageBox msgBox;
+    msgBox.setWindowTitle("Woops...");
+    msgBox.setText((str("While trying to load Cluedo.txt - ") + issue).c_str());
+    msgBox.exec();
+
+    return QFileDialog::getOpenFileName(this, tr("Open Cluedo.txt"), QDir::currentPath(), tr("Text files (*.txt)")).toStdString();
+}
+
+void Cluedo::startGame()
+{
+    ui.stackedWidget->setCurrentWidget(pGame);
+    pGame->startGame();
+}
+
+Game* Cluedo::game()
+{
+    return pGame;
 }

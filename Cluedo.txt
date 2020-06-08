@@ -1,23 +1,23 @@
-Poisoned Doughnut
-Extend-O-Glove
-Necklace
-Slingshot
-Plutonium Rod
-Saxophone
+Poisoned Doughnut=Nut
+Extend-O-Glove=Glove
+Necklace=Necklace
+Slingshot=Sling
+Plutonium Rod=Rod
+Saxophone=Sax
 
-Krusty the Clown
-Bart Simpson
-Homer Simpson
-Marge Simpson
-Lisa Simpson
-Waylon Smithers
+Krusty the Clown=Clown
+Bart Simpson=Bart
+Homer Simpson=Homie
+Marge Simpson=Marge
+Lisa Simpson=Lisa
+Waylon Smithers=Waylon
 
-Barney's Bowl-A-Rama
-Krustylu Studios
-Nuclear Power Plant
-The Simpsons House
-The Frying Dutchman
-Kwik-e-Mart
-Burns Manor
-Springfield Retirement Castle
-The Androids Dungeon
+Barney's Bowl-A-Rama=Bowl
+Krustylu Studios=Studios
+Nuclear Power Plant=Plant
+The Simpsons House=House
+The Frying Dutchman=Dutchman
+Kwik-e-Mart=Mart
+Burns Manor=Manor
+Springfield Retirement Castle=Castle
+The Androids Dungeon=Dungeon

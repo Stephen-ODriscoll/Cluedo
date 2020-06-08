@@ -22,7 +22,7 @@ struct Turn
         pWitness(pWitness),
         outcome(false)
     {
-        pDetective->pTurns.push_back(this);
+        /*pDetective->pTurns.push_back(this);
 
         action = static_cast<Action>(readInt(pDetective->name + "'s has:\n1.)\tAsked\n2.)\tMissed a turn\n3.)\tMade a guess", 1, 3) - 1);
         if (action == Action::MISSED)
@@ -38,14 +38,14 @@ struct Turn
         if (action == Action::ASKED)
             outcome = readBool(str("Did ") + pWitness->name + " have a card? (y/n)");
         else
-            outcome = readBool(str("Was ") + pDetective->name + " right? (y/n)");
+            outcome = readBool(str("Was ") + pDetective->name + " right? (y/n)");*/
     }
 
-    bool asked() { return action == Action::ASKED; }
-    bool missed() { return action == Action::MISSED; }
-    bool guessed() { return action == Action::GUESSED; }
+    bool asked() const { return action == Action::ASKED; }
+    bool missed() const { return action == Action::MISSED; }
+    bool guessed() const { return action == Action::GUESSED; }
 
-    str to_str()
+    str to_str() const
     {
         str message;
         switch (action)
@@ -67,5 +67,3 @@ struct Turn
         return message;
     }
 };
-
-std::vector<Turn> g_turns;

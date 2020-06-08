@@ -1,5 +1,8 @@
 <RCC>
     <qresource prefix="/Cluedo">
         <file>Images/Cluedo.png</file>
+        <file>Images/up.png</file>
+        <file>Images/down.png</file>
+        <file>Images/rename.png</file>
     </qresource>
 </RCC>

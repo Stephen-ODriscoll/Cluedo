@@ -34,6 +34,15 @@
     <ClCompile Include="Cluedo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Controller.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Home.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Game.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -45,16 +54,16 @@
     <ClInclude Include="Cards.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Global.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Player.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Turn.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Useful.h">
+    <ClInclude Include="Controller.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Macros.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -62,9 +71,21 @@
     <QtMoc Include="Cluedo.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="Home.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="Game.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="Cluedo.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="Home.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="Game.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>

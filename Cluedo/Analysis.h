@@ -12,7 +12,7 @@ struct Analysis
     Analysis(Player* pPlayer):
         pPlayer(pPlayer) { }
 
-    bool processHasEither(std::vector<Card*> pCards, std::set<Card*> possibleCards)
+    bool processHasEither(std::vector<Card*> pCards, std::set<Card*>& possibleCards)
     {
         std::vector<Card*> checkedCards;
         for (Card* pCard : pCards)
@@ -38,7 +38,7 @@ struct Analysis
         return false;
     }
 
-    bool processDoesntHave(std::vector<Card*> pCards, std::set<Card*> possibleCards)
+    bool processDoesntHave(std::vector<Card*> pCards, std::set<Card*>& possibleCards)
     {
         bool cardFound = false;
         for (Card* pCard : pCards)
@@ -72,7 +72,7 @@ struct Analysis
         return cardFound;
     }
 
-    bool processPossibleCards(std::set<Card*> possibleCards)
+    bool processPossibleCards(std::set<Card*>& possibleCards)
     {
         for (auto it = doesntHave.begin(); it != doesntHave.end();)
         {
@@ -107,7 +107,9 @@ struct Analysis
                 cardFound = true;
             }
             else
+            {
                 ++it1;
+            }
         }
 
         return cardFound;
@@ -151,82 +153,3 @@ struct Analysis
         return pPlayer == t.pWitness;
     }
 };
-
-std::set<Card*> g_possibleCards;
-std::vector<Analysis> g_analysis;
-
-
-void analyseAsk(Turn& turn)
-{
-    auto it = std::find(g_analysis.begin(), g_analysis.end(), turn);
-    if (it != g_analysis.end())
-    {
-        bool cardDeduced;
-        if (turn.outcome)
-            cardDeduced = it->processHasEither(turn.pCards, g_possibleCards);
-        else
-            cardDeduced = it->processDoesntHave(turn.pCards, g_possibleCards);
-        
-        // This could loop a few times. One deduction could lead to another and so on
-        while (cardDeduced)
-        {
-            cardDeduced = false;
-            for (auto aIt = g_analysis.begin(); aIt < g_analysis.end(); ++aIt)
-                cardDeduced |= aIt->processPossibleCards(g_possibleCards);
-        }
-    }
-}
-
-
-void analyseTurn(Turn& turn)
-{
-    switch (turn.action)
-    {
-    case Action::ASKED:
-        analyseAsk(turn);
-        break;
-    case Action::GUESSED:
-        break;
-    }
-}
-
-
-void analysisSetup()
-{
-    for (Player& player : g_players)
-        g_analysis.push_back(&player);
-
-    for (std::vector<Card>& category : g_cards)
-    {
-        for (Card& card : category)
-        {
-            if (card.pOwner == nullptr)         // Unowned, we suspect it
-                g_possibleCards.insert(&card);
-            else
-            {
-                auto it = std::find(g_analysis.begin(), g_analysis.end(), card.pOwner);
-                if (it != g_analysis.end())
-                    it->has.insert(&card);
-            }
-        }
-    }
-}
-
-
-void analyseGame(Player& perspective)
-{
-    /*std::vector<Card*> possibleCards;
-    for (std::vector<Card>& category : g_cards)
-        for (Card& card : category)
-            possibleCards.push_back(&card);
-
-    std::vector<Analysis> analyse;
-    for (Player& player : g_players)
-        if (perspective != player)
-            analyse.push_back(&player);
-
-    for (Analysis& analysis : analyse)
-    {
-
-    }*/
-}
