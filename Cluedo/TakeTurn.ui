@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TakeTurnObject</class>
+ <widget class="QWidget" name="TakeTurnObject">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>260</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Turn</string>
+  </property>
+  <widget class="QComboBox" name="cat1Box">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>110</y>
+     <width>101</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="cat2Box">
+   <property name="geometry">
+    <rect>
+     <x>150</x>
+     <y>110</y>
+     <width>101</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="cat3Box">
+   <property name="geometry">
+    <rect>
+     <x>280</x>
+     <y>110</y>
+     <width>101</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="missedButton">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>49</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Missed a turn</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="guessedButton">
+   <property name="geometry">
+    <rect>
+     <x>300</x>
+     <y>49</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Guessed</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="cancelButton">
+   <property name="geometry">
+    <rect>
+     <x>100</x>
+     <y>220</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Cancel</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="submitButton">
+   <property name="geometry">
+    <rect>
+     <x>230</x>
+     <y>220</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Submit</string>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="askedBox">
+   <property name="geometry">
+    <rect>
+     <x>200</x>
+     <y>50</y>
+     <width>70</width>
+     <height>21</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="askedButton">
+   <property name="geometry">
+    <rect>
+     <x>130</x>
+     <y>49</y>
+     <width>71</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Asked</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="outcomeTrue">
+   <property name="geometry">
+    <rect>
+     <x>50</x>
+     <y>170</y>
+     <width>171</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>  Don't know which was shown</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="outcomeFalse">
+   <property name="geometry">
+    <rect>
+     <x>230</x>
+     <y>170</y>
+     <width>121</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>  Nothing was shown</string>
+   </property>
+  </widget>
+  <widget class="QWidget" name="catShownWidget" native="true">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>140</y>
+     <width>320</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <widget class="QCheckBox" name="cat1Shown">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>60</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>  Shown</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="cat2Shown">
+    <property name="geometry">
+     <rect>
+      <x>130</x>
+      <y>0</y>
+      <width>60</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>  Shown</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="cat3Shown">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>0</y>
+      <width>60</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>  Shown</string>
+    </property>
+   </widget>
+  </widget>
+  <zorder>cat1Box</zorder>
+  <zorder>cat2Box</zorder>
+  <zorder>cat3Box</zorder>
+  <zorder>missedButton</zorder>
+  <zorder>guessedButton</zorder>
+  <zorder>cancelButton</zorder>
+  <zorder>submitButton</zorder>
+  <zorder>askedButton</zorder>
+  <zorder>askedBox</zorder>
+  <zorder>outcomeTrue</zorder>
+  <zorder>outcomeFalse</zorder>
+  <zorder>catShownWidget</zorder>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

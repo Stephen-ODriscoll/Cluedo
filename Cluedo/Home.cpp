@@ -36,13 +36,9 @@ void Home::continueButtonClicked()
 {
     Mode mode = Mode::NONE;
     if (ui.singleModeButton->isDefault())
-    {
         mode = Mode::SINGLE;
-    }
     else if (ui.groupModeButton->isDefault())
-    {
         mode = Mode::GROUP;
-    }
     else
     {
         QMessageBox msgBox;

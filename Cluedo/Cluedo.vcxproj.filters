@@ -23,6 +23,12 @@
       <Extensions>qrc;*</Extensions>
       <ParseFiles>false</ParseFiles>
     </Filter>
+    <Filter Include="Header Files\GUI">
+      <UniqueIdentifier>{5a53a453-4805-4746-b707-9bff186c2c06}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GUI">
+      <UniqueIdentifier>{94487316-75ec-4f49-b624-9666abf24ad3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -31,17 +37,20 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Cluedo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Controller.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Home.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Cluedo.cpp">
+      <Filter>Source Files\GUI</Filter>
     </ClCompile>
     <ClCompile Include="Game.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="Home.cpp">
+      <Filter>Source Files\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="TakeTurn.cpp">
+      <Filter>Source Files\GUI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -68,14 +77,17 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="Cluedo.h">
-      <Filter>Header Files</Filter>
+    <QtMoc Include="Game.h">
+      <Filter>Header Files\GUI</Filter>
     </QtMoc>
     <QtMoc Include="Home.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\GUI</Filter>
     </QtMoc>
-    <QtMoc Include="Game.h">
-      <Filter>Header Files</Filter>
+    <QtMoc Include="Cluedo.h">
+      <Filter>Header Files\GUI</Filter>
+    </QtMoc>
+    <QtMoc Include="TakeTurn.h">
+      <Filter>Header Files\GUI</Filter>
     </QtMoc>
   </ItemGroup>
   <ItemGroup>
@@ -86,6 +98,9 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="Game.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="TakeTurn.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>

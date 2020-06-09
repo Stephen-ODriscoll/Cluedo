@@ -133,12 +133,14 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="TakeTurn.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Controller.h" />
     <QtMoc Include="Home.h" />
     <QtMoc Include="Game.h" />
     <ClInclude Include="Macros.h" />
+    <QtMoc Include="TakeTurn.h" />
     <ClInclude Include="Turn.h" />
     <QtMoc Include="Cluedo.h" />
     <ClInclude Include="Analysis.h" />
@@ -150,6 +152,7 @@
     <QtUic Include="Cluedo.ui" />
     <QtUic Include="Game.ui" />
     <QtUic Include="Home.ui" />
+    <QtUic Include="TakeTurn.ui" />
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="Cluedo.qrc" />

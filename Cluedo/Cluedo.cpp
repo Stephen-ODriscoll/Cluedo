@@ -9,6 +9,7 @@ Cluedo::Cluedo(QWidget *parent) :
 
 {
     ui.setupUi(this);
+    this->setAttribute(Qt::WA_DeleteOnClose);
     
     ui.stackedWidget->addWidget(pHome);
     ui.stackedWidget->addWidget(pGame);

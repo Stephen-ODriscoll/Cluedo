@@ -148,7 +148,7 @@ struct Analysis
     {
         return pPlayer == a.pPlayer;
     }
-    bool operator==(const Turn& t)
+    bool operator==(const Asked& t)
     {
         return pPlayer == t.pWitness;
     }

@@ -3,6 +3,7 @@
 
 Game::Game(Controller* pController, QWidget* parent) :
     pController(pController),
+    pTakeTurn(nullptr),
     QWidget(parent)
 {
     ui.setupUi(this);
@@ -17,9 +18,18 @@ Game::Game(Controller* pController, QWidget* parent) :
     connect(ui.turnButton, SIGNAL(clicked()), this, SLOT(turnButtonClicked()));
 }
 
+Game::~Game()
+{
+    delete pTakeTurn;
+}
+
 void Game::startGame()
 {
     const std::vector<Player>& players = pController->players();
+
+    // Implementation of Bottom-up done using blank boxes (I liked bottom-up better than top-down)
+    for (int i = players.size(); i < MAX_PLAYERS; ++i)
+        ui.playersList->addItem("");
 
     for (auto& it = players.rbegin(); it != players.rend(); ++it)
         ui.playersList->addItem(it->name.c_str());
@@ -34,7 +44,7 @@ void Game::upButtonClicked()
 {
     int row = ui.playersList->currentIndex().row();
     
-    if (row == -1 || row == 0)
+    if (row <= MAX_PLAYERS - pController->players().size())
         return;
 
     ui.playersList->insertItem(row, ui.playersList->takeItem(row - 1));
@@ -44,7 +54,7 @@ void Game::downButtonClicked()
 {
     int row = ui.playersList->currentIndex().row();
 
-    if (row == -1 || row == ui.playersList->count() - 1)
+    if (row < MAX_PLAYERS - pController->players().size() || row == MAX_PLAYERS - 1)
         return;
 
     ui.playersList->insertItem(row, ui.playersList->takeItem(row + 1));
@@ -54,7 +64,7 @@ void Game::renameButtonClicked()
 {
     int row = ui.playersList->currentIndex().row();
 
-    if (row == -1)
+    if (row < MAX_PLAYERS - pController->players().size())
         return;
 
     bool dialogResult;
@@ -82,5 +92,10 @@ void Game::renameButtonClicked()
 
 void Game::turnButtonClicked()
 {
-    ui.playersList->currentItem()->text().toStdString();
+    delete pTakeTurn;
+
+    pTakeTurn = new TakeTurn(pController,
+        ui.playersList->item(MAX_PLAYERS - 1)->text().toStdString(),
+        ui.playersList->item(MAX_PLAYERS - 2)->text().toStdString());
+    pTakeTurn->show();
 }

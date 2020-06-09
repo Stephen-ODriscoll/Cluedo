@@ -59,6 +59,14 @@ Controller::Controller(Cluedo* pGUI, fs::path inputFile) :
     }
 }
 
+Controller::~Controller()
+{
+    for (Turn* pTurn : m_pTurns)
+        delete pTurn;
+
+    m_pTurns.clear();
+}
+
 void Controller::startGame(Mode mode, int numPlayers)
 {
     m_mode = mode;
@@ -80,7 +88,7 @@ void Controller::analysisSetup()
         for (Card& card : category)
         {
             if (card.pOwner == nullptr)         // Unowned, we suspect it
-                m_possibleCards.insert(&card);
+                m_pPossibleCards.insert(&card);
             else
             {
                 auto it = std::find(m_analysis.begin(), m_analysis.end(), card.pOwner);
@@ -91,37 +99,37 @@ void Controller::analysisSetup()
     }
 }
 
-void Controller::analyseTurn(Turn& turn)
+void Controller::analyseMissed(Missed* pMissed)
 {
-    switch (turn.action)
-    {
-    case Action::ASKED:
-    {
-        auto it = std::find(m_analysis.begin(), m_analysis.end(), turn);
-        if (it != m_analysis.end())
-        {
-            bool cardDeduced;
-            if (turn.outcome)
-                cardDeduced = it->processHasEither(turn.pCards, m_possibleCards);
-            else
-                cardDeduced = it->processDoesntHave(turn.pCards, m_possibleCards);
+    m_pTurns.push_back(pMissed);
+}
 
-            // This could loop a few times. One deduction could lead to another and so on
-            while (cardDeduced)
-            {
-                cardDeduced = false;
-                for (auto aIt = m_analysis.begin(); aIt < m_analysis.end(); ++aIt)
-                    cardDeduced |= aIt->processPossibleCards(m_possibleCards);
-            }
+void Controller::analyseAsked(Asked* pAsked)
+{
+    m_pTurns.push_back(pAsked);
+
+    auto it = std::find(m_analysis.begin(), m_analysis.end(), *pAsked);
+    if (it != m_analysis.end())
+    {
+        bool cardDeduced;
+        if (pAsked->shown)
+            cardDeduced = it->processHasEither(pAsked->pCards, m_pPossibleCards);
+        else
+            cardDeduced = it->processDoesntHave(pAsked->pCards, m_pPossibleCards);
+
+        // This could loop a few times. One deduction could lead to another and so on
+        while (cardDeduced)
+        {
+            cardDeduced = false;
+            for (auto aIt = m_analysis.begin(); aIt < m_analysis.end(); ++aIt)
+                cardDeduced |= aIt->processPossibleCards(m_pPossibleCards);
         }
     }
-    break;
-    case Action::GUESSED:
-    {
+}
 
-    }
-    break;
-    }
+void Controller::analyseGuessed(Guessed* pGuessed)
+{
+    m_pTurns.push_back(pGuessed);
 }
 
 bool Controller::rename(str oldName, str newName)
@@ -145,7 +153,7 @@ const std::vector<Player>& Controller::players()
     return m_players;
 }
 
-const std::vector<Turn>& Controller::turns()
+const std::vector<Turn*>& Controller::turns()
 {
-    return m_turns;
+    return m_pTurns;
 }

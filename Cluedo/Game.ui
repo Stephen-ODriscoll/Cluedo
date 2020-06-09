@@ -104,7 +104,7 @@
     <widget class="QPushButton" name="turnButton">
      <property name="geometry">
       <rect>
-       <x>170</x>
+       <x>160</x>
        <y>160</y>
        <width>81</width>
        <height>23</height>
