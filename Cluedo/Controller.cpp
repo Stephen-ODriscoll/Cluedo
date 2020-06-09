@@ -143,7 +143,7 @@ bool Controller::rename(str oldName, str newName)
     return true;
 }
 
-const std::vector<std::vector<Card>>& Controller::cards()
+std::vector<std::vector<Card>>& Controller::cards()
 {
     return m_cards;
 }

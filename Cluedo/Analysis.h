@@ -12,7 +12,7 @@ struct Analysis
     Analysis(Player* pPlayer):
         pPlayer(pPlayer) { }
 
-    bool processHasEither(std::vector<Card*> pCards, std::set<Card*>& possibleCards)
+    bool processHasEither(const std::vector<Card*> pCards, std::set<Card*>& possibleCards)
     {
         std::vector<Card*> checkedCards;
         for (Card* pCard : pCards)
@@ -38,7 +38,7 @@ struct Analysis
         return false;
     }
 
-    bool processDoesntHave(std::vector<Card*> pCards, std::set<Card*>& possibleCards)
+    bool processDoesntHave(const std::vector<Card*> pCards, std::set<Card*>& possibleCards)
     {
         bool cardFound = false;
         for (Card* pCard : pCards)
@@ -144,12 +144,6 @@ struct Analysis
         return info;
     }
 
-    bool operator==(const Analysis& a)
-    {
-        return pPlayer == a.pPlayer;
-    }
-    bool operator==(const Asked& t)
-    {
-        return pPlayer == t.pWitness;
-    }
+    bool operator==(const Analysis& a) { return pPlayer == a.pPlayer; }
+    bool operator==(const Asked& t) { return pPlayer == t.pWitness; }
 };

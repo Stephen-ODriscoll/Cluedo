@@ -77,6 +77,7 @@ void Game::renameButtonClicked()
 
     if (!pController->rename(ui.playersList->item(row)->text().toStdString(), result.toStdString()))
     {
+        // Should never happen
         QMessageBox msgBox;
         msgBox.critical(0, "Error", "Failed to find corresponding player");
         return;

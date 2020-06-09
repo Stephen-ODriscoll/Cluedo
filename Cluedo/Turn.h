@@ -12,10 +12,10 @@ enum class Action
 
 struct Turn
 {
-    Action action;
-    Player* pDetective;
+    const Action action;
+    const Player* pDetective;
 
-    Turn(Player* pDetective, Action action) :
+    Turn(const Player* pDetective, const Action action) :
         pDetective(pDetective),
         action(action)
     { }
@@ -24,6 +24,10 @@ struct Turn
 
 struct Missed : public Turn
 {
+    Missed(const Player* pDetective, const Action action) :
+        Turn(pDetective, action)
+    { }
+
     str to_str() const
     {
         return pDetective->name + str(" missed a turn");
@@ -33,16 +37,17 @@ struct Missed : public Turn
 
 struct Asked: public Turn
 {
-    Player* pWitness;
-    bool shown;
+    const Player* pWitness;
     std::vector<Card*> pCards;
-    str cardShown;
+    const bool shown;
+    const str cardShown;
 
-    Asked(Player* pDetective, Action action, Player* pWitness, bool shown, std::vector<Card*> pCards, const str& cardShown = "") :
+    Asked(const Player* pDetective, const Action action,
+            const Player* pWitness, std::vector<Card*> pCards, const bool shown, const str& cardShown = "") :
         Turn(pDetective, action),
         pWitness(pWitness),
-        shown(shown),
         pCards(pCards),
+        shown(shown),
         cardShown(cardShown)
     {
         assert(pCards.size() == NUM_CATEGORIES);
@@ -52,7 +57,7 @@ struct Asked: public Turn
     {
         str message = pWitness->name + str(shown ? " has either " : " doesn't have ");
 
-        for (Card* pCard : pCards)
+        for (const Card* pCard : pCards)
             message += pCard->name + ", ";
 
         return message;
@@ -62,10 +67,11 @@ struct Asked: public Turn
 
 struct Guessed : public Turn
 {
-    bool correct;
     std::vector<Card*> pCards;
+    const bool correct;
 
-    Guessed(Player* pDetective, Action action, bool correct, std::vector<Card*> pCards) :
+    Guessed(const Player* pDetective, const Action action,
+            std::vector<Card*> pCards, const bool correct) :
         Turn(pDetective, action),
         correct(correct),
         pCards(pCards)
@@ -77,7 +83,7 @@ struct Guessed : public Turn
     {
         str message = pDetective->name + str(" guessed ") + str(correct ? "correctly " : "incorrectly ");
 
-        for (Card* pCard : pCards)
+        for (const Card* pCard : pCards)
             message += pCard->name + ", ";
 
         return message;

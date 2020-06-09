@@ -18,6 +18,8 @@ private:
     const str detective;
     std::vector<QComboBox*> categoryBoxes;
 
+    bool outcomeChosen();
+
 private slots:
     void missedButtonClicked();
     void askedButtonClicked();

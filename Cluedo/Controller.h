@@ -2,7 +2,7 @@
 
 #include "Macros.h"
 
-#include "Cards.h"
+#include "Card.h"
 #include "Player.h"
 #include "Turn.h"
 #include "Analysis.h"
@@ -43,7 +43,7 @@ public:
 
     bool rename(str oldName, str newName);
 
-    const std::vector<std::vector<Card>>& cards();
+    std::vector<std::vector<Card>>& cards();
     const std::vector<Player>& players();
     const std::vector<Turn*>& turns();
 

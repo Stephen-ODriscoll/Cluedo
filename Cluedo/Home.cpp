@@ -11,6 +11,8 @@ Home::Home(Controller* pController, QWidget* parent) :
     pixmap = pixmap.scaled(ui.icon->size());
     ui.icon->setPixmap(pixmap);
 
+    ui.continueButton->setEnabled(false);
+
     connect(ui.singleModeButton, SIGNAL(clicked()), this, SLOT(singleModeButtonClicked()));
     connect(ui.groupModeButton, SIGNAL(clicked()), this, SLOT(groupModeButtonClicked()));
 
@@ -24,12 +26,16 @@ void Home::singleModeButtonClicked()
 {
     ui.singleModeButton->setDefault(true);
     ui.groupModeButton->setDefault(false);
+
+    ui.continueButton->setEnabled(true);
 }
 
 void Home::groupModeButtonClicked()
 {
     ui.groupModeButton->setDefault(true);
     ui.singleModeButton->setDefault(false);
+
+    ui.continueButton->setEnabled(true);
 }
 
 void Home::continueButtonClicked()
@@ -41,11 +47,9 @@ void Home::continueButtonClicked()
         mode = Mode::GROUP;
     else
     {
+        // Should never happen
         QMessageBox msgBox;
-        msgBox.setIcon(QMessageBox::Information);
-        msgBox.setText("Mode not selected");
-        msgBox.setInformativeText("Please choose either single or group mode");
-        msgBox.exec();
+        msgBox.critical(0, "Error", "Failed to deduce chosen mode");
         return;
     }
 

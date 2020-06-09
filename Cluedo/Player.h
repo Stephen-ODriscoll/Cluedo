@@ -24,13 +24,6 @@ struct Player
         name = newName;
     }
 
-    bool operator!=(const Player& player) const
-    {
-        return name != player.name;
-    }
-
-    bool operator==(const str& n) const
-    {
-        return name == n;
-    }
+    bool operator!=(const Player& player) const { return name != player.name; }
+    bool operator==(const str& n) const { return name == n; }
 };
