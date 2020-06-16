@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>598</width>
-    <height>400</height>
+    <height>399</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -22,6 +22,12 @@
      <height>401</height>
     </rect>
    </property>
+   <property name="autoFillBackground">
+    <bool>true</bool>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color:light;</string>
+   </property>
    <property name="currentIndex">
     <number>0</number>
    </property>
@@ -32,18 +38,18 @@
     <widget class="QTextBrowser" name="progressReportText">
      <property name="geometry">
       <rect>
-       <x>20</x>
-       <y>221</y>
-       <width>551</width>
-       <height>141</height>
+       <x>330</x>
+       <y>31</y>
+       <width>241</width>
+       <height>301</height>
       </rect>
      </property>
     </widget>
     <widget class="QLabel" name="progressReportLabel">
      <property name="geometry">
       <rect>
-       <x>10</x>
-       <y>200</y>
+       <x>340</x>
+       <y>10</y>
        <width>91</width>
        <height>16</height>
       </rect>
@@ -117,30 +123,25 @@
    </widget>
    <widget class="QWidget" name="tab_2">
     <attribute name="title">
-     <string>Players</string>
+     <string>Status</string>
     </attribute>
     <widget class="QPlainTextEdit" name="playersText">
      <property name="geometry">
       <rect>
-       <x>10</x>
-       <y>10</y>
-       <width>571</width>
-       <height>351</height>
+       <x>170</x>
+       <y>20</y>
+       <width>401</width>
+       <height>311</height>
       </rect>
      </property>
     </widget>
-   </widget>
-   <widget class="QWidget" name="tab_3">
-    <attribute name="title">
-     <string>Cards</string>
-    </attribute>
-    <widget class="QPlainTextEdit" name="cardsText">
+    <widget class="QListWidget" name="cardsList">
      <property name="geometry">
       <rect>
-       <x>10</x>
-       <y>10</y>
-       <width>571</width>
-       <height>351</height>
+       <x>20</x>
+       <y>20</y>
+       <width>131</width>
+       <height>311</height>
       </rect>
      </property>
     </widget>

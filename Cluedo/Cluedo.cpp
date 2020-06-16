@@ -38,6 +38,12 @@ void Cluedo::startGame()
     pGame->startGame();
 }
 
+void Cluedo::critical(const str& title, const str& desc)
+{
+    QMessageBox msgBox;
+    msgBox.critical(0, title.c_str(), desc.c_str());
+}
+
 Game* Cluedo::game()
 {
     return pGame;

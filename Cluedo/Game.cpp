@@ -38,6 +38,34 @@ void Game::startGame()
     font.setPointSize(14);
     for (int i = 0; i < ui.playersList->count(); ++i)
         ui.playersList->item(i)->setFont(font);
+
+    updateStatus();
+}
+
+void Game::updateStatus()
+{
+    ui.cardsList->clear();
+    for (std::vector<Card> category : pController->cards())
+    {
+        for (Card card : category)
+        {
+            str status;
+            if (card.pOwner != nullptr)
+                status = card.pOwner->name;
+            
+            ui.cardsList->addItem((card.nickname + " " + status).c_str());
+        }
+    }
+
+    QFont font;
+    font.setPointSize(7);
+    for (int i = 0; i < ui.cardsList->count(); ++i)
+        ui.cardsList->item(i)->setFont(font);
+}
+
+void Game::rotateTurn()
+{
+    ui.playersList->insertItem(MAX_PLAYERS - pController->players().size(), ui.playersList->takeItem(MAX_PLAYERS - 1));
 }
 
 void Game::upButtonClicked()
@@ -72,16 +100,13 @@ void Game::renameButtonClicked()
     QString result = inDialog.getText(0, "", "New name:", QLineEdit::Normal,
         ui.playersList->item(row)->text(), &dialogResult);
 
+    // User clicked cancel
     if (!dialogResult)
         return;
 
+    // Failed to rename, error message is handled by the controller
     if (!pController->rename(ui.playersList->item(row)->text().toStdString(), result.toStdString()))
-    {
-        // Should never happen
-        QMessageBox msgBox;
-        msgBox.critical(0, "Error", "Failed to find corresponding player");
         return;
-    }
 
     ui.playersList->takeItem(row);
     ui.playersList->insertItem(row, result);

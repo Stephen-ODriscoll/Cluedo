@@ -21,6 +21,7 @@ public:
     str openCluedoTextFile(const str& issue);
 
     void startGame();
+    void critical(const str& title, const str& desc);
     Game* game();
 
 private:

@@ -75,6 +75,7 @@ void Controller::startGame(Mode mode, int numPlayers)
     for (int i = 0; i < numPlayers; ++i)
         m_players.push_back(Player());
 
+    analysisSetup();
     m_pGUI->startGame();
 }
 
@@ -102,18 +103,34 @@ void Controller::analysisSetup()
 void Controller::analyseMissed(Missed* pMissed)
 {
     m_pTurns.push_back(pMissed);
+    m_pGUI->game()->rotateTurn();
 }
 
 void Controller::analyseAsked(Asked* pAsked)
 {
     m_pTurns.push_back(pAsked);
 
-    auto it = std::find(m_analysis.begin(), m_analysis.end(), *pAsked);
-    if (it != m_analysis.end())
+    try
     {
+        auto it = std::find(m_analysis.begin(), m_analysis.end(), pAsked->pWitness);
+        if (it == m_analysis.end())
+            throw std::exception((str("Failed to find analysis for player ") + pAsked->pWitness->name).c_str());
+
         bool cardDeduced;
         if (pAsked->shown)
-            cardDeduced = it->processHasEither(pAsked->pCards, m_pPossibleCards);
+        {
+            if (!pAsked->cardShown.empty())
+            {
+                auto itCard = std::_Find_pr(pAsked->pCards.begin(), pAsked->pCards.end(), pAsked->cardShown,
+                    [](const Card* c, const str& s) { return (c->name == s); });
+                if (itCard == pAsked->pCards.end())
+                    throw std::exception("Card shown not found amongst cards");
+
+                cardDeduced = it->processHas(*itCard, m_pPossibleCards);
+            }
+            else
+                cardDeduced = it->processHasEither(pAsked->pCards, m_pPossibleCards);
+        }
         else
             cardDeduced = it->processDoesntHave(pAsked->pCards, m_pPossibleCards);
 
@@ -122,24 +139,41 @@ void Controller::analyseAsked(Asked* pAsked)
         {
             cardDeduced = false;
             for (auto aIt = m_analysis.begin(); aIt < m_analysis.end(); ++aIt)
-                cardDeduced |= aIt->processPossibleCards(m_pPossibleCards);
+                cardDeduced = aIt->recheckCards(m_pPossibleCards);
         }
+
+        m_pGUI->game()->updateStatus();
+        m_pGUI->game()->rotateTurn();
+    }
+    catch (const contradiction& ex)
+    {
+        m_pGUI->critical("Contraditory Info Given", ex.what());
+    }
+    catch (const std::exception& ex)
+    {
+        m_pGUI->critical("Exception Occured", ex.what());
     }
 }
 
 void Controller::analyseGuessed(Guessed* pGuessed)
 {
     m_pTurns.push_back(pGuessed);
+
+    m_pGUI->game()->updateStatus();
+    m_pGUI->game()->rotateTurn();
 }
 
 bool Controller::rename(str oldName, str newName)
 {
-    auto& it = std::find(m_players.begin(), m_players.end(), oldName);
-
+    auto it = std::find(m_players.begin(), m_players.end(), oldName);
     if (it == m_players.end())
+    {
+        m_pGUI->critical("Exception", "Failed to find corresponding player");
         return false;
+    }
 
     it->updateName(newName);
+    m_pGUI->game()->updateStatus();
     return true;
 }
 

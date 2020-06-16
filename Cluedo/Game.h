@@ -16,6 +16,8 @@ public:
     ~Game();
 
     void startGame();
+    void updateStatus();
+    void rotateTurn();
 
 private:
     Ui::GameObject ui;

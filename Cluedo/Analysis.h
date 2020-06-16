@@ -2,6 +2,11 @@
 
 #include "stdafx.h"
 
+struct contradiction : public std::exception
+{
+    using std::exception::exception;
+};
+
 struct Analysis
 {
     Player* pPlayer;
@@ -11,6 +16,26 @@ struct Analysis
 
     Analysis(Player* pPlayer):
         pPlayer(pPlayer) { }
+
+    bool processHas(Card* pCard, std::set<Card*>& possibleCards)
+    {
+        if (pCard->pOwner != nullptr)
+        {
+            // We already know that this person owns this card
+            if (pCard->pOwner == pPlayer)
+                return false;
+
+            throw contradiction((
+                str("Deduced that ") + pCard->name + str(" is owned by ") + pPlayer->name +
+                str(" but this card is already owned by ") + pCard->pOwner->name).c_str());
+        }
+
+        // We've found a card
+        pCard->pOwner = pPlayer;
+        possibleCards.erase(pCard);
+        has.insert(pCard);
+        return true;
+    }
 
     bool processHasEither(const std::vector<Card*> pCards, std::set<Card*>& possibleCards)
     {
@@ -24,65 +49,46 @@ struct Analysis
                 checkedCards.emplace_back(pCard);
         }
 
-        if (checkedCards.size() == 1)
+        switch (checkedCards.size())
         {
-            has.insert(checkedCards[0]);            // We've found a card
-            checkedCards[0]->pOwner = pPlayer;
-            possibleCards.erase(checkedCards[0]);   // Obviously this card is no longer suspected
+        case 0:
+            throw contradiction((str("Player ") + pPlayer->name + str(" must have one of these cards")).c_str());
 
-            return true;
-        }
-        else if (checkedCards.size() < 1)
+        case 1:
+            return processHas(checkedCards[0], possibleCards);
+
+        default:
             hasEither.push_back(checkedCards);      // We don't know for sure which card was shown (yet)
+        }
 
         return false;
     }
 
     bool processDoesntHave(const std::vector<Card*> pCards, std::set<Card*>& possibleCards)
     {
-        bool cardFound = false;
         for (Card* pCard : pCards)
         {
+            if (has.find(pCard) != has.end())
+                throw contradiction((str("Previous info says ") + pPlayer->name + str(" has ") + pCard->name).c_str());
+
             if (possibleCards.find(pCard) != possibleCards.end())
-            {
                 doesntHave.insert(pCard);
-                for (std::vector<Card*>& pCards : hasEither)
-                {
-                    for (auto it = pCards.begin(); it < pCards.end(); ++it)
-                    {
-                        if (*it == pCard)
-                        {
-                            pCards.erase(it);
-                            break;
-                        }
-                    }
-
-                    if (pCards.size() == 1)
-                    {
-                        has.insert(pCards[0]);            // We've found a card
-                        pCards[0]->pOwner = pPlayer;
-                        possibleCards.erase(pCards[0]);   // Obviously this card is no longer suspected
-
-                        cardFound = true;
-                    }
-                }
-            }
         }
 
-        return cardFound;
+        return recheckCards(possibleCards);
     }
 
-    bool processPossibleCards(std::set<Card*>& possibleCards)
+    bool recheckCards(std::set<Card*>& possibleCards)
     {
         for (auto it = doesntHave.begin(); it != doesntHave.end();)
         {
-            if (possibleCards.find(*it) != possibleCards.end())
+            if (possibleCards.find(*it) == possibleCards.end())
                 doesntHave.erase(it);
             else
                 ++it;
         }
 
-        // Recheck past turns with this new info
+        // Recheck past cards with this new info
         bool cardFound = false;
         for (auto it1 = hasEither.begin(); it1 < hasEither.end();)
         {
@@ -92,22 +98,22 @@ struct Analysis
                 // either it's not suspected or this player is known to have it
                 if (doesntHave.find(*it2) == doesntHave.end() &&
                     (possibleCards.find(*it2) != possibleCards.end() || has.find(*it2) != has.end()))
-                    it1->erase(it2);
-                else
                     ++it2;
+                else
+                    it1->erase(it2);
             }
 
-            if (it1->size() == 1)
+            switch (it1->size())
             {
-                has.insert((*it1)[0]);              // We've found a card
-                (*it1)[0]->pOwner = pPlayer;
-                possibleCards.erase((*it1)[0]);     // Obviously this card is no longer suspected
-                hasEither.erase(it1);               // Removing from a large vector (RIP performance) :'(
+            case 0:
+                throw contradiction((str("Player ") + pPlayer->name + str(" must have one of these cards")).c_str());
 
-                cardFound = true;
-            }
-            else
-            {
+            case 1:
+                cardFound = processHas((*it1)[0], possibleCards);
+                hasEither.erase(it1);
+                break;
+
+            default:
                 ++it1;
             }
         }
@@ -145,5 +151,5 @@ struct Analysis
     }
 
     bool operator==(const Analysis& a) { return pPlayer == a.pPlayer; }
-    bool operator==(const Asked& t) { return pPlayer == t.pWitness; }
+    bool operator==(const Player* p) { return pPlayer == p; }
 };

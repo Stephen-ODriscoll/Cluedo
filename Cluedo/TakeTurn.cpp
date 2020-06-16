@@ -187,7 +187,7 @@ void TakeTurn::submitButtonClicked()
     const std::vector<Player>& players = pController->players();
 
 
-    const auto& itDetective = std::find(players.begin(), players.end(), detective);
+    const auto itDetective = std::find(players.begin(), players.end(), detective);
     if (itDetective == players.end())
     {
         // Should never happen
@@ -201,6 +201,7 @@ void TakeTurn::submitButtonClicked()
     if (ui.missedButton->isDefault())
     {
         pController->analyseMissed(new Missed(&*itDetective, Action::MISSED));
+        close();
         return;
     }
 
@@ -227,7 +228,7 @@ void TakeTurn::submitButtonClicked()
     if (ui.askedButton->isDefault())
     {
         const str witness = ui.askedBox->currentText().toStdString();
-        const auto& itWitness = std::find(players.begin(), players.end(), witness);
+        const auto itWitness = std::find(players.begin(), players.end(), witness);
         if (itWitness == players.end())
         {
             // Should never happen
@@ -254,6 +255,7 @@ void TakeTurn::submitButtonClicked()
             msgBox.critical(0, "Error", "Failed to deduce chosen outcome");
         }
 
+        close();
         return;
     }
 
@@ -265,6 +267,7 @@ void TakeTurn::submitButtonClicked()
         else if (ui.outcomeFalse->isChecked())
             pController->analyseGuessed(new Guessed(&*itDetective, Action::GUESSED, pCards, false));
 
+        close();
         return;
     }
 
