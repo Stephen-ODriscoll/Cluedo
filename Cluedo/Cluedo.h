@@ -18,7 +18,7 @@ public:
     Cluedo(QWidget *parent = Q_NULLPTR);
     ~Cluedo();
 
-    str openCluedoTextFile(const str& issue);
+    std::wstring openCluedoTextFile(const str& issue);
 
     void startGame();
     void critical(const str& title, const str& desc);

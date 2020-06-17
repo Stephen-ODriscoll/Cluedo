@@ -22,14 +22,14 @@ Cluedo::~Cluedo()
     delete pGame;
 }
 
-str Cluedo::openCluedoTextFile(const str& issue)
+std::wstring Cluedo::openCluedoTextFile(const str& issue)
 {
     QMessageBox msgBox;
     msgBox.setWindowTitle("Woops...");
     msgBox.setText((str("While trying to load Cluedo.txt - ") + issue).c_str());
     msgBox.exec();
 
-    return QFileDialog::getOpenFileName(this, tr("Open Cluedo.txt"), QDir::currentPath(), tr("Text files (*.txt)")).toStdString();
+    return QFileDialog::getOpenFileName(this, tr("Open Cluedo.txt"), QDir::currentPath(), tr("Text files (*.txt)")).toStdWString();
 }
 
 void Cluedo::startGame()

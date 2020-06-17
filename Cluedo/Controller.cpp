@@ -52,7 +52,7 @@ Controller::Controller(Cluedo* pGUI, fs::path inputFile) :
         {
             m_cards.clear();
 
-            inputFile = fs::path(m_pGUI->openCluedoTextFile(ex.what()).string());
+            inputFile = fs::path(m_pGUI->openCluedoTextFile(ex.what()));
             if (inputFile.empty())
                 exit(EXIT_SUCCESS);     // User clicked cancel
         }
