@@ -85,19 +85,8 @@ void Controller::analysisSetup()
         m_analysis.push_back(&player);
 
     for (std::vector<Card>& category : m_cards)
-    {
         for (Card& card : category)
-        {
-            if (card.pOwner == nullptr)         // Unowned, we suspect it
                 m_pPossibleCards.insert(&card);
-            else
-            {
-                auto it = std::find(m_analysis.begin(), m_analysis.end(), card.pOwner);
-                if (it != m_analysis.end())
-                    it->has.insert(&card);
-            }
-        }
-    }
 }
 
 void Controller::analyseMissed(Missed* pMissed)
@@ -180,6 +169,11 @@ bool Controller::rename(str oldName, str newName)
 std::vector<std::vector<Card>>& Controller::cards()
 {
     return m_cards;
+}
+
+const std::vector<Analysis>& Controller::analysis()
+{
+    return m_analysis;
 }
 
 const std::vector<Player>& Controller::players()

@@ -83,16 +83,16 @@ struct Analysis
         for (auto it = doesntHave.begin(); it != doesntHave.end();)
         {
             if (possibleCards.find(*it) == possibleCards.end())
-                doesntHave.erase(it);
+                it = doesntHave.erase(it);
             else
                 ++it;
         }
 
         // Recheck past cards with this new info
         bool cardFound = false;
-        for (auto it1 = hasEither.begin(); it1 < hasEither.end();)
+        for (auto it1 = hasEither.begin(); it1 != hasEither.end();)
         {
-            for (auto it2 = it1->begin(); it2 < it1->end();)
+            for (auto it2 = it1->begin(); it2 != it1->end();)
             {
                 // This card could've been shown if this player hasn't said no to it and
                 // either it's not suspected or this player is known to have it
@@ -100,7 +100,7 @@ struct Analysis
                     (possibleCards.find(*it2) != possibleCards.end() || has.find(*it2) != has.end()))
                     ++it2;
                 else
-                    it1->erase(it2);
+                    it2 = it1->erase(it2);
             }
 
             switch (it1->size())
@@ -110,7 +110,7 @@ struct Analysis
 
             case 1:
                 cardFound = processHas((*it1)[0], possibleCards);
-                hasEither.erase(it1);
+                it1 = hasEither.erase(it1);
                 break;
 
             default:
@@ -121,19 +121,19 @@ struct Analysis
         return cardFound;
     }
 
-    str to_str()
+    str to_str() const
     {
         str info = pPlayer->name + str("\n\thas: ");
-        for (Card* pCard : has)
-            info += pCard->name + str(", ");
+        for (const Card* pCard : has)
+            info += pCard->nickname + str(", ");
         if (!has.empty())
             info.resize(info.size() - 2);
 
         info += str("\n\thas either: ");
-        for (std::vector<Card*>& pCards : hasEither)
+        for (const std::vector<Card*>& pCards : hasEither)
         {
-            for (Card* pCard : pCards)
-                info += pCard->name + str("/");
+            for (const Card* pCard : pCards)
+                info += pCard->nickname + str("/");
 
             info.resize(info.size() - 1);
             info += ", ";
@@ -142,12 +142,12 @@ struct Analysis
             info.resize(info.size() - 2);
 
         info += "\n\tdoesn't have: ";
-        for (Card* pCard : doesntHave)
-            info += pCard->name + str(", ");
+        for (const Card* pCard : doesntHave)
+            info += pCard->nickname + str(", ");
         if (!doesntHave.empty())
             info.resize(info.size() - 2);
 
-        return info;
+        return info + "\n";
     }
 
     bool operator==(const Analysis& a) { return pPlayer == a.pPlayer; }

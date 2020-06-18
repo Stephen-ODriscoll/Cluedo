@@ -44,6 +44,7 @@ public:
     bool rename(str oldName, str newName);
 
     std::vector<std::vector<Card>>& cards();
+    const std::vector<Analysis>& analysis();
     const std::vector<Player>& players();
     const std::vector<Turn*>& turns();
 

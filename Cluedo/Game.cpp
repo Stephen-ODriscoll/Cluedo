@@ -57,10 +57,18 @@ void Game::updateStatus()
         }
     }
 
+    str status;
+    for (const Analysis& analyse : pController->analysis())
+        status += analyse.to_str();
+
+    ui.playersText->setPlainText(status.c_str());
+
     QFont font;
     font.setPointSize(7);
     for (int i = 0; i < ui.cardsList->count(); ++i)
         ui.cardsList->item(i)->setFont(font);
+
+    ui.playersText->setFont(font);
 }
 
 void Game::rotateTurn()
@@ -72,7 +80,7 @@ void Game::upButtonClicked()
 {
     int row = ui.playersList->currentIndex().row();
     
-    if (row <= MAX_PLAYERS - pController->players().size())
+    if (row <= int(MAX_PLAYERS - pController->players().size()))
         return;
 
     ui.playersList->insertItem(row, ui.playersList->takeItem(row - 1));
@@ -82,7 +90,7 @@ void Game::downButtonClicked()
 {
     int row = ui.playersList->currentIndex().row();
 
-    if (row < MAX_PLAYERS - pController->players().size() || row == MAX_PLAYERS - 1)
+    if (row < int(MAX_PLAYERS - pController->players().size()) || row == MAX_PLAYERS - 1)
         return;
 
     ui.playersList->insertItem(row, ui.playersList->takeItem(row + 1));
@@ -92,7 +100,7 @@ void Game::renameButtonClicked()
 {
     int row = ui.playersList->currentIndex().row();
 
-    if (row < MAX_PLAYERS - pController->players().size())
+    if (row < int(MAX_PLAYERS - pController->players().size()))
         return;
 
     bool dialogResult;
