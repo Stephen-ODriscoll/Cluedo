@@ -1,19 +1,15 @@
 #pragma once
 
-#include "stdafx.h"
-
 struct Player;
 struct Card
 {
     const str name;
     const str nickname;
-    const uint32_t category;
     Player* pOwner = nullptr;
 
-    Card(const str& name, const str& nickname, const uint32_t category) :
+    Card(const str& name, const str& nickname) :
         name(name),
-        nickname(nickname),
-        category(category)
+        nickname(nickname)
     { }
 
     bool locationKnown() const { return pOwner == nullptr; }

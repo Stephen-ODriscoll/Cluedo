@@ -39,7 +39,7 @@ Controller::Controller(Cluedo* pGUI, fs::path inputFile) :
 
                 // ++m_numCards;
                 std::vector<str> splits = line.split('=');
-                m_cards[category].push_back(Card(splits[0], splits[1], category));
+                m_cards[category].push_back(Card(splits[0], splits[1]));
             }
 
             if (m_cards.size() != NUM_CATEGORIES)

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "stdafx.h"
-
 struct contradiction : public std::exception
 {
     using std::exception::exception;

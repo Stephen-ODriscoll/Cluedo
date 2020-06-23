@@ -2,6 +2,7 @@
 
 #include "Macros.h"
 
+#include "stdafx.h"
 #include "Card.h"
 #include "Player.h"
 #include "Turn.h"
