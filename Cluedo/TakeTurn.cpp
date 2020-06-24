@@ -200,7 +200,7 @@ void TakeTurn::submitButtonClicked()
     // Missed a turn
     if (ui.missedButton->isDefault())
     {
-        pController->analyseMissed(new Missed(&*itDetective, Action::MISSED));
+        pController->analyseTurn(std::make_shared<Missed>(&*itDetective, Action::MISSED));
         close();
         return;
     }
@@ -239,15 +239,15 @@ void TakeTurn::submitButtonClicked()
 
 
         if (ui.outcomeTrue->isChecked())
-            pController->analyseAsked(new Asked(&*itDetective, Action::ASKED, &*itWitness, pCards, true));
+            pController->analyseTurn(std::make_shared<Asked>(&*itDetective, Action::ASKED, &*itWitness, pCards, true));
         else if (ui.outcomeFalse->isChecked())
-            pController->analyseAsked(new Asked(&*itDetective, Action::ASKED, &*itWitness, pCards, false));
+            pController->analyseTurn(std::make_shared<Asked>(&*itDetective, Action::ASKED, &*itWitness, pCards, false));
         else if (ui.cat1Shown->isChecked())
-            pController->analyseAsked(new Asked(&*itDetective, Action::ASKED, &*itWitness, pCards, true, ui.cat1Box->currentText().toStdString()));
+            pController->analyseTurn(std::make_shared<Asked>(&*itDetective, Action::ASKED, &*itWitness, pCards, true, ui.cat1Box->currentText().toStdString()));
         else if (ui.cat2Shown->isChecked())
-            pController->analyseAsked(new Asked(&*itDetective, Action::ASKED, &*itWitness, pCards, true, ui.cat2Box->currentText().toStdString()));
+            pController->analyseTurn(std::make_shared<Asked>(&*itDetective, Action::ASKED, &*itWitness, pCards, true, ui.cat2Box->currentText().toStdString()));
         else if (ui.cat3Shown->isChecked())
-            pController->analyseAsked(new Asked(&*itDetective, Action::ASKED, &*itWitness, pCards, true, ui.cat3Box->currentText().toStdString()));
+            pController->analyseTurn(std::make_shared<Asked>(&*itDetective, Action::ASKED, &*itWitness, pCards, true, ui.cat3Box->currentText().toStdString()));
         else
         {
             // Should never happen
@@ -263,9 +263,15 @@ void TakeTurn::submitButtonClicked()
     if (ui.guessedButton->isDefault())
     {
         if (ui.outcomeTrue->isChecked())
-            pController->analyseGuessed(new Guessed(&*itDetective, Action::GUESSED, pCards, true));
+            pController->analyseTurn(std::make_shared<Guessed>(&*itDetective, Action::GUESSED, pCards, true));
         else if (ui.outcomeFalse->isChecked())
-            pController->analyseGuessed(new Guessed(&*itDetective, Action::GUESSED, pCards, false));
+            pController->analyseTurn(std::make_shared<Guessed>(&*itDetective, Action::GUESSED, pCards, false));
+        else
+        {
+            // Should never happen
+            QMessageBox msgBox;
+            msgBox.critical(0, "Error", "Failed to deduce guessed outcome");
+        }
 
         close();
         return;

@@ -64,6 +64,14 @@ TEST_F(AnalysisTest, process_doesnt_have_throws_after_process_has)
     EXPECT_THROW(pAnalysis->processDoesntHave({ &cards[0], &cards[1], &cards[2] }, possibleCards), contradiction);
 }
 
+TEST_F(AnalysisTest, process_doesnt_have_throws_after_process_has_either)
+{
+    std::vector<Card*> pCards({ &cards[0], &cards[1], &cards[2] });
+    pAnalysis->processHasEither(pCards, possibleCards);
+
+    EXPECT_THROW(pAnalysis->processDoesntHave(pCards, possibleCards), contradiction);
+}
+
 TEST_F(AnalysisTest, process_doesnt_have_excludes_cards_not_in_possible_cards)
 {
     possibleCards.erase(&cards[0]);
@@ -92,6 +100,14 @@ TEST_F(AnalysisTest, process_has_either_finds_card_after_process_doesnt_have)
     pAnalysis->processHasEither({ &cards[1], &cards[2], &cards[3] }, possibleCards);
 
     EXPECT_EQ(*pAnalysis->has.begin(), &cards[3]);
+}
+
+TEST_F(AnalysisTest, process_has_either_throws_after_process_doesnt_have)
+{
+    std::vector<Card*> pCards({ &cards[0], &cards[1], &cards[2] });
+    pAnalysis->processDoesntHave(pCards, possibleCards);
+
+    EXPECT_THROW(pAnalysis->processHasEither(pCards, possibleCards), contradiction);
 }
 
 TEST_F(AnalysisTest, recheck_cards_does_nothing_when_nothing_needs_to_be_done)

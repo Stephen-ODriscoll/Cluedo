@@ -59,14 +59,6 @@ Controller::Controller(Cluedo* pGUI, fs::path inputFile) :
     }
 }
 
-Controller::~Controller()
-{
-    for (Turn* pTurn : m_pTurns)
-        delete pTurn;
-
-    m_pTurns.clear();
-}
-
 void Controller::startGame(Mode mode, int numPlayers)
 {
     m_mode = mode;
@@ -89,13 +81,13 @@ void Controller::analysisSetup()
                 m_pPossibleCards.insert(&card);
 }
 
-void Controller::analyseMissed(Missed* pMissed)
+void Controller::analyseTurn(std::shared_ptr<Missed> pMissed)
 {
     m_pTurns.push_back(pMissed);
     m_pGUI->game()->rotateTurn();
 }
 
-void Controller::analyseAsked(Asked* pAsked)
+void Controller::analyseTurn(std::shared_ptr<Asked> pAsked)
 {
     m_pTurns.push_back(pAsked);
 
@@ -144,7 +136,7 @@ void Controller::analyseAsked(Asked* pAsked)
     }
 }
 
-void Controller::analyseGuessed(Guessed* pGuessed)
+void Controller::analyseTurn(std::shared_ptr<Guessed> pGuessed)
 {
     m_pTurns.push_back(pGuessed);
 
@@ -181,7 +173,7 @@ const std::vector<Player>& Controller::players()
     return m_players;
 }
 
-const std::vector<Turn*>& Controller::turns()
+const std::vector<std::shared_ptr<Turn>>& Controller::turns()
 {
     return m_pTurns;
 }

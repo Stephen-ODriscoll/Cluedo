@@ -22,7 +22,7 @@ class Controller
 {
     std::vector<std::vector<Card>> m_cards;
     std::vector<Player> m_players;
-    std::vector<Turn*> m_pTurns;
+    std::vector<std::shared_ptr<Turn>> m_pTurns;
 
     std::set<Card*> m_pPossibleCards;
     std::vector<Analysis> m_analysis;
@@ -35,19 +35,18 @@ class Controller
 
 public:
     Controller(Cluedo* pGUI, fs::path inputFile = "ClueDo.txt");
-    ~Controller();
 
     void startGame(Mode mode, int numPlayers);
-    void analyseMissed(Missed* pMissed);
-    void analyseAsked(Asked* pAsked);
-    void analyseGuessed(Guessed* pGuessed);
+    void analyseTurn(std::shared_ptr<Missed> pMissed);
+    void analyseTurn(std::shared_ptr<Asked> pAsked);
+    void analyseTurn(std::shared_ptr<Guessed> pGuessed);
 
     bool rename(str oldName, str newName);
 
     std::vector<std::vector<Card>>& cards();
     const std::vector<Analysis>& analysis();
     const std::vector<Player>& players();
-    const std::vector<Turn*>& turns();
+    const std::vector<std::shared_ptr<Turn>>& turns();
 
 private:
     void analysisSetup();
