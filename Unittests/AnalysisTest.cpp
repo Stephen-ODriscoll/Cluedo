@@ -58,6 +58,24 @@ TEST_F(AnalysisTest, process_doesnt_have)
     EXPECT_EQ(pAnalysis->doesntHave, std::set<Card*>(pCards.begin(), pCards.end()));
 }
 
+TEST_F(AnalysisTest, process_doesnt_have_throws_after_process_has)
+{
+    pAnalysis->processHas(&cards[0], possibleCards);
+    EXPECT_THROW(pAnalysis->processDoesntHave({ &cards[0], &cards[1], &cards[2] }, possibleCards), contradiction);
+}
+
+TEST_F(AnalysisTest, process_doesnt_have_excludes_cards_not_in_possible_cards)
+{
+    possibleCards.erase(&cards[0]);
+    possibleCards.erase(&cards[1]);
+    possibleCards.erase(&cards[2]);
+
+    pAnalysis->processDoesntHave({ &cards[0], &cards[1], &cards[2] }, possibleCards);
+
+    // doesntHave should now be a set of the cards we just gave it to process
+    EXPECT_TRUE(pAnalysis->doesntHave.empty());
+}
+
 TEST_F(AnalysisTest, process_has_either_finds_card_when_only_one_is_in_possible_cards)
 {
     possibleCards.erase(&cards[0]);
@@ -68,10 +86,44 @@ TEST_F(AnalysisTest, process_has_either_finds_card_when_only_one_is_in_possible_
     EXPECT_EQ(*pAnalysis->has.begin(), &cards[2]);
 }
 
-TEST_F(AnalysisTest, process_has_either_finds_card_after_doesnt_have_rules_out_others)
+TEST_F(AnalysisTest, process_has_either_finds_card_after_process_doesnt_have)
 {
     pAnalysis->processDoesntHave({ &cards[0], &cards[1], &cards[2] }, possibleCards);
     pAnalysis->processHasEither({ &cards[1], &cards[2], &cards[3] }, possibleCards);
 
     EXPECT_EQ(*pAnalysis->has.begin(), &cards[3]);
+}
+
+TEST_F(AnalysisTest, recheck_cards_does_nothing_when_nothing_needs_to_be_done)
+{
+    EXPECT_FALSE(pAnalysis->recheckCards(possibleCards));
+}
+
+TEST_F(AnalysisTest, recheck_cards_removes_known_cards_from_doesnt_have)
+{
+    pAnalysis->processDoesntHave({ &cards[0], &cards[1], &cards[2] }, possibleCards);
+
+    possibleCards.erase(&cards[0]);
+    possibleCards.erase(&cards[1]);
+    possibleCards.erase(&cards[2]);
+
+    EXPECT_FALSE(pAnalysis->recheckCards(possibleCards));
+    EXPECT_TRUE(pAnalysis->doesntHave.empty());
+}
+
+TEST_F(AnalysisTest, recheck_cards_finds_cards_after_has_either)
+{
+    pAnalysis->processHasEither({ &cards[0], &cards[1], &cards[2] }, possibleCards);
+    pAnalysis->processHasEither({ &cards[3], &cards[4], &cards[5] }, possibleCards);
+    pAnalysis->processHasEither({ &cards[6], &cards[7], &cards[8] }, possibleCards);
+
+    possibleCards.erase(&cards[1]);
+    possibleCards.erase(&cards[2]);
+    possibleCards.erase(&cards[4]);
+    possibleCards.erase(&cards[5]);
+    possibleCards.erase(&cards[7]);
+    possibleCards.erase(&cards[8]);
+
+    EXPECT_TRUE(pAnalysis->recheckCards(possibleCards));
+    EXPECT_EQ(pAnalysis->has, std::set<Card*>({ &cards[0], &cards[3], &cards[6] }));
 }
