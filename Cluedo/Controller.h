@@ -22,7 +22,7 @@ class Controller
 {
     std::vector<std::vector<Card>> m_cards;
     std::vector<Player> m_players;
-    std::vector<std::shared_ptr<Turn>> m_pTurns;
+    std::vector<std::shared_ptr<const Turn>> m_pTurns;
 
     std::set<Card*> m_pPossibleCards;
     std::vector<Analysis> m_analysis;
@@ -46,7 +46,7 @@ public:
     std::vector<std::vector<Card>>& cards();
     const std::vector<Analysis>& analysis();
     const std::vector<Player>& players();
-    const std::vector<std::shared_ptr<Turn>>& turns();
+    const std::vector<std::shared_ptr<const Turn>>& turns();
 
 private:
     void analysisSetup();

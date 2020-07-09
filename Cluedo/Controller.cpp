@@ -84,6 +84,7 @@ void Controller::analysisSetup()
 void Controller::analyseTurn(std::shared_ptr<Missed> pMissed)
 {
     m_pTurns.push_back(pMissed);
+    m_pGUI->game()->updateStatus();
     m_pGUI->game()->rotateTurn();
 }
 
@@ -141,6 +142,7 @@ void Controller::analyseTurn(std::shared_ptr<Guessed> pGuessed)
     m_pTurns.push_back(pGuessed);
 
     m_pGUI->game()->updateStatus();
+    m_pGUI->game()->updateStatus();
     m_pGUI->game()->rotateTurn();
 }
 
@@ -173,7 +175,7 @@ const std::vector<Player>& Controller::players()
     return m_players;
 }
 
-const std::vector<std::shared_ptr<Turn>>& Controller::turns()
+const std::vector<std::shared_ptr<const Turn>>& Controller::turns()
 {
     return m_pTurns;
 }

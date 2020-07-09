@@ -103,6 +103,9 @@
     <QtUic Include="TakeTurn.ui">
       <Filter>Form Files</Filter>
     </QtUic>
+    <QtUic Include="Player.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="Cluedo.qrc">

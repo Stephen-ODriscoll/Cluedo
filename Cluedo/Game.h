@@ -29,4 +29,5 @@ private slots:
     void downButtonClicked();
     void renameButtonClicked();
     void turnButtonClicked();
+    void editTurnButtonClicked();
 };

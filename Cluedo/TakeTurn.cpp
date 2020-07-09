@@ -1,6 +1,65 @@
 #include "stdafx.h"
 #include "TakeTurn.h"
 
+TakeTurn::TakeTurn(Controller* pController, std::shared_ptr<const Turn> turn, QWidget* parent) :
+    TakeTurn(pController, turn->pDetective->name, turn->witness(), parent)  // Call other constructor (I ain't doing everything twice)
+{
+    switch (turn->action)
+    {
+    case Action::MISSED:
+        missedButtonClicked();
+        break;
+
+    case Action::ASKED:
+    {
+        askedButtonClicked();
+
+        const Asked& asked = *static_cast<const Asked*>(&*turn);
+
+        auto& it1 = categoryBoxes.begin();
+        for (auto& it2 = asked.pCards.begin(); it1 != categoryBoxes.end(); ++it1, ++it2)
+            (*it1)->setCurrentIndex((*it1)->findText((*it2)->name.c_str()));
+
+        if (asked.shown)
+        {
+            if (asked.cardShown.empty())
+                outcomeTrueClicked();
+            else if (asked.cardShown.c_str() == ui.cat1Box->currentText())
+                cat1ShownClicked();
+            else if (asked.cardShown.c_str() == ui.cat2Box->currentText())
+                cat2ShownClicked();
+            else if (asked.cardShown.c_str() == ui.cat3Box->currentText())
+                cat3ShownClicked();
+            {
+                // Should never happen
+                QMessageBox msgBox;
+                msgBox.critical(0, "Error", "Failed to deduce card chosen in previous turn");
+            }
+        }
+        else
+            outcomeFalseClicked();
+
+        break;
+    }
+
+    case Action::GUESSED:
+        guessedButtonClicked();
+
+        const Guessed& guessed = *static_cast<const Guessed*>(&*turn);
+
+        auto& it1 = categoryBoxes.begin();
+        for (auto& it2 = guessed.pCards.begin(); it1 != categoryBoxes.end(); ++it1, ++it2)
+            (*it1)->setCurrentIndex((*it1)->findText((*it2)->name.c_str()));
+
+        if (guessed.correct)
+            outcomeTrueClicked();
+        else
+            outcomeFalseClicked();
+
+        break;
+    }
+}
+
 TakeTurn::TakeTurn(Controller* pController, const str& detective, const str& probableWitness, QWidget* parent) :
     pController(pController),
     detective(detective),
@@ -20,7 +79,8 @@ TakeTurn::TakeTurn(Controller* pController, const str& detective, const str& pro
                 ui.askedBox->addItem(player.name.c_str());
 
         // We make a guess that the person being asked is probably the person whose turn is next but this can be changed
-        ui.askedBox->setCurrentText(probableWitness.c_str());
+        // If we're editing a previous turn and don't have a probable witness use the first player that appears
+        ui.askedBox->setCurrentText(probableWitness.empty() ? ui.askedBox->itemText(0) : probableWitness.c_str());
     }
 
     // Cards stuff
@@ -129,6 +189,7 @@ void TakeTurn::guessedButtonClicked()
 
 void TakeTurn::cat1ShownClicked()
 {
+    ui.cat1Shown->setChecked(true);
     ui.cat2Shown->setChecked(false);
     ui.cat3Shown->setChecked(false);
     ui.outcomeTrue->setChecked(false);
@@ -140,6 +201,7 @@ void TakeTurn::cat1ShownClicked()
 void TakeTurn::cat2ShownClicked()
 {
     ui.cat1Shown->setChecked(false);
+    ui.cat2Shown->setChecked(true);
     ui.cat3Shown->setChecked(false);
     ui.outcomeTrue->setChecked(false);
     ui.outcomeFalse->setChecked(false);
@@ -151,6 +213,7 @@ void TakeTurn::cat3ShownClicked()
 {
     ui.cat1Shown->setChecked(false);
     ui.cat2Shown->setChecked(false);
+    ui.cat3Shown->setChecked(true);
     ui.outcomeTrue->setChecked(false);
     ui.outcomeFalse->setChecked(false);
 
@@ -162,6 +225,7 @@ void TakeTurn::outcomeTrueClicked()
     ui.cat1Shown->setChecked(false);
     ui.cat2Shown->setChecked(false);
     ui.cat3Shown->setChecked(false);
+    ui.outcomeTrue->setChecked(true);
     ui.outcomeFalse->setChecked(false);
 
     ui.submitButton->setEnabled(true);
@@ -173,6 +237,7 @@ void TakeTurn::outcomeFalseClicked()
     ui.cat2Shown->setChecked(false);
     ui.cat3Shown->setChecked(false);
     ui.outcomeTrue->setChecked(false);
+    ui.outcomeFalse->setChecked(true);
 
     ui.submitButton->setEnabled(true);
 }

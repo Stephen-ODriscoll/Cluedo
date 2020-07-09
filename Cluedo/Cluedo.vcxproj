@@ -157,6 +157,7 @@
     <QtUic Include="Cluedo.ui" />
     <QtUic Include="Game.ui" />
     <QtUic Include="Home.ui" />
+    <QtUic Include="Player.ui" />
     <QtUic Include="TakeTurn.ui" />
   </ItemGroup>
   <ItemGroup>

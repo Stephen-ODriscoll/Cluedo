@@ -9,6 +9,7 @@ class TakeTurn : public QWidget
     Q_OBJECT
 
 public:
+    TakeTurn(Controller* pController, std::shared_ptr<const Turn> turn, QWidget* parent = Q_NULLPTR);
     TakeTurn(Controller* pController, const str& detective, const str& probableWitness, QWidget* parent = Q_NULLPTR);
 
 private:

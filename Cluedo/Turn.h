@@ -1,5 +1,9 @@
 #pragma once
 
+#include "Macros.h"
+#include "Card.h"
+#include "Player.h"
+
 enum class Action
 {
     MISSED,
@@ -7,16 +11,27 @@ enum class Action
     GUESSED
 };
 
-
 struct Turn
 {
+    const int id;
     const Action action;
     const Player* pDetective;
 
-    Turn(const Player* pDetective, const Action action) :
+    Turn::Turn(const Player* pDetective, const Action action, const int id = 0) :
         pDetective(pDetective),
-        action(action)
+        action(action),
+        id(id ? id : nextId())
     { }
+
+    str to_str() const;
+    str witness() const;
+
+private:
+    int nextId()
+    {
+        static int nextId = 0;
+        return ++nextId;
+    }
 };
 
 
@@ -28,7 +43,7 @@ struct Missed : public Turn
 
     str to_str() const
     {
-        return pDetective->name + str(" missed a turn");
+        return str(id) + str(".) ") + pDetective->name + str(" missed a turn");
     }
 };
 
@@ -53,7 +68,7 @@ struct Asked: public Turn
 
     str to_str() const
     {
-        str message = pWitness->name + str(shown ? " has either " : " doesn't have ");
+        str message = str(id) + str(".) ") + pWitness->name + str(shown ? " has either " : " doesn't have ");
 
         for (const Card* pCard : pCards)
             message += pCard->name + ", ";
@@ -79,7 +94,7 @@ struct Guessed : public Turn
 
     str to_str() const
     {
-        str message = pDetective->name + str(" guessed ") + str(correct ? "correctly " : "incorrectly ");
+        str message = str(id) + str(".) ") + pDetective->name + str(" guessed ") + str(correct ? "correctly " : "incorrectly ");
 
         for (const Card* pCard : pCards)
             message += pCard->name + ", ";
@@ -88,3 +103,28 @@ struct Guessed : public Turn
     }
 };
 
+
+inline str Turn::to_str() const
+{
+    switch (action)
+    {
+    case Action::MISSED:
+        return static_cast<const Missed*>(this)->to_str();
+
+    case Action::ASKED:
+        return static_cast<const Asked*>(this)->to_str();
+
+    case Action::GUESSED:
+        return static_cast<const Guessed*>(this)->to_str();
+    }
+
+    return "";
+}
+
+inline str Turn::witness() const
+{
+    if (action == Action::ASKED)
+        return static_cast<const Asked*>(this)->pWitness->name;
+
+    return "";
+}

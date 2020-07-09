@@ -10,6 +10,7 @@ Cluedo::Cluedo(QWidget *parent) :
 {
     ui.setupUi(this);
     this->setAttribute(Qt::WA_DeleteOnClose);
+    this->setStyleSheet("QWidget{font-size:11px;}");
     
     ui.stackedWidget->addWidget(pHome);
     ui.stackedWidget->addWidget(pGame);

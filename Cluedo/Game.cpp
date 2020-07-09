@@ -16,6 +16,7 @@ Game::Game(Controller* pController, QWidget* parent) :
     connect(ui.downButton, SIGNAL(clicked()), this, SLOT(downButtonClicked()));
     connect(ui.renameButton, SIGNAL(clicked()), this, SLOT(renameButtonClicked()));
     connect(ui.turnButton, SIGNAL(clicked()), this, SLOT(turnButtonClicked()));
+    connect(ui.editTurnButton, SIGNAL(clicked()), this, SLOT(editTurnButtonClicked()));
 }
 
 Game::~Game()
@@ -44,6 +45,7 @@ void Game::startGame()
 
 void Game::updateStatus()
 {
+    // Status tab
     ui.cardsList->clear();
     for (std::vector<Card> category : pController->cards())
     {
@@ -63,6 +65,17 @@ void Game::updateStatus()
 
     ui.playersText->setPlainText(status.c_str());
 
+    // Turns tab
+    ui.turnsWidget->clear();
+    for (std::shared_ptr<const Turn> turn : pController->turns())
+        ui.turnsWidget->addItem(QString(turn->to_str().c_str()));
+
+    bool empty = !ui.turnsWidget->count();
+    ui.editTurnButton->setEnabled(!empty);
+    if (empty)
+        ui.turnsWidget->addItem(QString("No turns to show yet"));
+
+    // Font stuff
     QFont font;
     font.setPointSize(7);
     for (int i = 0; i < ui.cardsList->count(); ++i)
@@ -79,7 +92,6 @@ void Game::rotateTurn()
 void Game::upButtonClicked()
 {
     int row = ui.playersList->currentIndex().row();
-    
     if (row <= int(MAX_PLAYERS - pController->players().size()))
         return;
 
@@ -89,7 +101,6 @@ void Game::upButtonClicked()
 void Game::downButtonClicked()
 {
     int row = ui.playersList->currentIndex().row();
-
     if (row < int(MAX_PLAYERS - pController->players().size()) || row == MAX_PLAYERS - 1)
         return;
 
@@ -99,7 +110,6 @@ void Game::downButtonClicked()
 void Game::renameButtonClicked()
 {
     int row = ui.playersList->currentIndex().row();
-
     if (row < int(MAX_PLAYERS - pController->players().size()))
         return;
 
@@ -131,5 +141,27 @@ void Game::turnButtonClicked()
     pTakeTurn = new TakeTurn(pController,
         ui.playersList->item(MAX_PLAYERS - 1)->text().toStdString(),
         ui.playersList->item(MAX_PLAYERS - 2)->text().toStdString());
+    pTakeTurn->show();
+}
+
+void Game::editTurnButtonClicked()
+{
+    int row = ui.turnsWidget->currentIndex().row();
+    if (row == -1)
+        return;
+
+    const std::vector<std::shared_ptr<const Turn>>& turns = pController->turns();
+
+    auto it = std::lower_bound(turns.begin(), turns.end(), row + 1,
+        [](std::shared_ptr<const Turn> item, int target) -> bool { return item->id < target; });
+    if (it == turns.end())
+    {
+        // Should never happen
+        QMessageBox msgBox;
+        msgBox.critical(0, "Error", (str("Failed to find turn with id ") + str(row + 1)).c_str());
+    }
+    
+    delete pTakeTurn;
+    pTakeTurn = new TakeTurn(pController, *it);
     pTakeTurn->show();
 }
