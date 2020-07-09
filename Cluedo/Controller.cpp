@@ -75,10 +75,6 @@ void Controller::analysisSetup()
 {
     for (Player& player : m_players)
         m_analysis.push_back(&player);
-
-    for (std::vector<Card>& category : m_cards)
-        for (Card& card : category)
-                m_pPossibleCards.insert(&card);
 }
 
 void Controller::analyseTurn(std::shared_ptr<Missed> pMissed)
@@ -108,20 +104,20 @@ void Controller::analyseTurn(std::shared_ptr<Asked> pAsked)
                 if (itCard == pAsked->pCards.end())
                     throw std::exception("Card shown not found amongst cards");
 
-                cardDeduced = it->processHas(*itCard, m_pPossibleCards);
+                cardDeduced = it->processHas(*itCard);
             }
             else
-                cardDeduced = it->processHasEither(pAsked->pCards, m_pPossibleCards);
+                cardDeduced = it->processHasEither(pAsked->pCards);
         }
         else
-            cardDeduced = it->processDoesntHave(pAsked->pCards, m_pPossibleCards);
+            cardDeduced = it->processDoesntHave(pAsked->pCards);
 
         // This could loop a few times. One deduction could lead to another and so on
         while (cardDeduced)
         {
             cardDeduced = false;
             for (auto aIt = m_analysis.begin(); aIt < m_analysis.end(); ++aIt)
-                cardDeduced = aIt->recheckCards(m_pPossibleCards);
+                cardDeduced = aIt->recheckCards();
         }
 
         m_pGUI->game()->updateStatus();

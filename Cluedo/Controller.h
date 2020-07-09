@@ -24,7 +24,6 @@ class Controller
     std::vector<Player> m_players;
     std::vector<std::shared_ptr<const Turn>> m_pTurns;
 
-    std::set<Card*> m_pPossibleCards;
     std::vector<Analysis> m_analysis;
 
     Mode m_mode;
