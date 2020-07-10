@@ -73,18 +73,37 @@ void Controller::startGame(Mode mode, int numPlayers)
 
 void Controller::analysisSetup()
 {
+    m_analysis.clear();
     for (Player& player : m_players)
         m_analysis.push_back(&player);
 }
 
-void Controller::analyseTurn(std::shared_ptr<Missed> pMissed)
+void Controller::analyseTurn(std::shared_ptr<const Turn> pTurn)
+{
+    switch (pTurn->action)
+    {
+    case Action::MISSED:
+        analyseMissed(std::static_pointer_cast<const Missed>(pTurn));
+        break;
+
+    case Action::ASKED:
+        analyseAsked(std::static_pointer_cast<const Asked>(pTurn));
+        break;
+
+    case Action::GUESSED:
+        analyseGuessed(std::static_pointer_cast<const Guessed>(pTurn));
+        break;
+    }
+}
+
+void Controller::analyseMissed(std::shared_ptr<const Missed> pMissed)
 {
     m_pTurns.push_back(pMissed);
     m_pGUI->game()->updateStatus();
     m_pGUI->game()->rotateTurn();
 }
 
-void Controller::analyseTurn(std::shared_ptr<Asked> pAsked)
+void Controller::analyseAsked(std::shared_ptr<const Asked> pAsked)
 {
     m_pTurns.push_back(pAsked);
 
@@ -133,13 +152,30 @@ void Controller::analyseTurn(std::shared_ptr<Asked> pAsked)
     }
 }
 
-void Controller::analyseTurn(std::shared_ptr<Guessed> pGuessed)
+void Controller::analyseGuessed(std::shared_ptr<const Guessed> pGuessed)
 {
     m_pTurns.push_back(pGuessed);
 
     m_pGUI->game()->updateStatus();
     m_pGUI->game()->updateStatus();
     m_pGUI->game()->rotateTurn();
+}
+
+void Controller::reAnalyseTurns(std::shared_ptr<const Turn> oldTurn, std::shared_ptr<const Turn> newTurn)
+{
+    auto it = std::find(m_pTurns.begin(), m_pTurns.end(), oldTurn);
+    if (it == m_pTurns.end())
+    {
+        m_pGUI->critical("Exception Occured", "Failed to find old turn in turns vector");
+        return;
+    }
+
+    *it = newTurn;      // Replace this turn with the updated one
+
+    // Start our analysis again
+    analysisSetup();
+    for (std::shared_ptr<const Turn> pTurn : m_pTurns)
+        analyseTurn(pTurn);
 }
 
 bool Controller::rename(str oldName, str newName)

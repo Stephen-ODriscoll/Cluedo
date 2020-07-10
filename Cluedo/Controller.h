@@ -36,9 +36,8 @@ public:
     Controller(Cluedo* pGUI, fs::path inputFile = "ClueDo.txt");
 
     void startGame(Mode mode, int numPlayers);
-    void analyseTurn(std::shared_ptr<Missed> pMissed);
-    void analyseTurn(std::shared_ptr<Asked> pAsked);
-    void analyseTurn(std::shared_ptr<Guessed> pGuessed);
+    void analyseTurn(std::shared_ptr<const Turn> pTurn);
+    void reAnalyseTurns(std::shared_ptr<const Turn> oldTurn, std::shared_ptr<const Turn> newTurn);
 
     bool rename(str oldName, str newName);
 
@@ -49,6 +48,10 @@ public:
 
 private:
     void analysisSetup();
+
+    void analyseMissed(std::shared_ptr<const Missed> pMissed);
+    void analyseAsked(std::shared_ptr<const Asked> pAsked);
+    void analyseGuessed(std::shared_ptr<const Guessed> pGuessed);
 };
 
 #include "Cluedo.h"

@@ -17,9 +17,11 @@ private:
     Controller* pController;
 
     const str detective;
+    std::shared_ptr<const Turn> oldTurn;
     std::vector<QComboBox*> categoryBoxes;
 
     bool outcomeChosen();
+    std::shared_ptr<const Turn> getTurnDetails();
 
 private slots:
     void missedButtonClicked();

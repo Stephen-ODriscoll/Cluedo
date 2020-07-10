@@ -4,6 +4,8 @@
 TakeTurn::TakeTurn(Controller* pController, std::shared_ptr<const Turn> turn, QWidget* parent) :
     TakeTurn(pController, turn->pDetective->name, turn->witness(), parent)  // Call other constructor (I ain't doing everything twice)
 {
+    oldTurn = turn;
+
     switch (turn->action)
     {
     case Action::MISSED:
@@ -30,6 +32,7 @@ TakeTurn::TakeTurn(Controller* pController, std::shared_ptr<const Turn> turn, QW
                 cat2ShownClicked();
             else if (asked.cardShown.c_str() == ui.cat3Box->currentText())
                 cat3ShownClicked();
+            else
             {
                 // Should never happen
                 QMessageBox msgBox;
@@ -63,6 +66,7 @@ TakeTurn::TakeTurn(Controller* pController, std::shared_ptr<const Turn> turn, QW
 TakeTurn::TakeTurn(Controller* pController, const str& detective, const str& probableWitness, QWidget* parent) :
     pController(pController),
     detective(detective),
+    oldTurn(nullptr),
     QWidget(parent)
 {
     ui.setupUi(this);
@@ -249,26 +253,36 @@ void TakeTurn::cancelButtonClicked()
 
 void TakeTurn::submitButtonClicked()
 {
+    try
+    {
+        if (oldTurn)
+            pController->reAnalyseTurns(oldTurn, getTurnDetails());
+        else
+            pController->analyseTurn(getTurnDetails());
+
+        close();
+    }
+    catch (const std::exception& ex)
+    {
+        // Should never happen
+        QMessageBox msgBox;
+        msgBox.critical(0, "Error", ex.what());
+    }
+}
+
+std::shared_ptr<const Turn> TakeTurn::getTurnDetails()
+{
     const std::vector<Player>& players = pController->players();
 
 
     const auto itDetective = std::find(players.begin(), players.end(), detective);
     if (itDetective == players.end())
-    {
-        // Should never happen
-        QMessageBox msgBox;
-        msgBox.critical(0, "Error", (str("Failed to find detective player ") + detective).c_str());
-        return;
-    }
+        throw std::exception((str("Failed to find detective player ") + detective).c_str());
 
 
     // Missed a turn
     if (ui.missedButton->isDefault())
-    {
-        pController->analyseTurn(std::make_shared<Missed>(&*itDetective, Action::MISSED));
-        close();
-        return;
-    }
+        return std::make_shared<Missed>(&*itDetective, Action::MISSED);
 
 
     std::vector<Card*> pCards;
@@ -278,12 +292,7 @@ void TakeTurn::submitButtonClicked()
         const str card = (*it1)->currentText().toStdString();
         auto& itCard = std::find(it2->begin(), it2->end(), card);
         if (itCard == it2->end())
-        {
-            // Should never happen
-            QMessageBox msgBox;
-            msgBox.critical(0, "Error", (str("Failed to find selected card ") + card).c_str());
-            return;
-        }
+            throw std::exception((str("Failed to find selected card ") + card).c_str());
 
         pCards.push_back(&*itCard);
     }
@@ -295,54 +304,33 @@ void TakeTurn::submitButtonClicked()
         const str witness = ui.askedBox->currentText().toStdString();
         const auto itWitness = std::find(players.begin(), players.end(), witness);
         if (itWitness == players.end())
-        {
-            // Should never happen
-            QMessageBox msgBox;
-            msgBox.critical(0, "Error", (str("Failed to find witness player ") + witness).c_str());
-            return;
-        }
-
+            throw std::exception((str("Failed to find witness player ") + witness).c_str());
 
         if (ui.outcomeTrue->isChecked())
-            pController->analyseTurn(std::make_shared<Asked>(&*itDetective, Action::ASKED, &*itWitness, pCards, true));
+            return std::make_shared<Asked>(&*itDetective, Action::ASKED, &*itWitness, pCards, true);
         else if (ui.outcomeFalse->isChecked())
-            pController->analyseTurn(std::make_shared<Asked>(&*itDetective, Action::ASKED, &*itWitness, pCards, false));
+            return std::make_shared<Asked>(&*itDetective, Action::ASKED, &*itWitness, pCards, false);
         else if (ui.cat1Shown->isChecked())
-            pController->analyseTurn(std::make_shared<Asked>(&*itDetective, Action::ASKED, &*itWitness, pCards, true, ui.cat1Box->currentText().toStdString()));
+            return std::make_shared<Asked>(&*itDetective, Action::ASKED, &*itWitness, pCards, true, ui.cat1Box->currentText().toStdString());
         else if (ui.cat2Shown->isChecked())
-            pController->analyseTurn(std::make_shared<Asked>(&*itDetective, Action::ASKED, &*itWitness, pCards, true, ui.cat2Box->currentText().toStdString()));
+            return std::make_shared<Asked>(&*itDetective, Action::ASKED, &*itWitness, pCards, true, ui.cat2Box->currentText().toStdString());
         else if (ui.cat3Shown->isChecked())
-            pController->analyseTurn(std::make_shared<Asked>(&*itDetective, Action::ASKED, &*itWitness, pCards, true, ui.cat3Box->currentText().toStdString()));
+            return std::make_shared<Asked>(&*itDetective, Action::ASKED, &*itWitness, pCards, true, ui.cat3Box->currentText().toStdString());
         else
-        {
-            // Should never happen
-            QMessageBox msgBox;
-            msgBox.critical(0, "Error", "Failed to deduce chosen outcome");
-        }
-
-        close();
-        return;
+            throw std::exception("Failed to deduce chosen outcome");
     }
+
 
     // Made a guess
     if (ui.guessedButton->isDefault())
     {
         if (ui.outcomeTrue->isChecked())
-            pController->analyseTurn(std::make_shared<Guessed>(&*itDetective, Action::GUESSED, pCards, true));
+            return std::make_shared<Guessed>(&*itDetective, Action::GUESSED, pCards, true);
         else if (ui.outcomeFalse->isChecked())
-            pController->analyseTurn(std::make_shared<Guessed>(&*itDetective, Action::GUESSED, pCards, false));
+            return std::make_shared<Guessed>(&*itDetective, Action::GUESSED, pCards, false);
         else
-        {
-            // Should never happen
-            QMessageBox msgBox;
-            msgBox.critical(0, "Error", "Failed to deduce guessed outcome");
-        }
-
-        close();
-        return;
+            throw std::exception("Failed to deduce guessed outcome");
     }
 
-    // Should never get to here
-    QMessageBox msgBox;
-    msgBox.critical(0, "Error", "Failed to deduce chosen action");
+    throw std::exception("Failed to deduce chosen action");
 }

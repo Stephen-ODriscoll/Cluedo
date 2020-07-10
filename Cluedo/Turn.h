@@ -72,6 +72,7 @@ struct Asked: public Turn
 
         for (const Card* pCard : pCards)
             message += pCard->name + ", ";
+        message.resize(message.size() - 2);
 
         return message;
     }
@@ -98,6 +99,7 @@ struct Guessed : public Turn
 
         for (const Card* pCard : pCards)
             message += pCard->name + ", ";
+        message.resize(message.size() - 2);
 
         return message;
     }
