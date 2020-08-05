@@ -1,15 +1,24 @@
 #pragma once
 
+enum class Status
+{
+    UNKNOWN,
+    INNOCENT,
+    GUILTY
+};
+
 struct Player;
 struct Card
 {
     const str name;
     const str nickname;
+    enum Status status;
     Player* pOwner;
 
     Card(const str& name, const str& nickname) :
         name(name),
         nickname(nickname),
+        status(Status::UNKNOWN),
         pOwner(nullptr)
     { }
 

@@ -39,7 +39,7 @@ public:
     void analyseTurn(std::shared_ptr<const Turn> pTurn);
     void reAnalyseTurns(std::shared_ptr<const Turn> oldTurn, std::shared_ptr<const Turn> newTurn);
 
-    bool rename(str oldName, str newName);
+    bool rename(const str& oldName, const str& newName);
 
     std::vector<std::vector<Card>>& cards();
     const std::vector<Analysis>& analysis();
@@ -49,9 +49,10 @@ public:
 private:
     void analysisSetup();
 
-    void analyseMissed(std::shared_ptr<const Missed> pMissed);
     void analyseAsked(std::shared_ptr<const Asked> pAsked);
     void analyseGuessed(std::shared_ptr<const Guessed> pGuessed);
+
+    void exteriorChecks();
 };
 
 #include "Cluedo.h"

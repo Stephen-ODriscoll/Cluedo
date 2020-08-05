@@ -146,6 +146,7 @@
     <QtMoc Include="Game.h" />
     <ClInclude Include="Macros.h" />
     <QtMoc Include="TakeTurn.h" />
+    <ClInclude Include="Stage.h" />
     <ClInclude Include="Turn.h" />
     <QtMoc Include="Cluedo.h" />
     <ClInclude Include="Analysis.h" />

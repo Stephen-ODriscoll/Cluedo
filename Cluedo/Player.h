@@ -3,21 +3,18 @@
 struct Turn;
 struct Player
 {
-    bool out;
     str name;
     //str character;      // Unused for now.
     uint32_t numCards;
-    std::vector<Turn*> pTurns;
     std::set<Card*> pCardsOwned;
 
-    Player() :
-        out(false)
+    Player()
     {
         static uint16_t playerCount = 0;
         name = str("Player ") + str(++playerCount);
     }
 
-    void updateName(str newName)
+    void updateName(const str& newName)
     {
         name = newName;
     }
