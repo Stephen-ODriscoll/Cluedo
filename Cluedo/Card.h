@@ -1,6 +1,6 @@
 #pragma once
 
-enum class Status
+enum class Conviction
 {
     UNKNOWN,
     INNOCENT,
@@ -12,18 +12,18 @@ struct Card
 {
     const str name;
     const str nickname;
-    enum Status status;
+    enum class Conviction conviction;
     Player* pOwner;
 
     Card(const str& name, const str& nickname) :
         name(name),
         nickname(nickname),
-        status(Status::UNKNOWN),
+        conviction(Conviction::UNKNOWN),
         pOwner(nullptr)
     { }
 
-    bool ownerKnown() const { return pOwner; }
-    bool ownerUnknown() const { return !pOwner; }
+    bool convictionKnown() const { return conviction != Conviction::UNKNOWN; }
+    bool convictionUnknown() const { return conviction == Conviction::UNKNOWN; }
     bool ownedBy(const Player* pPlayer) const { return pOwner == pPlayer; }
 
     bool operator<(const Card& card) const { return name < card.name; }

@@ -60,8 +60,8 @@ void Game::updateStatus()
     }
 
     str status;
-    for (const Analysis& analyse : pController->analysis())
-        status += analyse.to_str();
+    for (const Analysis& analysis : pController->analyses())
+        status += analysis.to_str(1);
 
     ui.playersText->setPlainText(status.c_str());
 

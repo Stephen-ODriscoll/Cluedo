@@ -27,7 +27,7 @@ struct Stage
 
     bool processHas(Card* pCard)
     {
-        if (pCard->ownerKnown())
+        if (pCard->convictionKnown())
         {
             // We already know that this person owns this card, no new info
             if (pCard->ownedBy(pPlayer))
@@ -39,8 +39,8 @@ struct Stage
         }
 
         // We've found a card and have new info to go on
+        pCard->conviction = Conviction::INNOCENT;
         pCard->pOwner = const_cast<Player*>(pPlayer);
-        pCard->status = Status::INNOCENT;
         has.insert(pCard);
         return true;
     }
@@ -52,7 +52,7 @@ struct Stage
             if (pCard->ownedBy(pPlayer))
                 throw contradiction((str("Previous info says ") + pPlayer->name + str(" has ") + pCard->name).c_str());
 
-            if (pCard->ownerUnknown())
+            if (pCard->convictionUnknown())
                 doesntHave.insert(pCard);
         }
 
@@ -67,7 +67,7 @@ struct Stage
             // This card could've been shown if this player hasn't said no to it and
             // either we don't know who owns it or they own it
             if (doesntHave.find(pCard) == doesntHave.end() &&
-                (pCard->ownerUnknown() || pCard->ownedBy(pPlayer)))
+                (pCard->convictionUnknown() || pCard->ownedBy(pPlayer)))
                 checkedCards.emplace_back(pCard);
         }
 
@@ -92,7 +92,7 @@ struct Stage
         {
             // If card location is known remove it from doesn't have.
             // We already know they don't have it because someone else does.
-            if ((*it)->ownerKnown())
+            if ((*it)->convictionKnown())
                 it = doesntHave.erase(it);
             else
                 ++it;
@@ -107,7 +107,7 @@ struct Stage
                 // This card could've been shown if this player hasn't said no to it and
                 // either we don't know who owns it or they own it
                 if (doesntHave.find(*it2) == doesntHave.end() &&
-                    ((*it2)->ownerUnknown() || (*it2)->ownedBy(pPlayer)))
+                    ((*it2)->convictionUnknown() || (*it2)->ownedBy(pPlayer)))
                     ++it2;
                 else
                     it2 = it1->erase(it2);

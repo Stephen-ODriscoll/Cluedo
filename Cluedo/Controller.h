@@ -24,7 +24,7 @@ class Controller
     std::vector<Player> m_players;
     std::vector<std::shared_ptr<const Turn>> m_pTurns;
 
-    std::vector<Analysis> m_analysis;
+    std::vector<Analysis> m_analyses;
 
     Mode m_mode;
     bool m_gameOver;
@@ -42,17 +42,18 @@ public:
     bool rename(const str& oldName, const str& newName);
 
     std::vector<std::vector<Card>>& cards();
-    const std::vector<Analysis>& analysis();
+    const std::vector<Analysis>& analyses();
     const std::vector<Player>& players();
     const std::vector<std::shared_ptr<const Turn>>& turns();
 
 private:
-    void analysisSetup();
+    void analysesSetup();
 
     void analyseAsked(std::shared_ptr<const Asked> pAsked);
     void analyseGuessed(std::shared_ptr<const Guessed> pGuessed);
 
-    void exteriorChecks();
+    bool exteriorChecks();
+    bool processGuilty();
 };
 
 #include "Cluedo.h"
