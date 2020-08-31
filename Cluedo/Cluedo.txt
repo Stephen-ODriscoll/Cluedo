@@ -1,0 +1,24 @@
+
+Krusty the Clown=Clown
+Bart Simpson=Bart
+Homer Simpson=Homer
+Marge Simpson=Marge
+Lisa Simpson=Lisa
+Waylon Smithers=Waylon
+
+Poisoned Doughnut=Doughnut
+Extend-O-Glove=Glove
+Necklace=Necklace
+Slingshot=Sling
+Plutonium Rod=Rod
+Saxophone=Sax
+
+Barney's Bowl-A-Rama=Barney's
+Krustylu Studios=Studios
+Nuclear Power Plant=Plant
+The Simpsons House=House
+The Frying Dutchman=Dutchman
+Kwik-e-Mart=Mart
+Burns Manor=Manor
+Springfield Retirement Castle=Castle
+The Androids Dungeon=Dungeon

@@ -8,7 +8,8 @@ struct Player
     uint32_t numCards;
     std::set<Card*> pCardsOwned;
 
-    Player()
+    Player() :
+        numCards(0)
     {
         static uint16_t playerCount = 0;
         name = str("Player ") + str(++playerCount);

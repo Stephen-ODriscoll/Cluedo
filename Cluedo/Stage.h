@@ -27,15 +27,19 @@ struct Stage
 
     bool processHas(Card* pCard)
     {
-        if (pCard->convictionKnown())
+        if (pCard->locationKnown())
         {
             // We already know that this person owns this card, no new info
             if (pCard->ownedBy(pPlayer))
                 return false;
 
             throw contradiction((
-                str("Deduced that ") + pCard->name + str(" is owned by ") + pPlayer->name +
-                str(" but this card is already owned by ") + pCard->pOwner->name).c_str());
+                str("Deduced that ") + pCard->name + str(" is owned by ") + pPlayer->name
+                + str(" but this card is already ")
+                + (pCard->isGuilty() ?
+                    str("guilty") :
+                    str("owned by ")) + pCard->pOwner->name
+                ).c_str());
         }
 
         // We've found a card and have new info to go on
@@ -52,7 +56,7 @@ struct Stage
             if (pCard->ownedBy(pPlayer))
                 throw contradiction((str("Previous info says ") + pPlayer->name + str(" has ") + pCard->name).c_str());
 
-            if (pCard->convictionUnknown())
+            if (pCard->locationUnknown())
                 doesntHave.insert(pCard);
         }
 
@@ -67,7 +71,7 @@ struct Stage
             // This card could've been shown if this player hasn't said no to it and
             // either we don't know who owns it or they own it
             if (doesntHave.find(pCard) == doesntHave.end() &&
-                (pCard->convictionUnknown() || pCard->ownedBy(pPlayer)))
+                (pCard->locationUnknown() || pCard->ownedBy(pPlayer)))
                 checkedCards.emplace_back(pCard);
         }
 
@@ -92,7 +96,7 @@ struct Stage
         {
             // If card location is known remove it from doesn't have.
             // We already know they don't have it because someone else does.
-            if ((*it)->convictionKnown())
+            if ((*it)->locationKnown())
                 it = doesntHave.erase(it);
             else
                 ++it;
@@ -107,7 +111,7 @@ struct Stage
                 // This card could've been shown if this player hasn't said no to it and
                 // either we don't know who owns it or they own it
                 if (doesntHave.find(*it2) == doesntHave.end() &&
-                    ((*it2)->convictionUnknown() || (*it2)->ownedBy(pPlayer)))
+                    ((*it2)->locationUnknown() || (*it2)->ownedBy(pPlayer)))
                     ++it2;
                 else
                     it2 = it1->erase(it2);

@@ -3,96 +3,133 @@
 
 Game::Game(Controller* pController, QWidget* parent) :
     pController(pController),
-    pTakeTurn(nullptr),
+    pPopUp(nullptr),
     QWidget(parent)
 {
     ui.setupUi(this);
 
     ui.upButton->setIcon(QIcon(":/Cluedo/Images/up.png"));
     ui.downButton->setIcon(QIcon(":/Cluedo/Images/down.png"));
-    ui.renameButton->setIcon(QIcon(":/Cluedo/Images/rename.png"));
+    ui.playerInfoButton->setIcon(QIcon(":/Cluedo/Images/rename.png"));
 
     connect(ui.upButton, SIGNAL(clicked()), this, SLOT(upButtonClicked()));
     connect(ui.downButton, SIGNAL(clicked()), this, SLOT(downButtonClicked()));
-    connect(ui.renameButton, SIGNAL(clicked()), this, SLOT(renameButtonClicked()));
+    connect(ui.playerInfoButton, SIGNAL(clicked()), this, SLOT(playerInfoButtonClicked()));
     connect(ui.turnButton, SIGNAL(clicked()), this, SLOT(turnButtonClicked()));
     connect(ui.editTurnButton, SIGNAL(clicked()), this, SLOT(editTurnButtonClicked()));
+
+    ui.playersList->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui.playersList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui.progressReportText->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui.progressReportText->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+    ui.cardList->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui.cardList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui.playersText->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui.playersText->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui.cardInfoList->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui.cardInfoList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+    ui.turnList->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui.turnList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 }
 
 Game::~Game()
 {
-    delete pTakeTurn;
+    delete pPopUp;
 }
 
 void Game::startGame()
 {
-    const std::vector<Player>& players = pController->players();
-
-    // Implementation of Bottom-up done using blank boxes (I liked bottom-up better than top-down)
-    for (int i = players.size(); i < MAX_PLAYERS; ++i)
-        ui.playersList->addItem("");
-
-    for (auto& it = players.rbegin(); it != players.rend(); ++it)
-        ui.playersList->addItem(it->name.c_str());
-
-    QFont font;
-    font.setPointSize(14);
-    for (int i = 0; i < ui.playersList->count(); ++i)
-        ui.playersList->item(i)->setFont(font);
-
-    updateStatus();
+    updateNames();
+    updateNotes();
 }
 
-void Game::updateStatus()
+void Game::updateNames()
 {
-    // Status tab
-    ui.cardsList->clear();
+    // Implementation of Bottom-up done using blank boxes (I liked bottom-up better than top-down)
+    ui.playersList->clear();
+    for (int i = pController->playersLeft(); i < MAX_PLAYERS; ++i)
+        ui.playersList->addItem("");
+
+    const std::vector<Analysis> analyses = pController->analyses();
+    for (auto& it = analyses.rbegin(); it != analyses.rend(); ++it)
+        if (!it->out)
+            ui.playersList->addItem(it->pPlayer->name.c_str());
+
+    QFont font;
+    font.setPixelSize(14);
+    ui.turnButton->setFont(font);
+
+    font.setPixelSize(22);
+    for (int i = 0; i < ui.playersList->count(); ++i)
+        ui.playersList->item(i)->setFont(font);
+}
+
+void Game::updateNotes()
+{
+    // Notes tab
+    ui.cardList->clear();
+    ui.cardInfoList->clear();
     for (std::vector<Card> category : pController->cards())
     {
         for (Card card : category)
         {
+            ui.cardList->addItem(card.nickname.c_str());
+
             str status;
-            if (card.pOwner != nullptr)
-                status = card.pOwner->name;
-            
-            ui.cardsList->addItem((card.nickname + " " + status).c_str());
+            if (card.ownerKnown())
+                ui.cardInfoList->addItem(card.pOwner->name.c_str());
+            else
+                ui.cardInfoList->addItem(convictionStrings.find(card.conviction)->second.c_str());
         }
+
+        ui.cardList->addItem("");
+        ui.cardInfoList->addItem("");
     }
+
+    ui.cardList->takeItem(ui.cardList->count() - 1);
+    ui.cardInfoList->takeItem(ui.cardInfoList->count() - 1);
 
     str status;
     for (const Analysis& analysis : pController->analyses())
-        status += analysis.to_str(1);
+        status += analysis.to_str(pController->numStages());
 
     ui.playersText->setPlainText(status.c_str());
 
     // Turns tab
-    ui.turnsWidget->clear();
+    ui.turnList->clear();
     for (std::shared_ptr<const Turn> turn : pController->turns())
-        ui.turnsWidget->addItem(QString(turn->to_str().c_str()));
+        ui.turnList->addItem(QString(turn->to_str().c_str()));
 
-    bool empty = !ui.turnsWidget->count();
+    bool empty = !ui.turnList->count();
     ui.editTurnButton->setEnabled(!empty);
     if (empty)
-        ui.turnsWidget->addItem(QString("No turns to show yet"));
+        ui.turnList->addItem(QString("No turns to show yet"));
 
     // Font stuff
     QFont font;
-    font.setPointSize(7);
-    for (int i = 0; i < ui.cardsList->count(); ++i)
-        ui.cardsList->item(i)->setFont(font);
+    font.setPixelSize(14);
+    for (int i = 0; i < ui.cardList->count(); ++i)
+        ui.cardList->item(i)->setFont(font);
 
+    for (int i = 0; i < ui.cardInfoList->count(); ++i)
+        ui.cardInfoList->item(i)->setFont(font);
+
+    font.setPixelSize(12);
     ui.playersText->setFont(font);
 }
 
 void Game::rotateTurn()
 {
-    ui.playersList->insertItem(MAX_PLAYERS - pController->players().size(), ui.playersList->takeItem(MAX_PLAYERS - 1));
+    // This is the issue
+    ui.playersList->insertItem(MAX_PLAYERS - pController->playersLeft(), ui.playersList->takeItem(MAX_PLAYERS - 1));
 }
 
 void Game::upButtonClicked()
 {
     int row = ui.playersList->currentIndex().row();
-    if (row <= int(MAX_PLAYERS - pController->players().size()))
+    if (row <= int(MAX_PLAYERS - pController->playersLeft()))
         return;
 
     ui.playersList->insertItem(row, ui.playersList->takeItem(row - 1));
@@ -101,52 +138,47 @@ void Game::upButtonClicked()
 void Game::downButtonClicked()
 {
     int row = ui.playersList->currentIndex().row();
-    if (row < int(MAX_PLAYERS - pController->players().size()) || row == MAX_PLAYERS - 1)
+    if (row < int(MAX_PLAYERS - pController->playersLeft()) || row == MAX_PLAYERS - 1)
         return;
 
     ui.playersList->insertItem(row, ui.playersList->takeItem(row + 1));
 }
 
-void Game::renameButtonClicked()
+void Game::playerInfoButtonClicked()
 {
     int row = ui.playersList->currentIndex().row();
-    if (row < int(MAX_PLAYERS - pController->players().size()))
+    if (row < int(MAX_PLAYERS - pController->playersLeft()))
         return;
 
-    bool dialogResult;
-    QInputDialog inDialog;
-    QString result = inDialog.getText(0, "", "New name:", QLineEdit::Normal,
-        ui.playersList->item(row)->text(), &dialogResult);
-
-    // User clicked cancel
-    if (!dialogResult)
+    const std::vector<Player>& players = pController->players();
+    auto it = std::find(players.begin(), players.end(), ui.playersList->item(row)->text().toStdString());
+    if (it == players.end())
+    {
+        // Should never happen
+        QMessageBox msgBox;
+        msgBox.critical(0, "Error", "Failed to find the chosen player");
         return;
+    }
 
-    // Failed to rename, error message is handled by the controller
-    if (!pController->rename(ui.playersList->item(row)->text().toStdString(), result.toStdString()))
-        return;
+    delete pPopUp;
 
-    ui.playersList->takeItem(row);
-    ui.playersList->insertItem(row, result);
-    
-    QFont font;
-    font.setPointSize(14);
-    ui.playersList->item(row)->setFont(font);
+    pPopUp = new PlayerInfo(pController, this, &*it);
+    pPopUp->show();
 }
 
 void Game::turnButtonClicked()
 {
-    delete pTakeTurn;
+    delete pPopUp;
 
-    pTakeTurn = new TakeTurn(pController,
+    pPopUp = new TakeTurn(pController,
         ui.playersList->item(MAX_PLAYERS - 1)->text().toStdString(),
         ui.playersList->item(MAX_PLAYERS - 2)->text().toStdString());
-    pTakeTurn->show();
+    pPopUp->show();
 }
 
 void Game::editTurnButtonClicked()
 {
-    int row = ui.turnsWidget->currentIndex().row();
+    int row = ui.turnList->currentIndex().row();
     if (row == -1)
         return;
 
@@ -159,9 +191,10 @@ void Game::editTurnButtonClicked()
         // Should never happen
         QMessageBox msgBox;
         msgBox.critical(0, "Error", (str("Failed to find turn with id ") + str(row + 1)).c_str());
+        return;
     }
     
-    delete pTakeTurn;
-    pTakeTurn = new TakeTurn(pController, *it);
-    pTakeTurn->show();
+    delete pPopUp;
+    pPopUp = new TakeTurn(pController, *it);
+    pPopUp->show();
 }

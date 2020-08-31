@@ -4,7 +4,7 @@
 Controller::Controller(Cluedo* pGUI, fs::path inputFile) :
     m_mode(Mode::NONE),
     m_gameOver(false),
-    m_numPlayers(-1),
+    m_numStages(1),
     m_pGUI(pGUI)
 {
     // Keep trying until we successfully load the file
@@ -62,7 +62,6 @@ Controller::Controller(Cluedo* pGUI, fs::path inputFile) :
 void Controller::startGame(Mode mode, int numPlayers)
 {
     m_mode = mode;
-    m_numPlayers = numPlayers;
 
     for (int i = 0; i < numPlayers; ++i)
         m_players.push_back(Player());
@@ -71,38 +70,197 @@ void Controller::startGame(Mode mode, int numPlayers)
     m_pGUI->startGame();
 }
 
-void Controller::analysesSetup()
-{
-    m_analyses.clear();
-    for (Player& player : m_players)
-        m_analyses.push_back(&player);
-}
-
-void Controller::analyseTurn(std::shared_ptr<const Turn> pTurn)
+void Controller::processNewTurn(std::shared_ptr<const Turn> pTurn)
 {
     m_pTurns.push_back(pTurn);
 
     try
     {
-        switch (pTurn->action)
-        {
-        case Action::MISSED:
-            break;
-
-        case Action::ASKED:
-            analyseAsked(std::static_pointer_cast<const Asked>(pTurn));
-            break;
-
-        case Action::GUESSED:
-            analyseGuessed(std::static_pointer_cast<const Guessed>(pTurn));
-            break;
-        }
+        analyseTurn(pTurn);
     }
     catch (const contradiction& ex) { m_pGUI->critical("Contraditory Info Given", ex.what()); }
     catch (const std::exception& ex) { m_pGUI->critical("Exception Occured", ex.what()); }
 
-    m_pGUI->game()->updateStatus();
+    m_pGUI->game()->updateNotes();
     m_pGUI->game()->rotateTurn();
+}
+
+bool Controller::rename(const Player* pPlayer, const str& newName)
+{
+    try
+    {
+        if (pPlayer->name == newName)
+            return false;
+
+        if (std::find(m_players.begin(), m_players.end(), newName) != m_players.end())
+            throw std::exception("Player with that name already exists");
+
+        Player& player = const_cast<Player&>(*pPlayer);
+
+        player.updateName(newName);
+        m_pGUI->game()->updateNames();
+        m_pGUI->game()->updateNotes();
+        return true;
+    }
+    catch (const std::exception& ex) { m_pGUI->critical("Exception Occured", ex.what()); }
+
+    return false;
+}
+
+void Controller::hasCard(const Player* pPlayer, const str& cardName)
+{
+    try
+    {
+        Player& player = const_cast<Player&>(*pPlayer);
+
+        Card* pCard = nullptr;
+        for (std::vector<Card>& category : m_cards)
+        {
+            auto it = std::find(category.begin(), category.end(), cardName);
+            if (it == category.end())
+                continue;
+
+            pCard = &*it;
+            player.pCardsOwned.insert(pCard);
+            break;
+        }
+
+        if (!pCard)
+            throw std::exception((str("Failed to find card ") + cardName).c_str());
+
+        auto it = std::find(m_analyses.begin(), m_analyses.end(), &player);
+        if (it == m_analyses.end())
+            throw std::exception((str("Failed to find analysis for player ") + player.name).c_str());
+
+        // If this is new information see if we can make anymore deductions
+        if (it->processHas(pCard))
+            continueDeducing();
+    }
+    catch (const contradiction& ex) { m_pGUI->critical("Contraditory Info Given", ex.what()); }
+    catch (const std::exception& ex) { m_pGUI->critical("Exception Occured", ex.what()); }
+
+    m_pGUI->game()->updateNotes();
+}
+
+void Controller::removeHasCard(const Player* pPlayer, const str& cardName)
+{
+    try
+    {
+        Player& player = const_cast<Player&>(*pPlayer);
+
+        bool found = false;
+        for (std::vector<Card>& category : m_cards)
+        {
+            auto it = std::find(category.begin(), category.end(), cardName);
+            if (it == category.end())
+                continue;
+
+            found = true;
+            player.pCardsOwned.erase(&*it);
+            break;
+        }
+
+        if (!found)
+            throw std::exception((str("Failed to find card ") + cardName).c_str());
+
+        // This info may have been used to make other deductions so we need to start our analysis again
+        reAnalyseTurns();
+    }
+    catch (const contradiction& ex) { m_pGUI->critical("Contraditory Info Given", ex.what()); }
+    catch (const std::exception& ex) { m_pGUI->critical("Exception Occured", ex.what()); }
+
+    m_pGUI->game()->updateNotes();
+}
+
+void Controller::replaceTurn(std::shared_ptr<const Turn> oldTurn, std::shared_ptr<const Turn> newTurn)
+{
+    try
+    {
+        auto it = std::find(m_pTurns.begin(), m_pTurns.end(), oldTurn);
+        if (it == m_pTurns.end())
+            throw std::exception("Failed to find old turn in turns vector");
+
+        *it = newTurn;      // Replace this turn with the updated one
+
+        // Our analysis is may now be wrong so we need to start new
+        reAnalyseTurns();
+    }
+    catch (const contradiction& ex) { m_pGUI->critical("Contraditory Info Given", ex.what()); }
+    catch (const std::exception& ex) { m_pGUI->critical("Exception Occured", ex.what()); }
+
+    m_pGUI->game()->updateNotes();
+}
+
+size_t Controller::numStages()
+{
+    return m_numStages;
+}
+
+size_t Controller::playersLeft()
+{
+    return m_players.size() - m_numStages + 1;
+}
+
+std::vector<std::vector<Card>>& Controller::cards()
+{
+    return m_cards;
+}
+
+const std::vector<Analysis>& Controller::analyses()
+{
+    return m_analyses;
+}
+
+const std::vector<Player>& Controller::players()
+{
+    return m_players;
+}
+
+const std::vector<std::shared_ptr<const Turn>>& Controller::turns()
+{
+    return m_pTurns;
+}
+
+void Controller::analysesSetup()
+{
+    // reset each cards owner and conviction
+    for (std::vector<Card>& category : m_cards)
+        for (Card& card : category)
+            card.reset();
+
+    m_analyses.clear();
+    for (Player& player : m_players)
+    {
+        m_analyses.emplace_back(&player);
+
+        for (Card* pCard : player.pCardsOwned)
+            m_analyses.back().processHas(pCard);
+    }
+}
+
+void Controller::reAnalyseTurns()
+{
+    // Start our analysis again
+    analysesSetup();
+    for (std::shared_ptr<const Turn> pTurn : m_pTurns)
+        analyseTurn(pTurn);
+}
+
+void Controller::analyseTurn(std::shared_ptr<const Turn> pTurn)
+{
+    switch (pTurn->action)
+    {
+    case Action::MISSED:
+        break;
+
+    case Action::ASKED:
+        analyseAsked(std::static_pointer_cast<const Asked>(pTurn));
+        break;
+
+    case Action::GUESSED:
+        analyseGuessed(std::static_pointer_cast<const Guessed>(pTurn));
+        break;
+    }
 }
 
 void Controller::analyseAsked(std::shared_ptr<const Asked> pAsked)
@@ -127,17 +285,10 @@ void Controller::analyseAsked(std::shared_ptr<const Asked> pAsked)
             cardDeduced = it->processHasEither(pAsked->pCards);
     }
     else
-        cardDeduced = it->processDoesntHave(pAsked->pCards);
+        cardDeduced = it->processDoesntHave(pAsked->pCards) || exteriorChecks();
 
-    // This could loop a few times. One deduction could lead to another and so on
-    while (cardDeduced)
-    {
-        cardDeduced = false;
-        for (auto aIt = m_analyses.begin(); aIt < m_analyses.end(); ++aIt)
-            cardDeduced |= aIt->recheckCards();
-
-        cardDeduced |= exteriorChecks();
-    }
+    if (cardDeduced)
+        continueDeducing();
 }
 
 void Controller::analyseGuessed(std::shared_ptr<const Guessed> pGuessed)
@@ -152,27 +303,27 @@ void Controller::analyseGuessed(std::shared_ptr<const Guessed> pGuessed)
         if (it == m_analyses.end())
             throw std::exception((str("Failed to find analysis for player ") + pGuessed->pDetective->name).c_str());
 
+        ++m_numStages;
         it->out = true;
         for (Analysis& analysis : m_analyses)
             analysis.processGuessedWrong(it->collectDoesntHave());
+
+        m_pGUI->game()->updateNames();
     }
 }
 
-void Controller::reAnalyseTurns(std::shared_ptr<const Turn> oldTurn, std::shared_ptr<const Turn> newTurn)
+void Controller::continueDeducing()
 {
-    auto it = std::find(m_pTurns.begin(), m_pTurns.end(), oldTurn);
-    if (it == m_pTurns.end())
+    // This could loop a few times. One deduction could lead to another and so on
+    bool cardDeduced = true;
+    while (cardDeduced)
     {
-        m_pGUI->critical("Exception Occured", "Failed to find old turn in turns vector");
-        return;
+        cardDeduced = false;
+        for (auto aIt = m_analyses.begin(); aIt < m_analyses.end(); ++aIt)
+            cardDeduced |= aIt->recheckCards();
+
+        cardDeduced |= exteriorChecks();
     }
-
-    *it = newTurn;      // Replace this turn with the updated one
-
-    // Start our analysis again
-    analysesSetup();
-    for (std::shared_ptr<const Turn> pTurn : m_pTurns)
-        analyseTurn(pTurn);
 }
 
 bool Controller::exteriorChecks()
@@ -184,9 +335,9 @@ bool Controller::exteriorChecks()
         std::vector<Card*> unknownCards;
         for (Card& card : category)
         {
-            if (card.conviction == Conviction::UNKNOWN)
+            if (card.isUnknown())
                 unknownCards.push_back(&card);
-            else if (card.conviction == Conviction::GUILTY)
+            else if (card.isGuilty())
                 guiltyKnown = true;
         }
 
@@ -211,7 +362,9 @@ bool Controller::exteriorChecks()
                 unknownCards.front()->conviction = Conviction::GUILTY;
                 break;
             case 1:
-                analysesCouldHaveCard.front()->processHas(pCard);
+                // We know which card is guilty and everyone else has said no to this card
+                if (guiltyKnown)
+                    cardDeduced = analysesCouldHaveCard.front()->processHas(pCard);
             }
         }
 
@@ -232,38 +385,4 @@ bool Controller::exteriorChecks()
     }
 
     return cardDeduced;
-}
-
-bool Controller::rename(const str& oldName, const str& newName)
-{
-    auto it = std::find(m_players.begin(), m_players.end(), oldName);
-    if (it == m_players.end())
-    {
-        m_pGUI->critical("Exception", "Failed to find corresponding player");
-        return false;
-    }
-
-    it->updateName(newName);
-    m_pGUI->game()->updateStatus();
-    return true;
-}
-
-std::vector<std::vector<Card>>& Controller::cards()
-{
-    return m_cards;
-}
-
-const std::vector<Analysis>& Controller::analyses()
-{
-    return m_analyses;
-}
-
-const std::vector<Player>& Controller::players()
-{
-    return m_players;
-}
-
-const std::vector<std::shared_ptr<const Turn>>& Controller::turns()
-{
-    return m_pTurns;
 }

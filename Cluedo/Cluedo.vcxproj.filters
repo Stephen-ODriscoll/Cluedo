@@ -52,6 +52,9 @@
     <ClCompile Include="Main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="PlayerInfo.cpp">
+      <Filter>Source Files\GUI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -92,6 +95,9 @@
     <QtMoc Include="TakeTurn.h">
       <Filter>Header Files\GUI</Filter>
     </QtMoc>
+    <QtMoc Include="PlayerInfo.h">
+      <Filter>Header Files\GUI</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="Cluedo.ui">
@@ -106,7 +112,7 @@
     <QtUic Include="TakeTurn.ui">
       <Filter>Form Files</Filter>
     </QtUic>
-    <QtUic Include="Player.ui">
+    <QtUic Include="PlayerInfo.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>

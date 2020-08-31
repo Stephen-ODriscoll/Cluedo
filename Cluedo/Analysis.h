@@ -25,7 +25,7 @@ struct Analysis
         // Player doesn't have a card, they must never have had that card so this applies to every stage
         bool result = false;
         for (Stage& stage : stages)
-            result |= processDoesntHave(pCards);
+            result |= stage.processDoesntHave(pCards);
 
         return result;
     }
@@ -43,7 +43,7 @@ struct Analysis
         // recheck cards at each stage
         bool result = false;
         for (Stage& stage : stages)
-            result |= recheckCards();
+            result |= stage.recheckCards();
 
         return result;
     }
@@ -102,7 +102,7 @@ struct Analysis
         if (!doesntHave.empty())
             info.resize(info.size() - 2);
 
-        return info + "\n";
+        return info + "\n\n";
     }
 
     bool operator==(const Analysis& a) const

@@ -134,6 +134,7 @@
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="Home.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="PlayerInfo.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
@@ -146,6 +147,7 @@
     <QtMoc Include="Game.h" />
     <ClInclude Include="Macros.h" />
     <QtMoc Include="TakeTurn.h" />
+    <QtMoc Include="PlayerInfo.h" />
     <ClInclude Include="Stage.h" />
     <ClInclude Include="Turn.h" />
     <QtMoc Include="Cluedo.h" />
@@ -158,7 +160,7 @@
     <QtUic Include="Cluedo.ui" />
     <QtUic Include="Game.ui" />
     <QtUic Include="Home.ui" />
-    <QtUic Include="Player.ui" />
+    <QtUic Include="PlayerInfo.ui" />
     <QtUic Include="TakeTurn.ui" />
   </ItemGroup>
   <ItemGroup>

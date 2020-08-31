@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>600</width>
-    <height>400</height>
+    <width>800</width>
+    <height>600</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,9 +17,9 @@
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>-1</y>
-     <width>601</width>
-     <height>401</height>
+     <y>0</y>
+     <width>800</width>
+     <height>600</height>
     </rect>
    </property>
    <property name="sizePolicy">
@@ -52,17 +52,17 @@
     <widget class="QTextBrowser" name="progressReportText">
      <property name="geometry">
       <rect>
-       <x>330</x>
+       <x>460</x>
        <y>31</y>
-       <width>241</width>
-       <height>301</height>
+       <width>301</width>
+       <height>491</height>
       </rect>
      </property>
     </widget>
     <widget class="QLabel" name="progressReportLabel">
      <property name="geometry">
       <rect>
-       <x>340</x>
+       <x>480</x>
        <y>10</y>
        <width>91</width>
        <height>16</height>
@@ -75,10 +75,10 @@
     <widget class="QListWidget" name="playersList">
      <property name="geometry">
       <rect>
-       <x>20</x>
-       <y>20</y>
-       <width>131</width>
-       <height>171</height>
+       <x>90</x>
+       <y>180</y>
+       <width>161</width>
+       <height>201</height>
       </rect>
      </property>
      <property name="sizePolicy">
@@ -87,17 +87,20 @@
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
+     <property name="autoScroll">
+      <bool>true</bool>
+     </property>
      <property name="resizeMode">
       <enum>QListView::Adjust</enum>
      </property>
     </widget>
-    <widget class="QToolButton" name="renameButton">
+    <widget class="QToolButton" name="playerInfoButton">
      <property name="geometry">
       <rect>
-       <x>190</x>
-       <y>110</y>
-       <width>25</width>
-       <height>19</height>
+       <x>300</x>
+       <y>290</y>
+       <width>41</width>
+       <height>31</height>
       </rect>
      </property>
      <property name="text">
@@ -107,10 +110,10 @@
     <widget class="QToolButton" name="downButton">
      <property name="geometry">
       <rect>
-       <x>190</x>
-       <y>70</y>
-       <width>25</width>
-       <height>19</height>
+       <x>300</x>
+       <y>240</y>
+       <width>41</width>
+       <height>31</height>
       </rect>
      </property>
      <property name="text">
@@ -120,10 +123,10 @@
     <widget class="QToolButton" name="upButton">
      <property name="geometry">
       <rect>
-       <x>190</x>
-       <y>30</y>
-       <width>25</width>
-       <height>19</height>
+       <x>300</x>
+       <y>190</y>
+       <width>41</width>
+       <height>31</height>
       </rect>
      </property>
      <property name="text">
@@ -133,10 +136,10 @@
     <widget class="QPushButton" name="turnButton">
      <property name="geometry">
       <rect>
-       <x>160</x>
-       <y>160</y>
-       <width>81</width>
-       <height>23</height>
+       <x>270</x>
+       <y>342</y>
+       <width>101</width>
+       <height>31</height>
       </rect>
      </property>
      <property name="text">
@@ -146,28 +149,38 @@
    </widget>
    <widget class="QWidget" name="tab_2">
     <attribute name="title">
-     <string>Status</string>
+     <string>Notes</string>
     </attribute>
     <widget class="QPlainTextEdit" name="playersText">
      <property name="geometry">
       <rect>
-       <x>170</x>
-       <y>20</y>
-       <width>401</width>
-       <height>311</height>
+       <x>310</x>
+       <y>30</y>
+       <width>451</width>
+       <height>491</height>
       </rect>
      </property>
      <property name="readOnly">
       <bool>true</bool>
      </property>
     </widget>
-    <widget class="QListWidget" name="cardsList">
+    <widget class="QListWidget" name="cardList">
      <property name="geometry">
       <rect>
-       <x>20</x>
-       <y>20</y>
-       <width>131</width>
-       <height>311</height>
+       <x>30</x>
+       <y>30</y>
+       <width>121</width>
+       <height>491</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="cardInfoList">
+     <property name="geometry">
+      <rect>
+       <x>150</x>
+       <y>30</y>
+       <width>121</width>
+       <height>491</height>
       </rect>
      </property>
     </widget>
@@ -176,23 +189,23 @@
     <attribute name="title">
      <string>Turns</string>
     </attribute>
-    <widget class="QListWidget" name="turnsWidget">
+    <widget class="QListWidget" name="turnList">
      <property name="geometry">
       <rect>
-       <x>20</x>
-       <y>20</y>
-       <width>551</width>
-       <height>241</height>
+       <x>30</x>
+       <y>30</y>
+       <width>731</width>
+       <height>431</height>
       </rect>
      </property>
     </widget>
     <widget class="QPushButton" name="editTurnButton">
      <property name="geometry">
       <rect>
-       <x>260</x>
-       <y>280</y>
-       <width>75</width>
-       <height>23</height>
+       <x>320</x>
+       <y>490</y>
+       <width>151</width>
+       <height>31</height>
       </rect>
      </property>
      <property name="text">

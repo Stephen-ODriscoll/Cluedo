@@ -256,9 +256,9 @@ void TakeTurn::submitButtonClicked()
     try
     {
         if (oldTurn)
-            pController->reAnalyseTurns(oldTurn, getTurnDetails());
+            pController->replaceTurn(oldTurn, getTurnDetails());
         else
-            pController->analyseTurn(getTurnDetails());
+            pController->processNewTurn(getTurnDetails());
 
         close();
     }

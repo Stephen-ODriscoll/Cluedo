@@ -4,9 +4,9 @@
 #include "ui_Game.h"
 
 #include "TakeTurn.h"
+#include "PlayerInfo.h"
 #include "Controller.h"
 
-class TakeTurn;
 class Game : public QWidget
 {
     Q_OBJECT
@@ -16,18 +16,19 @@ public:
     ~Game();
 
     void startGame();
-    void updateStatus();
+    void updateNames();
+    void updateNotes();
     void rotateTurn();
 
 private:
     Ui::GameObject ui;
     Controller* pController;
-    TakeTurn* pTakeTurn;
+    QWidget* pPopUp;
 
 private slots:
     void upButtonClicked();
     void downButtonClicked();
-    void renameButtonClicked();
+    void playerInfoButtonClicked();
     void turnButtonClicked();
     void editTurnButtonClicked();
 };
