@@ -32,10 +32,9 @@ std::wstring Cluedo::openCluedoTextFile(const str& issue)
     return QFileDialog::getOpenFileName(this, tr("Open Cluedo.txt"), QDir::currentPath(), tr("Text files (*.txt)")).toStdWString();
 }
 
-void Cluedo::startGame()
+void Cluedo::showGame()
 {
     ui.stackedWidget->setCurrentWidget(pGame);
-    pGame->startGame();
 }
 
 void Cluedo::critical(const str& title, const str& desc)

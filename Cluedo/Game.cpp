@@ -8,6 +8,10 @@ Game::Game(Controller* pController, QWidget* parent) :
 {
     ui.setupUi(this);
 
+    QFont font;
+    font.setPixelSize(14);
+    ui.turnButton->setFont(font);
+
     ui.upButton->setIcon(QIcon(":/Cluedo/Images/up.png"));
     ui.downButton->setIcon(QIcon(":/Cluedo/Images/down.png"));
     ui.playerInfoButton->setIcon(QIcon(":/Cluedo/Images/rename.png"));
@@ -41,34 +45,27 @@ Game::~Game()
 
 void Game::startGame()
 {
-    updateNames();
-    updateNotes();
-}
-
-void Game::updateNames()
-{
     // Implementation of Bottom-up done using blank boxes (I liked bottom-up better than top-down)
+    const std::vector<Player>& players = pController->players();
+
     ui.playersList->clear();
-    for (int i = pController->playersLeft(); i < MAX_PLAYERS; ++i)
+    for (size_t i = players.size(); i < MAX_PLAYERS; ++i)
         ui.playersList->addItem("");
 
-    const std::vector<Analysis> analyses = pController->analyses();
-    for (auto& it = analyses.rbegin(); it != analyses.rend(); ++it)
-        if (!it->out)
-            ui.playersList->addItem(it->pPlayer->name.c_str());
+    for (auto& it = players.rbegin(); it != players.rend(); ++it)
+        ui.playersList->addItem(it->name.c_str());
 
     QFont font;
-    font.setPixelSize(14);
-    ui.turnButton->setFont(font);
-
     font.setPixelSize(22);
     for (int i = 0; i < ui.playersList->count(); ++i)
         ui.playersList->item(i)->setFont(font);
+
+    updateNotes();
 }
 
 void Game::updateNotes()
 {
-    // Notes tab
+    // Notes on cards
     ui.cardList->clear();
     ui.cardInfoList->clear();
     for (std::vector<Card> category : pController->cards())
@@ -91,13 +88,14 @@ void Game::updateNotes()
     ui.cardList->takeItem(ui.cardList->count() - 1);
     ui.cardInfoList->takeItem(ui.cardInfoList->count() - 1);
 
+    // Notes on players
     str status;
     for (const Analysis& analysis : pController->analyses())
         status += analysis.to_str(pController->numStages());
 
     ui.playersText->setPlainText(status.c_str());
 
-    // Turns tab
+    // Notes on turns
     ui.turnList->clear();
     for (std::shared_ptr<const Turn> turn : pController->turns())
         ui.turnList->addItem(QString(turn->to_str().c_str()));
@@ -120,10 +118,63 @@ void Game::updateNotes()
     ui.playersText->setFont(font);
 }
 
-void Game::rotateTurn()
+void Game::moveToBack(const str& playerName)
 {
-    // This is the issue
-    ui.playersList->insertItem(MAX_PLAYERS - pController->playersLeft(), ui.playersList->takeItem(MAX_PLAYERS - 1));
+    int index = findItem(playerName);
+    if (index == -1)
+    {
+        // Should never happen
+        QMessageBox msgBox;
+        msgBox.critical(0, "Error", "Failed to find player with that name");
+        return;
+    }
+
+    ui.playersList->insertItem(MAX_PLAYERS - pController->playersLeft(), ui.playersList->takeItem(index));
+}
+
+void Game::removePlayer(const str& playerName)
+{
+    int index = findItem(playerName);
+    if (index == -1)
+    {
+        // Should never happen
+        QMessageBox msgBox;
+        msgBox.critical(0, "Error", "Failed to find player with that name");
+        return;
+    }
+
+    ui.playersList->takeItem(index);
+    ui.playersList->insertItem(0, "");
+    
+    QFont font;
+    font.setPixelSize(22);
+    ui.playersList->item(0)->setFont(font);
+}
+
+void Game::editName(const str& oldName, const str& newName)
+{
+    int index = findItem(oldName);
+    if (index == -1)
+    {
+        // Should never happen
+        QMessageBox msgBox;
+        msgBox.critical(0, "Error", "Failed to find player with that name");
+        return;
+    }
+
+    ui.playersList->item(index)->setText(newName.c_str());
+    updateNotes();
+}
+
+int Game::findItem(const str& playerName)
+{
+    // Search backwards as we're more likely to be dealing with the bottom items
+    int i = ui.playersList->count() - 1;
+    for (; i != MAX_PLAYERS - pController->playersLeft(); --i)
+        if (ui.playersList->item(i)->text() == playerName.c_str())
+            return i;
+
+    return -1;
 }
 
 void Game::upButtonClicked()

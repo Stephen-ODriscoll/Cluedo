@@ -16,14 +16,17 @@ public:
     ~Game();
 
     void startGame();
-    void updateNames();
     void updateNotes();
-    void rotateTurn();
+    void moveToBack(const str& playerName);
+    void removePlayer(const str& playerName);
+    void editName(const str& oldName, const str& newName);
 
 private:
     Ui::GameObject ui;
     Controller* pController;
     QWidget* pPopUp;
+
+    int findItem(const str& playerName);
 
 private slots:
     void upButtonClicked();

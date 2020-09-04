@@ -45,7 +45,6 @@ Controller::Controller(Cluedo* pGUI, fs::path inputFile) :
             if (m_cards.size() != NUM_CATEGORIES)
                 throw std::invalid_argument(str("Not enough categories. There should be ") + str(NUM_CATEGORIES));
 
-            load.close();
             break;          // This is how we complete the constructor
         }
         catch (const std::invalid_argument& ex)
@@ -67,7 +66,7 @@ void Controller::startGame(Mode mode, int numPlayers)
         m_players.push_back(Player());
 
     analysesSetup();
-    m_pGUI->startGame();
+    m_pGUI->showGame();
 }
 
 void Controller::processNewTurn(std::shared_ptr<const Turn> pTurn)
@@ -82,7 +81,6 @@ void Controller::processNewTurn(std::shared_ptr<const Turn> pTurn)
     catch (const std::exception& ex) { m_pGUI->critical("Exception Occured", ex.what()); }
 
     m_pGUI->game()->updateNotes();
-    m_pGUI->game()->rotateTurn();
 }
 
 bool Controller::rename(const Player* pPlayer, const str& newName)
@@ -96,10 +94,8 @@ bool Controller::rename(const Player* pPlayer, const str& newName)
             throw std::exception("Player with that name already exists");
 
         Player& player = const_cast<Player&>(*pPlayer);
-
         player.updateName(newName);
-        m_pGUI->game()->updateNames();
-        m_pGUI->game()->updateNotes();
+        m_pGUI->game()->editName(pPlayer->name, newName);
         return true;
     }
     catch (const std::exception& ex) { m_pGUI->critical("Exception Occured", ex.what()); }
@@ -223,6 +219,9 @@ const std::vector<std::shared_ptr<const Turn>>& Controller::turns()
 
 void Controller::analysesSetup()
 {
+    m_numStages = 1;
+    m_gameOver = false;
+
     // reset each cards owner and conviction
     for (std::vector<Card>& category : m_cards)
         for (Card& card : category)
@@ -236,6 +235,8 @@ void Controller::analysesSetup()
         for (Card* pCard : player.pCardsOwned)
             m_analyses.back().processHas(pCard);
     }
+
+    m_pGUI->game()->startGame();
 }
 
 void Controller::reAnalyseTurns()
@@ -251,14 +252,18 @@ void Controller::analyseTurn(std::shared_ptr<const Turn> pTurn)
     switch (pTurn->action)
     {
     case Action::MISSED:
+        m_pGUI->game()->moveToBack(pTurn->pDetective->name);
         break;
 
     case Action::ASKED:
         analyseAsked(std::static_pointer_cast<const Asked>(pTurn));
+        m_pGUI->game()->moveToBack(pTurn->pDetective->name);
         break;
 
     case Action::GUESSED:
         analyseGuessed(std::static_pointer_cast<const Guessed>(pTurn));
+        if (!m_gameOver)
+            m_pGUI->game()->removePlayer(pTurn->pDetective->name);
         break;
     }
 }
@@ -295,7 +300,7 @@ void Controller::analyseGuessed(std::shared_ptr<const Guessed> pGuessed)
 {
     if (pGuessed->correct)
     {
-        // Game Over
+        m_gameOver = true;
     }
     else
     {
@@ -307,8 +312,6 @@ void Controller::analyseGuessed(std::shared_ptr<const Guessed> pGuessed)
         it->out = true;
         for (Analysis& analysis : m_analyses)
             analysis.processGuessedWrong(it->collectDoesntHave());
-
-        m_pGUI->game()->updateNames();
     }
 }
 

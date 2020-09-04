@@ -20,7 +20,7 @@ public:
 
     std::wstring openCluedoTextFile(const str& issue);
 
-    void startGame();
+    void showGame();
     void critical(const str& title, const str& desc);
     Game* game();
 
