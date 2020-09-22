@@ -5,11 +5,9 @@ struct Player
 {
     str name;
     //str character;      // Unused for now.
-    uint32_t numCards;
     std::set<Card*> pCardsOwned;
 
-    Player() :
-        numCards(0)
+    Player()
     {
         static uint16_t playerCount = 0;
         name = str("Player ") + str(++playerCount);

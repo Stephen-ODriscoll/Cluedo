@@ -20,8 +20,9 @@ private:
     std::shared_ptr<const Turn> oldTurn;
     std::vector<QComboBox*> categoryBoxes;
 
+    size_t nextId();
     bool outcomeChosen();
-    std::shared_ptr<const Turn> getTurnDetails();
+    std::shared_ptr<const Turn> getTurnDetails(const size_t id);
 
 private slots:
     void missedButtonClicked();

@@ -93,9 +93,10 @@ bool Controller::rename(const Player* pPlayer, const str& newName)
         if (std::find(m_players.begin(), m_players.end(), newName) != m_players.end())
             throw std::exception("Player with that name already exists");
 
+        m_pGUI->game()->editName(pPlayer->name, newName);
+
         Player& player = const_cast<Player&>(*pPlayer);
         player.updateName(newName);
-        m_pGUI->game()->editName(pPlayer->name, newName);
         return true;
     }
     catch (const std::exception& ex) { m_pGUI->critical("Exception Occured", ex.what()); }
@@ -202,14 +203,14 @@ std::vector<std::vector<Card>>& Controller::cards()
     return m_cards;
 }
 
-const std::vector<Analysis>& Controller::analyses()
-{
-    return m_analyses;
-}
-
 const std::vector<Player>& Controller::players()
 {
     return m_players;
+}
+
+const std::vector<Analysis>& Controller::analyses()
+{
+    return m_analyses;
 }
 
 const std::vector<std::shared_ptr<const Turn>>& Controller::turns()
@@ -263,7 +264,7 @@ void Controller::analyseTurn(std::shared_ptr<const Turn> pTurn)
     case Action::GUESSED:
         analyseGuessed(std::static_pointer_cast<const Guessed>(pTurn));
         if (!m_gameOver)
-            m_pGUI->game()->removePlayer(pTurn->pDetective->name);
+            m_pGUI->game()->removePlayerAndAddStage(pTurn->pDetective->name);
         break;
     }
 }
@@ -308,10 +309,20 @@ void Controller::analyseGuessed(std::shared_ptr<const Guessed> pGuessed)
         if (it == m_analyses.end())
             throw std::exception((str("Failed to find analysis for player ") + pGuessed->pDetective->name).c_str());
 
-        ++m_numStages;
+        // Create new analysis for every player left
         it->out = true;
         for (Analysis& analysis : m_analyses)
-            analysis.processGuessedWrong(it->collectDoesntHave());
+            analysis.processGuessedWrong(it->collectDoesntHave(m_numStages - 1));
+
+        // Cards belonging to the wrong guesser have been redistributed
+        for (std::vector<Card>& category : m_cards)
+            for (Card& card : category)
+                card.pOwners.push_back(card.pOwners.back());
+
+        for (Card* pCard : it->collectHas(m_numStages - 1))
+            pCard->pOwners.back() = nullptr;
+
+        ++m_numStages;
     }
 }
 
@@ -322,8 +333,8 @@ void Controller::continueDeducing()
     while (cardDeduced)
     {
         cardDeduced = false;
-        for (auto aIt = m_analyses.begin(); aIt < m_analyses.end(); ++aIt)
-            cardDeduced |= aIt->recheckCards();
+        for (auto it = m_analyses.begin(); it < m_analyses.end(); ++it)
+            cardDeduced |= it->recheckCards();
 
         cardDeduced |= exteriorChecks();
     }
@@ -344,33 +355,6 @@ bool Controller::exteriorChecks()
                 guiltyKnown = true;
         }
 
-        for (Card* pCard : unknownCards)
-        {
-            std::vector<Analysis*> analysesCouldHaveCard;
-            for (Analysis& analysis : m_analyses)
-            {
-                if (analysis.couldHaveCard(pCard))
-                    analysesCouldHaveCard.push_back(&analysis);
-            }
-
-            switch (analysesCouldHaveCard.size())
-            {
-            case 0:
-                if (guiltyKnown)
-                    throw contradiction((pCard->name + str(" has been convicted but another card in the same category was already covicted")).c_str());
-
-                // Everyone has said no to this card so it must be the murder card
-                cardDeduced = true;
-                guiltyKnown = true;
-                unknownCards.front()->conviction = Conviction::GUILTY;
-                break;
-            case 1:
-                // We know which card is guilty and everyone else has said no to this card
-                if (guiltyKnown)
-                    cardDeduced = analysesCouldHaveCard.front()->processHas(pCard);
-            }
-        }
-
         if (!guiltyKnown)
         {
             switch (unknownCards.size())
@@ -381,8 +365,35 @@ bool Controller::exteriorChecks()
             case 1:
                 // All other cards have been ruled out so this card must be the murder card
                 cardDeduced = true;
-                guiltyKnown = true;
                 unknownCards.front()->conviction = Conviction::GUILTY;
+                continue;
+            }
+        }
+
+        for (Card* pUnknownCard : unknownCards)
+        {
+            std::vector<Analysis*> analysesCouldHaveCard;
+            for (Analysis& analysis : m_analyses)
+            {
+                if (analysis.couldHaveCard(pUnknownCard, m_numStages - 1))
+                    analysesCouldHaveCard.push_back(&analysis);
+            }
+
+            switch (analysesCouldHaveCard.size())
+            {
+            case 0:
+                if (guiltyKnown)
+                    throw contradiction((pUnknownCard->name + str(" has been convicted but another card in the same category was already covicted")).c_str());
+
+                // Nobody can have this card so it must be guilty
+                cardDeduced = true;
+                guiltyKnown = true;
+                pUnknownCard->conviction = Conviction::GUILTY;
+                break;
+            case 1:
+                // We know which card is guilty and nobody else can have this card
+                if (guiltyKnown)
+                    cardDeduced = analysesCouldHaveCard.front()->processHas(pUnknownCard);
             }
         }
     }

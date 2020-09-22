@@ -50,10 +50,8 @@ void PlayerInfo::updateInfo()
 void PlayerInfo::renameButtonClicked()
 {
     // Error message is handled by the Controller calling the main GUI
-    if (!pController->rename(pPlayer, ui.renameText->toPlainText().toStdString()))
-        return;
-
-    updateInfo();
+    if (pController->rename(pPlayer, ui.renameText->toPlainText().toStdString()))
+        updateInfo();
 }
 
 bool PlayerInfo::eventFilter(QObject* object, QEvent* event)
@@ -71,8 +69,6 @@ bool PlayerInfo::eventFilter(QObject* object, QEvent* event)
     return QObject::eventFilter(object, event);
 }
 
-#define ADD_CARD "Add Card"
-#define REMOVE_CARD "Remove Card"
 void PlayerInfo::setCardButtonText(const str& cardName, QPushButton* pButton)
 {
     auto it = std::find_if(pPlayer->pCardsOwned.begin(), pPlayer->pCardsOwned.end(),

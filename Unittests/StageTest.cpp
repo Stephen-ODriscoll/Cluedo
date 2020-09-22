@@ -12,7 +12,7 @@ struct StageTest : testing::Test
 
     void SetUp()
     {
-        pStage = new Stage(new Player());
+        pStage = new Stage(new Player(), 0);
     }
 
     void TearDown()
@@ -21,7 +21,7 @@ struct StageTest : testing::Test
         delete pStage;
 
         for (auto& card : cards)
-            card.pOwner = nullptr;
+            card.pOwners[0] = nullptr;
     }
 };
 
@@ -29,14 +29,14 @@ TEST_F(StageTest, process_has)
 {
     pStage->processHas(&cards[0]);
 
-    EXPECT_NE(cards[0].pOwner, nullptr);
+    EXPECT_NE(cards[0].pOwners[0], nullptr);
     EXPECT_NE(pStage->has.find(&cards[0]), pStage->has.end());
 }
 
 TEST_F(StageTest, process_has_throws)
 {
     Player* pPlayer = new Player();
-    cards[0].pOwner = pPlayer;
+    cards[0].pOwners[0] = pPlayer;
 
     EXPECT_THROW(pStage->processHas(&cards[0]), contradiction);
     delete pPlayer;;
@@ -68,9 +68,9 @@ TEST_F(StageTest, process_doesnt_have_throws_after_process_has_either)
 TEST_F(StageTest, process_doesnt_have_excludes_cards_with_known_location)
 {
     Player* pPlayer = new Player();
-    cards[0].pOwner = pPlayer;
-    cards[1].pOwner = pPlayer;
-    cards[2].pOwner = pPlayer;
+    cards[0].pOwners[0] = pPlayer;
+    cards[1].pOwners[0] = pPlayer;
+    cards[2].pOwners[0] = pPlayer;
 
     pStage->processDoesntHave({ &cards[0], &cards[1], &cards[2] });
 
@@ -82,8 +82,8 @@ TEST_F(StageTest, process_doesnt_have_excludes_cards_with_known_location)
 TEST_F(StageTest, process_has_either_finds_card_when_only_one_has_unknown_location)
 {
     Player* pPlayer = new Player();
-    cards[0].pOwner = pPlayer;
-    cards[1].pOwner = pPlayer;
+    cards[0].pOwners[0] = pPlayer;
+    cards[1].pOwners[0] = pPlayer;
 
     pStage->processHasEither({ &cards[0], &cards[1], &cards[2] });
 
@@ -117,9 +117,9 @@ TEST_F(StageTest, recheck_cards_removes_known_cards_from_doesnt_have)
     pStage->processDoesntHave({ &cards[0], &cards[1], &cards[2] });
 
     Player* pPlayer = new Player();
-    cards[0].pOwner = pPlayer;
-    cards[1].pOwner = pPlayer;
-    cards[2].pOwner = pPlayer;
+    cards[0].pOwners[0] = pPlayer;
+    cards[1].pOwners[0] = pPlayer;
+    cards[2].pOwners[0] = pPlayer;
 
     EXPECT_FALSE(pStage->recheckCards());
     EXPECT_TRUE(pStage->doesntHave.empty());
@@ -133,12 +133,12 @@ TEST_F(StageTest, recheck_cards_finds_cards_after_has_either)
     pStage->processHasEither({ &cards[6], &cards[7], &cards[8] });
 
     Player* pPlayer = new Player();
-    cards[0].pOwner = pPlayer;
-    cards[1].pOwner = pPlayer;
-    cards[3].pOwner = pPlayer;
-    cards[4].pOwner = pPlayer;
-    cards[6].pOwner = pPlayer;
-    cards[7].pOwner = pPlayer;
+    cards[0].pOwners[0] = pPlayer;
+    cards[1].pOwners[0] = pPlayer;
+    cards[3].pOwners[0] = pPlayer;
+    cards[4].pOwners[0] = pPlayer;
+    cards[6].pOwners[0] = pPlayer;
+    cards[7].pOwners[0] = pPlayer;
 
     EXPECT_TRUE(pStage->recheckCards());
     EXPECT_EQ(pStage->has, std::set<Card*>({ &cards[2], &cards[5], &cards[8] }));

@@ -13,24 +13,28 @@ struct contradiction : public std::exception
 struct Stage
 {
     const Player* pPlayer;
+    const size_t stageIndex;
+
     std::set<Card*> has;
     std::set<Card*> doesntHave;
     std::vector<std::vector<Card*>> hasEither;
 
-    Stage(const Player* pPlayer) :
-        pPlayer(pPlayer) { }
-
-    Stage(const Player* pPlayer, std::set<Card*> doesntHave) :
+    Stage(const Player* pPlayer, const size_t stageIndex) :
         pPlayer(pPlayer),
+        stageIndex(stageIndex) { }
+
+    Stage(const Player* pPlayer, const size_t stageIndex, std::set<Card*> doesntHave) :
+        pPlayer(pPlayer),
+        stageIndex(stageIndex),
         doesntHave(doesntHave) { }
 
 
     bool processHas(Card* pCard)
     {
-        if (pCard->locationKnown())
+        if (pCard->locationKnown(stageIndex))
         {
             // We already know that this person owns this card, no new info
-            if (pCard->ownedBy(pPlayer))
+            if (pCard->ownedBy(pPlayer, stageIndex))
                 return false;
 
             throw contradiction((
@@ -38,13 +42,13 @@ struct Stage
                 + str(" but this card is already ")
                 + (pCard->isGuilty() ?
                     str("guilty") :
-                    str("owned by ")) + pCard->pOwner->name
+                    str("owned by ")) + pCard->pOwners[stageIndex]->name
                 ).c_str());
         }
 
         // We've found a card and have new info to go on
         pCard->conviction = Conviction::INNOCENT;
-        pCard->pOwner = const_cast<Player*>(pPlayer);
+        pCard->pOwners[stageIndex] = const_cast<Player*>(pPlayer);
         has.insert(pCard);
         return true;
     }
@@ -53,10 +57,10 @@ struct Stage
     {
         for (Card* pCard : pCards)
         {
-            if (pCard->ownedBy(pPlayer))
+            if (pCard->ownedBy(pPlayer, stageIndex))
                 throw contradiction((str("Previous info says ") + pPlayer->name + str(" has ") + pCard->name).c_str());
 
-            if (pCard->locationUnknown())
+            if (pCard->locationUnknown(stageIndex))
                 doesntHave.insert(pCard);
         }
 
@@ -71,14 +75,14 @@ struct Stage
             // This card could've been shown if this player hasn't said no to it and
             // either we don't know who owns it or they own it
             if (doesntHave.find(pCard) == doesntHave.end() &&
-                (pCard->locationUnknown() || pCard->ownedBy(pPlayer)))
+                (pCard->locationUnknown(stageIndex) || pCard->ownedBy(pPlayer, stageIndex)))
                 checkedCards.emplace_back(pCard);
         }
 
         switch (checkedCards.size())
         {
         case 0:
-            throw contradiction((str("Player ") + pPlayer->name + str(" must have one of these cards")).c_str());
+            throw contradiction((pPlayer->name + str(" can't have any of those cards")).c_str());
 
         case 1:
             return processHas(checkedCards.front());
@@ -96,7 +100,7 @@ struct Stage
         {
             // If card location is known remove it from doesn't have.
             // We already know they don't have it because someone else does.
-            if ((*it)->locationKnown())
+            if ((*it)->locationKnown(stageIndex))
                 it = doesntHave.erase(it);
             else
                 ++it;
@@ -111,7 +115,7 @@ struct Stage
                 // This card could've been shown if this player hasn't said no to it and
                 // either we don't know who owns it or they own it
                 if (doesntHave.find(*it2) == doesntHave.end() &&
-                    ((*it2)->locationUnknown() || (*it2)->ownedBy(pPlayer)))
+                    ((*it2)->locationUnknown(stageIndex) || (*it2)->ownedBy(pPlayer, stageIndex)))
                     ++it2;
                 else
                     it2 = it1->erase(it2);
@@ -120,7 +124,7 @@ struct Stage
             switch (it1->size())
             {
             case 0:
-                throw contradiction((str("Player ") + pPlayer->name + str(" must have one of these cards")).c_str());
+                throw contradiction((pPlayer->name + str(" can't have any of the 3 cards they're supposed to") ).c_str());
 
             case 1:
                 cardFound = processHas(it1->front());

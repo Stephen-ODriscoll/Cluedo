@@ -4,14 +4,28 @@
 Game::Game(Controller* pController, QWidget* parent) :
     pController(pController),
     pPopUp(nullptr),
+    stageDisplayed(1),
     QWidget(parent)
 {
     ui.setupUi(this);
 
+    // Font stuff
     QFont font;
+    font.setPixelSize(22);
+    ui.playersList->setFont(font);
+    ui.statusLabel->setFont(font);
+    ui.stageLabel->setFont(font);
+    
     font.setPixelSize(14);
+    ui.stageBox->setFont(font);
     ui.turnButton->setFont(font);
+    ui.cardList->setFont(font);
+    ui.cardInfoList->setFont(font);
 
+    font.setPixelSize(12);
+    ui.playersText->setFont(font);
+
+    // Setting icons
     ui.upButton->setIcon(QIcon(":/Cluedo/Images/up.png"));
     ui.downButton->setIcon(QIcon(":/Cluedo/Images/down.png"));
     ui.playerInfoButton->setIcon(QIcon(":/Cluedo/Images/rename.png"));
@@ -21,6 +35,7 @@ Game::Game(Controller* pController, QWidget* parent) :
     connect(ui.playerInfoButton, SIGNAL(clicked()), this, SLOT(playerInfoButtonClicked()));
     connect(ui.turnButton, SIGNAL(clicked()), this, SLOT(turnButtonClicked()));
     connect(ui.editTurnButton, SIGNAL(clicked()), this, SLOT(editTurnButtonClicked()));
+    connect(ui.stageBox, SIGNAL(currentTextChanged(QString)), this, SLOT(stageBoxChanged(QString)));
 
     ui.playersList->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     ui.playersList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -55,10 +70,8 @@ void Game::startGame()
     for (auto& it = players.rbegin(); it != players.rend(); ++it)
         ui.playersList->addItem(it->name.c_str());
 
-    QFont font;
-    font.setPixelSize(22);
-    for (int i = 0; i < ui.playersList->count(); ++i)
-        ui.playersList->item(i)->setFont(font);
+    ui.stageBox->addItem("1");
+    ui.statusLabel->setText(STATUS_NEEDS_CARD_INFO);
 
     updateNotes();
 }
@@ -68,15 +81,14 @@ void Game::updateNotes()
     // Notes on cards
     ui.cardList->clear();
     ui.cardInfoList->clear();
-    for (std::vector<Card> category : pController->cards())
+    for (const std::vector<Card>& category : pController->cards())
     {
-        for (Card card : category)
+        for (const Card& card : category)
         {
             ui.cardList->addItem(card.nickname.c_str());
 
-            str status;
-            if (card.ownerKnown())
-                ui.cardInfoList->addItem(card.pOwner->name.c_str());
+            if (card.ownerKnown(stageDisplayed - 1))
+                ui.cardInfoList->addItem(card.pOwners[stageDisplayed - 1]->name.c_str());
             else
                 ui.cardInfoList->addItem(convictionStrings.find(card.conviction)->second.c_str());
         }
@@ -91,7 +103,7 @@ void Game::updateNotes()
     // Notes on players
     str status;
     for (const Analysis& analysis : pController->analyses())
-        status += analysis.to_str(pController->numStages());
+        status += analysis.to_str(stageDisplayed - 1);
 
     ui.playersText->setPlainText(status.c_str());
 
@@ -104,76 +116,56 @@ void Game::updateNotes()
     ui.editTurnButton->setEnabled(!empty);
     if (empty)
         ui.turnList->addItem(QString("No turns to show yet"));
-
-    // Font stuff
-    QFont font;
-    font.setPixelSize(14);
-    for (int i = 0; i < ui.cardList->count(); ++i)
-        ui.cardList->item(i)->setFont(font);
-
-    for (int i = 0; i < ui.cardInfoList->count(); ++i)
-        ui.cardInfoList->item(i)->setFont(font);
-
-    font.setPixelSize(12);
-    ui.playersText->setFont(font);
 }
 
 void Game::moveToBack(const str& playerName)
 {
-    int index = findItem(playerName);
+    int index = findItemIndex(playerName);
     if (index == -1)
-    {
-        // Should never happen
-        QMessageBox msgBox;
-        msgBox.critical(0, "Error", "Failed to find player with that name");
         return;
-    }
 
     ui.playersList->insertItem(MAX_PLAYERS - pController->playersLeft(), ui.playersList->takeItem(index));
 }
 
-void Game::removePlayer(const str& playerName)
+void Game::removePlayerAndAddStage(const str& playerName)
 {
-    int index = findItem(playerName);
+    // Remove Player stuff
+    int index = findItemIndex(playerName);
     if (index == -1)
-    {
-        // Should never happen
-        QMessageBox msgBox;
-        msgBox.critical(0, "Error", "Failed to find player with that name");
         return;
-    }
 
-    ui.playersList->takeItem(index);
-    ui.playersList->insertItem(0, "");
-    
-    QFont font;
-    font.setPixelSize(22);
-    ui.playersList->item(0)->setFont(font);
+    ui.playersList->insertItem(0, ui.playersList->takeItem(index));
+    ui.playersList->item(0)->setText("");
+
+    // Add stage stuff
+    ui.stageBox->addItem(str(pController->numStages()).c_str());
+    ui.stageBox->setCurrentIndex(ui.stageBox->count() - 1);
 }
 
 void Game::editName(const str& oldName, const str& newName)
 {
-    int index = findItem(oldName);
+    int index = findItemIndex(oldName);
     if (index == -1)
-    {
-        // Should never happen
-        QMessageBox msgBox;
-        msgBox.critical(0, "Error", "Failed to find player with that name");
         return;
-    }
 
     ui.playersList->item(index)->setText(newName.c_str());
     updateNotes();
 }
 
-int Game::findItem(const str& playerName)
+int Game::findItemIndex(const str& playerName)
 {
     // Search backwards as we're more likely to be dealing with the bottom items
-    int i = ui.playersList->count() - 1;
-    for (; i != MAX_PLAYERS - pController->playersLeft(); --i)
+    int end = MAX_PLAYERS - pController->playersLeft() - 1;
+    for (int i = ui.playersList->count() - 1; i != end; --i)
+    {
+        auto temp = ui.playersList->item(i)->text();
         if (ui.playersList->item(i)->text() == playerName.c_str())
             return i;
+    }
 
+    // Should never happen
+    QMessageBox msgBox;
+    msgBox.critical(0, "Error", "Failed to find player with that name");
     return -1;
 }
 
@@ -246,6 +238,17 @@ void Game::editTurnButtonClicked()
     }
     
     delete pPopUp;
+
     pPopUp = new TakeTurn(pController, *it);
     pPopUp->show();
+}
+
+void Game::stageBoxChanged(const QString& text)
+{
+    size_t newStageToDisplay = str(text.toStdString()).toull();
+    if (newStageToDisplay == stageDisplayed)
+        return;
+
+    stageDisplayed = newStageToDisplay;
+    updateNotes();
 }

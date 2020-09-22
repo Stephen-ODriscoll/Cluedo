@@ -20,30 +20,30 @@ struct Card
     const str name;
     const str nickname;
     enum class Conviction conviction;
-    Player* pOwner;
+    std::vector<Player*> pOwners;
 
     Card(const str& name, const str& nickname) :
         name(name),
         nickname(nickname),
         conviction(Conviction::UNKNOWN),
-        pOwner(nullptr)
+        pOwners({ nullptr })
     { }
 
     void reset()
     {
         conviction = Conviction::UNKNOWN;
-        pOwner = nullptr;
+        pOwners = { nullptr };
     }
 
     bool isGuilty() const { return conviction == Conviction::GUILTY; }
     bool isUnknown() const { return conviction == Conviction::UNKNOWN; }
     bool isInnocent() const { return conviction == Conviction::INNOCENT; }
 
-    bool ownerKnown() const { return pOwner; }
-    bool ownerUnknown() const { return !pOwner; }
-    bool ownedBy(const Player* pPlayer) const { return pOwner == pPlayer; }
-    bool locationKnown() const { return ownerKnown() || isGuilty(); }
-    bool locationUnknown() const { return !locationKnown(); }
+    bool ownerKnown(const size_t stageIndex) const { return pOwners[stageIndex]; }
+    bool ownerUnknown(const size_t stageIndex) const { return !pOwners[stageIndex]; }
+    bool ownedBy(const Player* pPlayer, const size_t stageIndex) const { return pOwners[stageIndex] == pPlayer; }
+    bool locationKnown(const size_t stageIndex) const { return ownerKnown(stageIndex) || isGuilty(); }
+    bool locationUnknown(const size_t stageIndex) const { return !locationKnown(stageIndex); }
 
     bool operator<(const Card& card) const { return name < card.name; }
     bool operator==(const str& n) const { return name == n; }

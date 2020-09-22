@@ -18,15 +18,17 @@ public:
     void startGame();
     void updateNotes();
     void moveToBack(const str& playerName);
-    void removePlayer(const str& playerName);
+    void removePlayerAndAddStage(const str& playerName);
     void editName(const str& oldName, const str& newName);
 
 private:
+    size_t stageDisplayed;
+
     Ui::GameObject ui;
     Controller* pController;
     QWidget* pPopUp;
 
-    int findItem(const str& playerName);
+    int findItemIndex(const str& playerName);
 
 private slots:
     void upButtonClicked();
@@ -34,4 +36,5 @@ private slots:
     void playerInfoButtonClicked();
     void turnButtonClicked();
     void editTurnButtonClicked();
+    void stageBoxChanged(const QString& text);
 };

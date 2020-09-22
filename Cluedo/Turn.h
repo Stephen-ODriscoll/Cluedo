@@ -13,32 +13,25 @@ enum class Action
 
 struct Turn
 {
-    const int id;
+    const size_t id;
     const Action action;
     const Player* pDetective;
 
-    Turn::Turn(const Player* pDetective, const Action action, const int id = 0) :
+    Turn::Turn(const Player* pDetective, const Action action, const size_t id) :
         pDetective(pDetective),
         action(action),
-        id(id ? id : nextId())
+        id(id)
     { }
 
     str to_str() const;
     str witness() const;
-
-private:
-    int nextId()
-    {
-        static int nextId = 0;
-        return ++nextId;
-    }
 };
 
 
 struct Missed : public Turn
 {
-    Missed(const Player* pDetective, const Action action) :
-        Turn(pDetective, action)
+    Missed(const Player* pDetective, const Action action, const size_t id) :
+        Turn(pDetective, action, id)
     { }
 
     str to_str() const
@@ -55,9 +48,9 @@ struct Asked: public Turn
     const bool shown;
     const str cardShown;
 
-    Asked(const Player* pDetective, const Action action,
+    Asked(const Player* pDetective, const Action action, const size_t id,
             const Player* pWitness, std::vector<Card*> pCards, const bool shown, const str& cardShown = "") :
-        Turn(pDetective, action),
+        Turn(pDetective, action, id),
         pWitness(pWitness),
         pCards(pCards),
         shown(shown),
@@ -84,9 +77,9 @@ struct Guessed : public Turn
     std::vector<Card*> pCards;
     const bool correct;
 
-    Guessed(const Player* pDetective, const Action action,
+    Guessed(const Player* pDetective, const Action action, const size_t id,
             std::vector<Card*> pCards, const bool correct) :
-        Turn(pDetective, action),
+        Turn(pDetective, action, id),
         correct(correct),
         pCards(pCards)
     {

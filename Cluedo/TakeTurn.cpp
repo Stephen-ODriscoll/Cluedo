@@ -127,6 +127,12 @@ TakeTurn::TakeTurn(Controller* pController, const str& detective, const str& pro
     connect(ui.submitButton, SIGNAL(clicked()), this, SLOT(submitButtonClicked()));
 }
 
+size_t TakeTurn::nextId()
+{
+    static size_t nextId = 0;
+    return ++nextId;
+}
+
 bool TakeTurn::outcomeChosen()
 {
     return ui.outcomeTrue->isChecked() || ui.outcomeFalse->isChecked()
@@ -253,24 +259,15 @@ void TakeTurn::cancelButtonClicked()
 
 void TakeTurn::submitButtonClicked()
 {
-    try
-    {
-        if (oldTurn)
-            pController->replaceTurn(oldTurn, getTurnDetails());
-        else
-            pController->processNewTurn(getTurnDetails());
+    if (oldTurn)
+        pController->replaceTurn(oldTurn, getTurnDetails(oldTurn->id));
+    else
+        pController->processNewTurn(getTurnDetails(nextId()));
 
-        close();
-    }
-    catch (const std::exception& ex)
-    {
-        // Should never happen
-        QMessageBox msgBox;
-        msgBox.critical(0, "Error", ex.what());
-    }
+    close();
 }
 
-std::shared_ptr<const Turn> TakeTurn::getTurnDetails()
+std::shared_ptr<const Turn> TakeTurn::getTurnDetails(const size_t id)
 {
     const std::vector<Player>& players = pController->players();
 
@@ -282,7 +279,7 @@ std::shared_ptr<const Turn> TakeTurn::getTurnDetails()
 
     // Missed a turn
     if (ui.missedButton->isDefault())
-        return std::make_shared<Missed>(&*itDetective, Action::MISSED);
+        return std::make_shared<Missed>(&*itDetective, Action::MISSED, id);
 
 
     std::vector<Card*> pCards;
@@ -307,15 +304,15 @@ std::shared_ptr<const Turn> TakeTurn::getTurnDetails()
             throw std::exception((str("Failed to find witness player ") + witness).c_str());
 
         if (ui.outcomeTrue->isChecked())
-            return std::make_shared<Asked>(&*itDetective, Action::ASKED, &*itWitness, pCards, true);
+            return std::make_shared<Asked>(&*itDetective, Action::ASKED, id, &*itWitness, pCards, true);
         else if (ui.outcomeFalse->isChecked())
-            return std::make_shared<Asked>(&*itDetective, Action::ASKED, &*itWitness, pCards, false);
+            return std::make_shared<Asked>(&*itDetective, Action::ASKED, id, &*itWitness, pCards, false);
         else if (ui.cat1Shown->isChecked())
-            return std::make_shared<Asked>(&*itDetective, Action::ASKED, &*itWitness, pCards, true, ui.cat1Box->currentText().toStdString());
+            return std::make_shared<Asked>(&*itDetective, Action::ASKED, id, &*itWitness, pCards, true, ui.cat1Box->currentText().toStdString());
         else if (ui.cat2Shown->isChecked())
-            return std::make_shared<Asked>(&*itDetective, Action::ASKED, &*itWitness, pCards, true, ui.cat2Box->currentText().toStdString());
+            return std::make_shared<Asked>(&*itDetective, Action::ASKED, id, &*itWitness, pCards, true, ui.cat2Box->currentText().toStdString());
         else if (ui.cat3Shown->isChecked())
-            return std::make_shared<Asked>(&*itDetective, Action::ASKED, &*itWitness, pCards, true, ui.cat3Box->currentText().toStdString());
+            return std::make_shared<Asked>(&*itDetective, Action::ASKED, id, &*itWitness, pCards, true, ui.cat3Box->currentText().toStdString());
         else
             throw std::exception("Failed to deduce chosen outcome");
     }
@@ -325,9 +322,9 @@ std::shared_ptr<const Turn> TakeTurn::getTurnDetails()
     if (ui.guessedButton->isDefault())
     {
         if (ui.outcomeTrue->isChecked())
-            return std::make_shared<Guessed>(&*itDetective, Action::GUESSED, pCards, true);
+            return std::make_shared<Guessed>(&*itDetective, Action::GUESSED, id, pCards, true);
         else if (ui.outcomeFalse->isChecked())
-            return std::make_shared<Guessed>(&*itDetective, Action::GUESSED, pCards, false);
+            return std::make_shared<Guessed>(&*itDetective, Action::GUESSED, id, pCards, false);
         else
             throw std::exception("Failed to deduce guessed outcome");
     }

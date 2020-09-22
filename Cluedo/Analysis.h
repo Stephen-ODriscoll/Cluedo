@@ -12,7 +12,7 @@ struct Analysis
         pPlayer(pPlayer),
         out(false)
     {
-        stages.emplace_back(pPlayer);
+        stages.emplace_back(pPlayer, 0);
     }
 
     bool processHas(Card* pCard)
@@ -61,28 +61,28 @@ struct Analysis
             std::inserter(newDoesntHave, newDoesntHave.begin())
         );
 
-        stages.emplace_back(pPlayer, newDoesntHave);
+        stages.emplace_back(pPlayer, stages.size() - 1, newDoesntHave);
     }
 
-    bool couldHaveCard(const Card* pCard)
+    bool couldHaveCard(const Card* pCard, size_t stageIndex)
     {
-        const std::set<Card*>& doesntHave = collectDoesntHave();
+        const std::set<Card*>& doesntHave = collectDoesntHave(stageIndex);
         return (std::find(doesntHave.begin(), doesntHave.end(), pCard) == doesntHave.end());
     }
 
-    str to_str(size_t stageNum) const
+    str to_str(size_t stageIndex) const
     {
-        if (stages.size() < stageNum)
+        if (stages.size() <= stageIndex)
             return "";
 
-        auto has = collectHas(stageNum);
+        auto has = collectHas(stageIndex);
         str info = pPlayer->name + str("\n\thas: ");
         for (const Card* pCard : has)
             info += pCard->nickname + str(", ");
         if (!has.empty())
             info.resize(info.size() - 2);
 
-        auto hasEither = collectHasEither(stageNum);
+        auto hasEither = collectHasEither(stageIndex);
         info += str("\n\thas either: ");
         for (const std::vector<Card*>& pCards : hasEither)
         {
@@ -95,7 +95,7 @@ struct Analysis
         if (!hasEither.empty())
             info.resize(info.size() - 2);
 
-        auto doesntHave = collectDoesntHave(stageNum);
+        auto doesntHave = collectDoesntHave(stageIndex);
         info += "\n\tdoesn't have: ";
         for (const Card* pCard : doesntHave)
             info += pCard->nickname + str(", ");
@@ -114,36 +114,28 @@ struct Analysis
         return pPlayer == p;
     }
 
-
-private:
-    const std::set<Card*> collectHas(const size_t stageNum) const
+    const std::set<Card*> collectHas(const size_t stageIndex) const
     {
         std::set<Card*> has;
-        const auto itEnd = stages.begin() + stageNum;
-        for (auto it = stages.begin(); it < itEnd; ++it)
+        const auto itEnd = stages.begin() + stageIndex + 1;
+        for (auto it = stages.begin(); it != itEnd; ++it)
             has.insert(it->has.begin(), it->has.end());
 
         return has;
     }
 
-    const std::vector<std::vector<Card*>> collectHasEither(const size_t stageNum) const
+    const std::vector<std::vector<Card*>> collectHasEither(const size_t stageIndex) const
     {
         std::vector<std::vector<Card*>> hasEither;
-        const auto itEnd = stages.begin() + stageNum;
-        for (auto it = stages.begin(); it < itEnd; ++it)
+        const auto itEnd = stages.begin() + stageIndex + 1;
+        for (auto it = stages.begin(); it != itEnd; ++it)
             hasEither.insert(hasEither.end(), it->hasEither.begin(), it->hasEither.end());
 
         return hasEither;
     }
 
-    const std::set<Card*> collectDoesntHave(const size_t stageNum) const
+    const std::set<Card*> collectDoesntHave(const size_t stageIndex) const
     {
-        return stages[stageNum - 1].doesntHave;
-    }
-
-public:
-    const std::set<Card*>& collectDoesntHave() const
-    {
-        return stages.back().doesntHave;
+        return stages[stageIndex].doesntHave;
     }
 };

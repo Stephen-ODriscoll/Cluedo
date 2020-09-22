@@ -46,8 +46,8 @@ public:
     size_t numStages();
     size_t playersLeft();
     std::vector<std::vector<Card>>& cards();
-    const std::vector<Analysis>& analyses();
     const std::vector<Player>& players();
+    const std::vector<Analysis>& analyses();
     const std::vector<std::shared_ptr<const Turn>>& turns();
 
 private:
