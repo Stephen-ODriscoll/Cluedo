@@ -104,64 +104,52 @@ bool Controller::rename(const Player* pPlayer, const str& newName)
     return false;
 }
 
-void Controller::hasCard(const Player* pPlayer, const str& cardName)
+void Controller::updateHasCards(const Player* pPlayer, const std::vector<str>& cardNames, const size_t stageIndex)
 {
     try
     {
         Player& player = const_cast<Player&>(*pPlayer);
 
-        Card* pCard = nullptr;
-        for (std::vector<Card>& category : m_cards)
+        std::set<Card*> newCardsOwned;
+        for (const str& cardName : cardNames)
         {
-            auto it = std::find(category.begin(), category.end(), cardName);
-            if (it == category.end())
-                continue;
+            bool found = false;
+            for (std::vector<Card>& category : m_cards)
+            {
+                auto it = std::find(category.begin(), category.end(), cardName);
+                if (it == category.end())
+                    continue;
 
-            pCard = &*it;
-            player.pCardsOwned.insert(pCard);
-            break;
+                found = true;
+                newCardsOwned.insert(&*it);
+                break;
+            }
+
+            if (!found)
+                throw std::exception((str("Failed to find card ") + cardName).c_str());
         }
 
-        if (!pCard)
-            throw std::exception((str("Failed to find card ") + cardName).c_str());
-
-        auto it = std::find(m_analyses.begin(), m_analyses.end(), &player);
-        if (it == m_analyses.end())
-            throw std::exception((str("Failed to find analysis for player ") + player.name).c_str());
-
-        // If this is new information see if we can make anymore deductions
-        if (it->processHas(pCard))
-            continueDeducing();
-    }
-    catch (const contradiction& ex) { m_pGUI->critical("Contraditory Info Given", ex.what()); }
-    catch (const std::exception& ex) { m_pGUI->critical("Exception Occured", ex.what()); }
-
-    m_pGUI->game()->updateNotes();
-}
-
-void Controller::removeHasCard(const Player* pPlayer, const str& cardName)
-{
-    try
-    {
-        Player& player = const_cast<Player&>(*pPlayer);
-
-        bool found = false;
-        for (std::vector<Card>& category : m_cards)
+        std::set<Card*>& pCardsOwned = player.stageCardDetails[stageIndex].pCardsOwned;
+        if (std::includes(pCardsOwned.begin(), pCardsOwned.end(),
+            newCardsOwned.begin(), newCardsOwned.end()))
         {
-            auto it = std::find(category.begin(), category.end(), cardName);
-            if (it == category.end())
-                continue;
+            auto it = std::find(m_analyses.begin(), m_analyses.end(), &player);
+            if (it == m_analyses.end())
+                throw std::exception((str("Failed to find analysis for player ") + player.name).c_str());
 
-            found = true;
-            player.pCardsOwned.erase(&*it);
-            break;
+            for (Card* pCard : newCardsOwned)
+            {
+                if (it->processHas(pCard))
+                    continueDeducing();
+            }
         }
+        else
+        {
+            pCardsOwned = newCardsOwned;
 
-        if (!found)
-            throw std::exception((str("Failed to find card ") + cardName).c_str());
-
-        // This info may have been used to make other deductions so we need to start our analysis again
-        reAnalyseTurns();
+            // This info may have been used to make other deductions so we need to start our analysis again
+            reAnalyseTurns();
+        }
     }
     catch (const contradiction& ex) { m_pGUI->critical("Contraditory Info Given", ex.what()); }
     catch (const std::exception& ex) { m_pGUI->critical("Exception Occured", ex.what()); }
@@ -230,12 +218,9 @@ void Controller::analysesSetup()
 
     m_analyses.clear();
     for (Player& player : m_players)
-    {
         m_analyses.emplace_back(&player);
 
-        for (Card* pCard : player.pCardsOwned)
-            m_analyses.back().processHas(pCard);
-    }
+    processHasAtStage(0);
 
     m_pGUI->game()->startGame();
 }
@@ -246,6 +231,23 @@ void Controller::reAnalyseTurns()
     analysesSetup();
     for (std::shared_ptr<const Turn> pTurn : m_pTurns)
         analyseTurn(pTurn);
+}
+
+void Controller::processHasAtStage(const size_t stageIndex)
+{
+    for (Analysis& analysis : m_analyses)
+    {
+        if (stageIndex < analysis.pPlayer->stageCardDetails.size())
+        {
+            for (Card* pCard : analysis.pPlayer->stageCardDetails[stageIndex].pCardsOwned)
+                analysis.processHas(pCard);
+        }
+        else
+        {
+            Player& player = const_cast<Player&>(*analysis.pPlayer);
+            player.stageCardDetails.push_back(player.stageCardDetails.back());
+        }
+    }
 }
 
 void Controller::analyseTurn(std::shared_ptr<const Turn> pTurn)
@@ -320,8 +322,9 @@ void Controller::analyseGuessed(std::shared_ptr<const Guessed> pGuessed)
                 card.pOwners.push_back(card.pOwners.back());
 
         for (Card* pCard : it->collectHas(m_numStages - 1))
-            pCard->pOwners.back() = nullptr;
+            pCard->pOwners.push_back(nullptr);
 
+        processHasAtStage(m_numStages);
         ++m_numStages;
     }
 }

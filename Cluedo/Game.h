@@ -28,7 +28,7 @@ private:
     Controller* pController;
     QWidget* pPopUp;
 
-    int findItemIndex(const str& playerName);
+    int findPlayerIndex(const str& playerName);
 
 private slots:
     void upButtonClicked();

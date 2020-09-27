@@ -39,8 +39,7 @@ public:
     void processNewTurn(std::shared_ptr<const Turn> pTurn);
 
     bool rename(const Player* pPlayer, const str& newName);
-    void hasCard(const Player* pPlayer, const str& cardName);
-    void removeHasCard(const Player* pPlayer, const str& cardName);
+    void updateHasCards(const Player* pPlayer, const std::vector<str>& cardNames, const size_t stageIndex);
     void replaceTurn(std::shared_ptr<const Turn> oldTurn, std::shared_ptr<const Turn> newTurn);
 
     size_t numStages();
@@ -53,6 +52,7 @@ public:
 private:
     void analysesSetup();
     void reAnalyseTurns();
+    void processHasAtStage(const size_t stageIndex);
 
     void analyseTurn(std::shared_ptr<const Turn> pTurn);
     void analyseAsked(std::shared_ptr<const Asked> pAsked);

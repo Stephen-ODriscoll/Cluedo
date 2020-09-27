@@ -120,7 +120,7 @@ void Game::updateNotes()
 
 void Game::moveToBack(const str& playerName)
 {
-    int index = findItemIndex(playerName);
+    int index = findPlayerIndex(playerName);
     if (index == -1)
         return;
 
@@ -130,7 +130,7 @@ void Game::moveToBack(const str& playerName)
 void Game::removePlayerAndAddStage(const str& playerName)
 {
     // Remove Player stuff
-    int index = findItemIndex(playerName);
+    int index = findPlayerIndex(playerName);
     if (index == -1)
         return;
 
@@ -144,7 +144,7 @@ void Game::removePlayerAndAddStage(const str& playerName)
 
 void Game::editName(const str& oldName, const str& newName)
 {
-    int index = findItemIndex(oldName);
+    int index = findPlayerIndex(oldName);
     if (index == -1)
         return;
 
@@ -152,13 +152,12 @@ void Game::editName(const str& oldName, const str& newName)
     updateNotes();
 }
 
-int Game::findItemIndex(const str& playerName)
+int Game::findPlayerIndex(const str& playerName)
 {
     // Search backwards as we're more likely to be dealing with the bottom items
     int end = MAX_PLAYERS - pController->playersLeft() - 1;
     for (int i = ui.playersList->count() - 1; i != end; --i)
     {
-        auto temp = ui.playersList->item(i)->text();
         if (ui.playersList->item(i)->text() == playerName.c_str())
             return i;
     }
@@ -205,7 +204,7 @@ void Game::playerInfoButtonClicked()
 
     delete pPopUp;
 
-    pPopUp = new PlayerInfo(pController, this, &*it);
+    pPopUp = new PlayerInfo(pController, this, &*it, stageDisplayed);
     pPopUp->show();
 }
 
@@ -245,10 +244,6 @@ void Game::editTurnButtonClicked()
 
 void Game::stageBoxChanged(const QString& text)
 {
-    size_t newStageToDisplay = str(text.toStdString()).toull();
-    if (newStageToDisplay == stageDisplayed)
-        return;
-
-    stageDisplayed = newStageToDisplay;
+    stageDisplayed = str(text.toStdString()).toull();
     updateNotes();
 }

@@ -1,13 +1,19 @@
 #include "stdafx.h"
 #include "PlayerInfo.h"
 
-PlayerInfo::PlayerInfo(Controller* pController, Game* pGame, const Player* pPlayer, QWidget* parent) :
+PlayerInfo::PlayerInfo(Controller* pController, Game* pGame, const Player* pPlayer, const size_t stageToDisplay, QWidget* parent) :
     pController(pController),
     pGame(pGame),
     pPlayer(pPlayer),
+    stageDisplayed(std::min(stageToDisplay, pPlayer->stageCardDetails.size())),
     QWidget(parent)
 {
     ui.setupUi(this);
+
+    for (size_t i = 1; i <= pPlayer->stageCardDetails.size(); ++i)
+        ui.stageBox->addItem(str(i).c_str());
+
+    ui.stageBox->setCurrentIndex(stageDisplayed - 1);
 
     std::vector<QComboBox*> categoryBoxes = { ui.cat1Box, ui.cat2Box, ui.cat3Box };
     auto& it1 = categoryBoxes.begin();
@@ -17,21 +23,14 @@ PlayerInfo::PlayerInfo(Controller* pController, Game* pGame, const Player* pPlay
         for (auto& item : *it2)
             (*it1)->addItem(item.name.c_str());
     }
+    
+    connect(ui.cat1Box, SIGNAL(textActivated(QString)), this, SLOT(cat1BoxChanged(QString)));
+    connect(ui.cat2Box, SIGNAL(textActivated(QString)), this, SLOT(cat2BoxChanged(QString)));
+    connect(ui.cat3Box, SIGNAL(textActivated(QString)), this, SLOT(cat3BoxChanged(QString)));
+    connect(ui.resetButton, SIGNAL(clicked()), this, SLOT(resetButtonClicked()));
+    connect(ui.applyButton, SIGNAL(clicked()), this, SLOT(applyButtonClicked()));
 
-    connect(ui.renameButton, SIGNAL(clicked()), this, SLOT(renameButtonClicked()));
-    connect(ui.cat1Box, SIGNAL(currentTextChanged(QString)), this, SLOT(cat1BoxChanged(QString)));
-    connect(ui.cat2Box, SIGNAL(currentTextChanged(QString)), this, SLOT(cat2BoxChanged(QString)));
-    connect(ui.cat3Box, SIGNAL(currentTextChanged(QString)), this, SLOT(cat3BoxChanged(QString)));
-    connect(ui.cat1Button, SIGNAL(clicked()), this, SLOT(cat1ButtonClicked()));
-    connect(ui.cat2Button, SIGNAL(clicked()), this, SLOT(cat2ButtonClicked()));
-    connect(ui.cat3Button, SIGNAL(clicked()), this, SLOT(cat3ButtonClicked()));
-
-    ui.renameText->installEventFilter(this);
-
-    updateInfo();
-    cat1BoxChanged(ui.cat1Box->currentText());
-    cat2BoxChanged(ui.cat2Box->currentText());
-    cat3BoxChanged(ui.cat3Box->currentText());
+    resetButtonClicked();
 }
 
 void PlayerInfo::updateInfo()
@@ -40,66 +39,50 @@ void PlayerInfo::updateInfo()
     ui.renameText->setText(pPlayer->name.c_str());
 
     ui.cardsList->clear();
-    for (const Card* card : pPlayer->pCardsOwned)
-        ui.cardsList->addItem(card->name.c_str());
+    for (const str& cardName : cardNames)
+        ui.cardsList->addItem(cardName.c_str());
 
-    if (ui.cardsList->count() == 0)
+    if (cardNames.empty())
         ui.cardsList->addItem("No preset cards");
 }
 
-void PlayerInfo::renameButtonClicked()
+void PlayerInfo::toggleCardOwned(const str& cardName)
 {
-    // Error message is handled by the Controller calling the main GUI
-    if (pController->rename(pPlayer, ui.renameText->toPlainText().toStdString()))
-        updateInfo();
-}
+    auto it = std::find(cardNames.begin(), cardNames.end(), cardName);
 
-bool PlayerInfo::eventFilter(QObject* object, QEvent* event)
-{
-    if (object == ui.renameText && event->type() == QEvent::KeyPress)
-    {
-        int key = static_cast<QKeyEvent*>(event)->key();
-        if (key == Qt::Key_Enter || key == Qt::Key_Return)
-        {
-            renameButtonClicked();
-            return true;
-        }
-    }
-
-    return QObject::eventFilter(object, event);
-}
-
-void PlayerInfo::setCardButtonText(const str& cardName, QPushButton* pButton)
-{
-    auto it = std::find_if(pPlayer->pCardsOwned.begin(), pPlayer->pCardsOwned.end(),
-        [cardName](const Card* pCard) { return pCard->name == cardName; });
-
-    if (it == pPlayer->pCardsOwned.end())
-        pButton->setText(ADD_CARD);
+    if (it == cardNames.end())
+        cardNames.push_back(cardName);
     else
-        pButton->setText(REMOVE_CARD);
-}
-
-void PlayerInfo::addRemoveCard(const str& cardName, QPushButton* pButton)
-{
-    if (pButton->text() == ADD_CARD)
-    {
-        pController->hasCard(pPlayer, cardName);
-        pButton->setText(REMOVE_CARD);
-    }
-    else if (pButton->text() == REMOVE_CARD)
-    {
-        pController->removeHasCard(pPlayer, cardName);
-        pButton->setText(ADD_CARD);
-    }
+        cardNames.erase(it);
 
     updateInfo();
 }
 
-void PlayerInfo::cat1BoxChanged(const QString& text) { setCardButtonText(text.toStdString(), ui.cat1Button); }
-void PlayerInfo::cat2BoxChanged(const QString& text) { setCardButtonText(text.toStdString(), ui.cat2Button); }
-void PlayerInfo::cat3BoxChanged(const QString& text) { setCardButtonText(text.toStdString(), ui.cat3Button); }
+void PlayerInfo::stageBoxChanged(const QString& text)
+{
+    stageDisplayed = str(text.toStdString()).toull();
+    resetButtonClicked();
+}
 
-void PlayerInfo::cat1ButtonClicked() { addRemoveCard(ui.cat1Box->currentText().toStdString(), ui.cat1Button); }
-void PlayerInfo::cat2ButtonClicked() { addRemoveCard(ui.cat2Box->currentText().toStdString(), ui.cat2Button); }
-void PlayerInfo::cat3ButtonClicked() { addRemoveCard(ui.cat3Box->currentText().toStdString(), ui.cat3Button); }
+void PlayerInfo::cat1BoxChanged(const QString& text) { toggleCardOwned(text.toStdString()); }
+void PlayerInfo::cat2BoxChanged(const QString& text) { toggleCardOwned(text.toStdString()); }
+void PlayerInfo::cat3BoxChanged(const QString& text) { toggleCardOwned(text.toStdString()); }
+
+void PlayerInfo::resetButtonClicked()
+{
+    cardNames.clear();
+    for (const Card* card : pPlayer->stageCardDetails[stageDisplayed - 1].pCardsOwned)
+        cardNames.push_back(card->name);
+
+    updateInfo();
+};
+
+void PlayerInfo::applyButtonClicked()
+{
+    pController->updateHasCards(pPlayer, cardNames, stageDisplayed - 1);
+    
+    // Error message is handled by the Controller calling the main GUI
+    pController->rename(pPlayer, ui.renameText->toPlainText().toStdString());
+   
+    updateInfo();
+};

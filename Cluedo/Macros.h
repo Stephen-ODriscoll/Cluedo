@@ -4,10 +4,6 @@
 #define MAX_PLAYERS 6
 #define NUM_CATEGORIES 3
 
-// PlayerInfo.cpp
-#define ADD_CARD "Add Card"
-#define REMOVE_CARD "Remove Card"
-
 // Game.cpp
 #define STATUS_OKAY             "Status: <font color='green'>Okay</font>"
 #define STATUS_NEEDS_CARD_INFO  "Status: <font color='yellow'>Needs Card Info</font>"

@@ -1,15 +1,20 @@
 #pragma once
 
-struct Turn;
+struct CardDetails
+{
+    size_t numCards = 0;
+    std::set<Card*> pCardsOwned;
+};
+
 struct Player
 {
     str name;
     //str character;      // Unused for now.
-    std::set<Card*> pCardsOwned;
+    std::vector<CardDetails> stageCardDetails = { CardDetails() };
 
     Player()
     {
-        static uint16_t playerCount = 0;
+        static size_t playerCount = 0;
         name = str("Player ") + str(++playerCount);
     }
 

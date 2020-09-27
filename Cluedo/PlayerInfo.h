@@ -12,25 +12,25 @@ class PlayerInfo : public QWidget
     Q_OBJECT
 
 public:
-    PlayerInfo(Controller* pController, Game* pGame, const Player* pPlayer, QWidget* parent = Q_NULLPTR);
+    PlayerInfo(Controller* pController, Game* pGame, const Player* pPlayer, const size_t stageNum, QWidget* parent = Q_NULLPTR);
 
 private:
     Ui::PlayerInfoObject ui;
     Controller* pController;
     Game* pGame;
+
     const Player* pPlayer;
+    size_t stageDisplayed;
+    std::vector<str> cardNames;
 
     void updateInfo();
-    void setCardButtonText(const str& cardName, QPushButton* pButton);
-    void addRemoveCard(const str& cardName, QPushButton* pButton);
+    void toggleCardOwned(const str& cardName);
 
 private slots:
-    void renameButtonClicked();
-    bool eventFilter(QObject* watched, QEvent* event);
+    void stageBoxChanged(const QString& text);
     void cat1BoxChanged(const QString& text);
     void cat2BoxChanged(const QString& text);
     void cat3BoxChanged(const QString& text);
-    void cat1ButtonClicked();
-    void cat2ButtonClicked();
-    void cat3ButtonClicked();
+    void resetButtonClicked();
+    void applyButtonClicked();
 };
