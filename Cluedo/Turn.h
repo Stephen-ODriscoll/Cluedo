@@ -1,9 +1,5 @@
 #pragma once
 
-#include "Macros.h"
-#include "Card.h"
-#include "Player.h"
-
 enum class Action
 {
     MISSED,

@@ -5,19 +5,19 @@ PlayerInfo::PlayerInfo(Controller* pController, Game* pGame, const Player* pPlay
     pController(pController),
     pGame(pGame),
     pPlayer(pPlayer),
-    stageDisplayed(std::min(stageToDisplay, pPlayer->stageCardDetails.size())),
+    stageDisplayed(std::min(stageToDisplay, pPlayer->stagePresets.size())),
     QWidget(parent)
 {
     ui.setupUi(this);
 
-    for (size_t i = 1; i <= pPlayer->stageCardDetails.size(); ++i)
+    for (size_t i = 1; i <= pPlayer->stagePresets.size(); ++i)
         ui.stageBox->addItem(str(i).c_str());
 
     ui.stageBox->setCurrentIndex(stageDisplayed - 1);
 
     std::vector<QComboBox*> categoryBoxes = { ui.cat1Box, ui.cat2Box, ui.cat3Box };
     auto& it1 = categoryBoxes.begin();
-    for (auto& it2 = pController->cards().begin(); it1 != categoryBoxes.end(); ++it1, ++it2)
+    for (auto& it2 = g_cards.begin(); it1 != categoryBoxes.end(); ++it1, ++it2)
     {
         // Add cards for this category
         for (auto& item : *it2)
@@ -71,7 +71,7 @@ void PlayerInfo::cat3BoxChanged(const QString& text) { toggleCardOwned(text.toSt
 void PlayerInfo::resetButtonClicked()
 {
     cardNames.clear();
-    for (const Card* card : pPlayer->stageCardDetails[stageDisplayed - 1].pCardsOwned)
+    for (const Card* card : pPlayer->stagePresets[stageDisplayed - 1].pCardsOwned)
         cardNames.push_back(card->name);
 
     updateInfo();

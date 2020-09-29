@@ -78,7 +78,7 @@ TakeTurn::TakeTurn(Controller* pController, const str& detective, const str& pro
         ui.askedBox->setEnabled(false);
 
         // Add players for who is being asked
-        for (const Player& player : pController->players())
+        for (const Player& player : g_players)
             if (player.name != detective)
                 ui.askedBox->addItem(player.name.c_str());
 
@@ -94,7 +94,7 @@ TakeTurn::TakeTurn(Controller* pController, const str& detective, const str& pro
 
         // Adds the cards in each category to each combo box
         auto& it1 = categoryBoxes.begin();
-        for (auto& it2 = pController->cards().begin(); it1 != categoryBoxes.end(); ++it1, ++it2)
+        for (auto& it2 = g_cards.begin(); it1 != categoryBoxes.end(); ++it1, ++it2)
         {
             (*it1)->setEnabled(false);  // Set the combo box as disabled until action is chosen
 
@@ -269,11 +269,8 @@ void TakeTurn::submitButtonClicked()
 
 std::shared_ptr<const Turn> TakeTurn::getTurnDetails(const size_t id)
 {
-    const std::vector<Player>& players = pController->players();
-
-
-    const auto itDetective = std::find(players.begin(), players.end(), detective);
-    if (itDetective == players.end())
+    const auto itDetective = std::find(g_players.begin(), g_players.end(), detective);
+    if (itDetective == g_players.end())
         throw std::exception((str("Failed to find detective player ") + detective).c_str());
 
 
@@ -284,7 +281,7 @@ std::shared_ptr<const Turn> TakeTurn::getTurnDetails(const size_t id)
 
     std::vector<Card*> pCards;
     auto& it1 = categoryBoxes.begin();
-    for (auto& it2 = pController->cards().begin(); it1 != categoryBoxes.end(); ++it1, ++it2)
+    for (auto& it2 = g_cards.begin(); it1 != categoryBoxes.end(); ++it1, ++it2)
     {
         const str card = (*it1)->currentText().toStdString();
         auto& itCard = std::find(it2->begin(), it2->end(), card);
@@ -299,8 +296,8 @@ std::shared_ptr<const Turn> TakeTurn::getTurnDetails(const size_t id)
     if (ui.askedButton->isDefault())
     {
         const str witness = ui.askedBox->currentText().toStdString();
-        const auto itWitness = std::find(players.begin(), players.end(), witness);
-        if (itWitness == players.end())
+        const auto itWitness = std::find(g_players.begin(), g_players.end(), witness);
+        if (itWitness == g_players.end())
             throw std::exception((str("Failed to find witness player ") + witness).c_str());
 
         if (ui.outcomeTrue->isChecked())

@@ -8,7 +8,6 @@
 #include "gtest/gtest.h"
 
 #include "../Common/Common/str.h"
-#include "../Cluedo/Card.h"
 #include "../Cluedo/Player.h"
+#include "../Cluedo/Card.h"
 #include "../Cluedo/Turn.h"
-#include "../Cluedo/Analysis.h"

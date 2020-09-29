@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "Home.h"
 
-Home::Home(Controller* pController, QWidget* parent) :
-    pController(pController),
+Home::Home(Cluedo* pCluedo, QWidget* parent) :
+    pCluedo(pCluedo),
     QWidget(parent)
 {
     ui.setupUi(this);
@@ -53,5 +53,5 @@ void Home::continueButtonClicked()
         return;
     }
 
-    pController->startGame(mode, ui.numPlayersBox->value());
+    pCluedo->startGame(mode, ui.numPlayersBox->value());
 }

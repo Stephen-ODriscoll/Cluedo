@@ -1,12 +1,8 @@
 #pragma once
 
-#include "Macros.h"
-
 #include "stdafx.h"
-#include "Card.h"
-#include "Player.h"
-#include "Turn.h"
-#include "Analysis.h"
+#include "Macros.h"
+#include "Globals.h"
 
 enum class Mode
 {
@@ -17,25 +13,17 @@ enum class Mode
 
 namespace fs = std::filesystem;
 
-class Cluedo;
+class Game;
 class Controller
 {
-    std::vector<std::vector<Card>> m_cards;
-    std::vector<Player> m_players;
-    std::vector<std::shared_ptr<const Turn>> m_pTurns;
-
-    std::vector<Analysis> m_analyses;
-
     Mode m_mode;
     bool m_gameOver;
-    size_t m_numStages;
 
-    Cluedo* m_pGUI;
+    Game* m_pGame;
 
 public:
-    Controller(Cluedo* pGUI, fs::path inputFile = "ClueDo.txt");
+    Controller(Game* pGame, Mode mode, int numPlayers);
 
-    void startGame(Mode mode, int numPlayers);
     void processNewTurn(std::shared_ptr<const Turn> pTurn);
 
     bool rename(const Player* pPlayer, const str& newName);
@@ -43,16 +31,10 @@ public:
     void replaceTurn(std::shared_ptr<const Turn> oldTurn, std::shared_ptr<const Turn> newTurn);
 
     size_t numStages();
-    size_t playersLeft();
-    std::vector<std::vector<Card>>& cards();
-    const std::vector<Player>& players();
-    const std::vector<Analysis>& analyses();
-    const std::vector<std::shared_ptr<const Turn>>& turns();
 
 private:
     void analysesSetup();
     void reAnalyseTurns();
-    void processHasAtStage(const size_t stageIndex);
 
     void analyseTurn(std::shared_ptr<const Turn> pTurn);
     void analyseAsked(std::shared_ptr<const Asked> pAsked);
@@ -61,4 +43,4 @@ private:
     bool exteriorChecks();
 };
 
-#include "Cluedo.h"
+#include "Game.h"
