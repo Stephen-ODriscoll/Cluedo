@@ -163,6 +163,7 @@
     <QtUic Include="Game.ui" />
     <QtUic Include="Home.ui" />
     <QtUic Include="PlayerInfo.ui" />
+    <QtUic Include="RedistributeCards.ui" />
     <QtUic Include="TakeTurn.ui" />
   </ItemGroup>
   <ItemGroup>

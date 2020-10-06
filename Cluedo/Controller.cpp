@@ -8,7 +8,10 @@ Controller::Controller(Game* pGame, Mode mode, int numPlayers) :
 {
     g_numStages = 1;
     for (int i = 0; i != numPlayers; ++i)
+    {
         g_players.emplace_back();
+        g_pPlayersLeft.insert(&g_players.back());
+    }
 
     // Keep trying until we successfully load the file
     for (fs::path inputFile = "Cluedo.txt"; true;)
@@ -23,7 +26,7 @@ Controller::Controller(Game* pGame, Mode mode, int numPlayers) :
                 throw std::invalid_argument(str("Failed to open file ") + inputFile.string());
 
             str line;
-            g_cards.push_back(std::vector<Card>());
+            g_cards.emplace_back();
             for (uint32_t category = 0U; std::getline(load, line);)
             {
                 if (NUM_CATEGORIES <= category)
@@ -33,7 +36,7 @@ Controller::Controller(Game* pGame, Mode mode, int numPlayers) :
                 {
                     if (!g_cards[category].empty())
                     {
-                        g_cards.push_back(std::vector<Card>());
+                        g_cards.emplace_back();
                         ++category;
                     }
 
@@ -41,7 +44,7 @@ Controller::Controller(Game* pGame, Mode mode, int numPlayers) :
                 }
 
                 std::vector<str> splits = line.split('=');
-                g_cards[category].push_back(Card(splits[0], splits[1]));
+                g_cards[category].push_back(Card(splits[0], splits[1], category));
             }
 
             if (g_cards.size() != NUM_CATEGORIES)
@@ -174,8 +177,12 @@ void Controller::analysesSetup()
     g_numStages = 1;
     m_gameOver = false;
 
+    g_pPlayersOut.clear();
     for (Player& player : g_players)
+    {
         player.reset();
+        g_pPlayersLeft.insert(&player);
+    }
 
     // reset each cards owner and conviction
     for (std::vector<Card>& category : g_cards)
@@ -248,20 +255,19 @@ void Controller::analyseGuessed(std::shared_ptr<const Guessed> pGuessed)
     {
         Player& detective = const_cast<Player&>(*pGuessed->pDetective);
 
+        g_pPlayersLeft.erase(&detective);
+        g_pPlayersOut.push_back(&detective);
+
         // Create new analysis for every player left
-        detective.out = true;
-        for (Player& player : g_players)
-            player.processGuessedWrong(detective.stages[g_numStages - 1].doesntHave);
+        for (Player* player : g_pPlayersLeft)
+            player->processGuessedWrong(&detective);
 
         for (std::vector<Card>& category : g_cards)
             for (Card& card : category)
-                card.stages.push_back(card.stages.back());
-
-        // Cards belonging to the wrong guesser have been redistributed
-        for (Card* pCard : detective.stages[g_numStages - 1].has)
-            pCard->stages.back().pOwner = nullptr;
+                card.processGuessedWrong(&detective);
 
         ++g_numStages;
+        g_wrongGuesses.push_back(pGuessed->pCards);
     }
 }
 
@@ -273,7 +279,7 @@ void Controller::continueDeducing()
     {
         cardDeduced = false;
         for (auto it = g_players.begin(); it != g_players.end(); ++it)
-            cardDeduced |= it->recheckCards(g_numStages - 1);
+            cardDeduced |= it->recheck();
 
         cardDeduced |= exteriorChecks();
     }
@@ -281,5 +287,57 @@ void Controller::continueDeducing()
 
 bool Controller::exteriorChecks()
 {
-    return false;
+    bool cardDeduced = false;
+    for (std::vector<Card>& category : g_cards)
+    {
+        bool guiltyKnown = false;
+        std::vector<Card*> unknownCards;
+        for (Card& card : category)
+        {
+            if (card.isUnknown())
+                unknownCards.push_back(&card);
+            else if (card.isGuilty())
+                guiltyKnown = true;
+        }
+
+        if (!guiltyKnown)
+        {
+            switch (unknownCards.size())
+            {
+            case 0:
+                throw contradiction((str("Ruled out all cards in category starting with ") + category.front().name).c_str());
+
+            case 1:
+                // All other cards have been ruled out so this card must be the murder card
+                cardDeduced = true;
+                unknownCards.front()->conviction = Conviction::GUILTY;
+                continue;
+            }
+        }
+
+        for (size_t i = 0; i != g_numStages; ++i)
+        {
+            for (Card* pUnknownCard : unknownCards)
+            {
+                switch (pUnknownCard->stages[i].pPossibleOwners.size())
+                {
+                case 0:
+                    if (guiltyKnown)
+                        throw contradiction((pUnknownCard->name + str(" has been convicted but another card in the same category was already covicted")).c_str());
+
+                    // Nobody can have this card so it must be guilty
+                    cardDeduced = true;
+                    guiltyKnown = true;
+                    pUnknownCard->conviction = Conviction::GUILTY;
+                    break;
+                case 1:
+                    // We know which card is guilty and nobody else can have this card
+                    if (guiltyKnown)
+                        cardDeduced = (*pUnknownCard->stages[i].pPossibleOwners.begin())->processHas(pUnknownCard, i);
+                }
+            }
+        }
+    }
+
+    return cardDeduced;
 }

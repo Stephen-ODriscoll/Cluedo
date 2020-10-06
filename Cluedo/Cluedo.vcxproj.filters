@@ -121,6 +121,9 @@
     <QtUic Include="PlayerInfo.ui">
       <Filter>Form Files</Filter>
     </QtUic>
+    <QtUic Include="RedistributeCards.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="Cluedo.qrc">

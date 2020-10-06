@@ -23,17 +23,24 @@ struct CardStage
     std::set<Player*> pPossibleOwners;
 
     CardStage(std::vector<Player>& players);
+    CardStage(std::set<Player*>& pPlayers);
 };
 
 struct Card
 {
     const str name, nickname;
+    const size_t categoryIndex;
 
     std::vector<CardStage> stages;
     enum class Conviction conviction;
 
-    Card(const str& name, const str& nickname);
+    Card(const str& name, const str& nickname, const size_t categoryIndex);
     void reset();
+
+    bool processBelongsTo(Player* pPlayer, const size_t stageIndex);
+    bool processDoesntBelongTo(Player* pPlayer, const size_t stageIndex);
+
+    void processGuessedWrong(Player* pPlayer);
 
     bool isGuilty() const;
     bool isUnknown() const;

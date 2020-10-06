@@ -83,7 +83,7 @@ void Game::updateNotes()
             ui.cardList->addItem(card.nickname.c_str());
 
             if (card.ownerKnown(stageDisplayed - 1))
-                ui.cardInfoList->addItem(card.stages[stageDisplayed].pOwner->name.c_str());
+                ui.cardInfoList->addItem(card.stages[stageDisplayed - 1].pOwner->name.c_str());
             else
                 ui.cardInfoList->addItem(convictionStrings.find(card.conviction)->second.c_str());
         }

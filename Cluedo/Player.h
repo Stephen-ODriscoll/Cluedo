@@ -28,7 +28,6 @@ struct Player
     str name;
     std::vector<StagePresets> stagePresets = { StagePresets() };
 
-    bool out;
     std::vector<PlayerStage> stages;
 
     Player();
@@ -37,9 +36,11 @@ struct Player
     bool processHas(Card* pCard, const size_t stageIndex);
     bool processDoesntHave(const std::vector<Card*>& pCards, const size_t stageIndex);
     bool processHasEither(const std::vector<Card*>& pCards, const size_t stageIndex);
-    bool recheckCards(const size_t stageIndex);
+    bool recheck();
 
-    bool processGuessedWrong(const std::set<Card*>& guesserDoesntHave);
+    bool processGuessedWrong(Player* pPlayer);
+
+    bool couldHaveCard(Card* pCard, size_t stageIndex);
 
     str to_str(size_t stageIndex) const;
 
