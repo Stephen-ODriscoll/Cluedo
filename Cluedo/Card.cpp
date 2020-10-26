@@ -8,8 +8,8 @@ CardStage::CardStage(std::vector<Player>& players) :
         pPossibleOwners.insert(&player);
 }
 
-CardStage::CardStage(std::set<Player*>& pPlayers) :
-    pPossibleOwners(pPlayers),
+CardStage::CardStage(std::vector<Player*>& pPlayers) :
+    pPossibleOwners(pPlayers.begin(), pPlayers.end()),
     pOwner(nullptr) { }
 
 Card::Card(const str& name, const str& nickname, const size_t categoryIndex) :
@@ -34,18 +34,16 @@ bool Card::processBelongsTo(Player* pPlayer, const size_t stageIndex)
         if (ownedBy(pPlayer, stageIndex))
             return false;
 
-        throw contradiction((
-            str("Deduced that ") + name + str(" is owned by ") + pPlayer->name
-            + str(" but this card is already ")
+        throw contradiction((name + str(" can't be owned by ") + pPlayer->name + str(" and ")
             + (isGuilty() ?
                 str("guilty") :
-                str("owned by ")) + stages[stageIndex].pOwner->name
+                stages[stageIndex].pOwner->name)
             ).c_str());
     }
 
     if (stages[stageIndex].pPossibleOwners.find(pPlayer) == stages[stageIndex].pPossibleOwners.end())
-        throw contradiction((str("Deduced that ") + name + str(" is owned by ") + pPlayer->name
-        + str(" but this scenario has already been ruled out")).c_str());
+        throw contradiction((name + str(" can't be owned by ") + pPlayer->name
+        + str(" because this has already been ruled out")).c_str());
         
     conviction = Conviction::INNOCENT;
     stages[stageIndex].pOwner = pPlayer;
@@ -63,7 +61,21 @@ bool Card::processBelongsTo(Player* pPlayer, const size_t stageIndex)
                 ++it;
         }
 
-        stages[i].pPossibleOwners = pPossibleOwners;
+        // Break here if we already know all this
+        if (stages[i].pPossibleOwners == pPossibleOwners)
+            break;
+
+        std::set<Player*> pImpossibleOwners;
+        std::set_difference(
+            stages[i].pPossibleOwners.begin(),
+            stages[i].pPossibleOwners.end(),
+            pPossibleOwners.begin(),
+            pPossibleOwners.end(),
+            std::inserter(pImpossibleOwners, pImpossibleOwners.begin())
+        );
+
+        for (Player* pImpossibleOwner : pImpossibleOwners)
+            pImpossibleOwner->processDoesntHave({ this }, i);
     }
 
     return true;
@@ -74,10 +86,63 @@ bool Card::processDoesntBelongTo(Player* pPlayer, const size_t stageIndex)
     if (ownedBy(pPlayer, stageIndex))
         throw contradiction((str("Previous info says ") + pPlayer->name + str(" has ") + name).c_str());
 
-    for (size_t i = stageIndex; i != 0; --i)
+    for (size_t i = 0; i != stageIndex + 1; ++i)
         stages[i].pPossibleOwners.erase(pPlayer);
     
+    return recheck();
+}
+
+bool Card::processGuilty()
+{
+    switch (conviction)
+    {
+    case Conviction::GUILTY:
+        return false;
+
+    case Conviction::INNOCENT:
+        throw contradiction((str("Deduced that ") + name + str(" is guilty but this card is already innocent")).c_str());
+
+    case Conviction::UNKNOWN:
+        if (g_categories[categoryIndex].guiltyKnown)
+            throw contradiction((name + str(" has been convicted but another card in the same category was already covicted")).c_str());
+
+        conviction = Conviction::GUILTY;
+        g_categories[categoryIndex].guiltyKnown = true;
+        g_progressReport += name + str(" has been convicted\n");
+
+        for (Card& card : g_categories[categoryIndex].cards)
+        {
+            if (&card != this)
+                card.conviction = Conviction::INNOCENT;
+        }
+    }
+
     return true;
+}
+
+bool Card::recheck()
+{
+    bool cardDeduced = false;
+    for (size_t i = 0; i != stages.size(); ++i)
+    {
+        if (locationKnown(i))
+            continue;
+
+        switch (stages[i].pPossibleOwners.size())
+        {
+        case 0:
+            // Nobody can have this card so it must be guilty
+            cardDeduced |= processGuilty();
+            break;
+
+        case 1:
+            // If this card is innocent then we know it's only possible owner is it's owner
+            if (isInnocent())
+                cardDeduced |= (*stages[i].pPossibleOwners.begin())->processHas(this, i);
+        }
+    }
+
+    return cardDeduced;
 }
 
 void Card::processGuessedWrong(Player* pPlayer)
@@ -101,3 +166,11 @@ bool Card::locationUnknown(const size_t stageIndex) const { return !locationKnow
 
 bool Card::operator<(const Card& card) const { return name < card.name; }
 bool Card::operator==(const str& n) const { return name == n; }
+
+
+void Category::reset()
+{
+    guiltyKnown = false;
+    for (Card& card : cards)
+        card.reset();
+}

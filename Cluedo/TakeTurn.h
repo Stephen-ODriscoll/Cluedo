@@ -4,6 +4,8 @@
 #include "ui_TakeTurn.h"
 #include "Controller.h"
 
+#include "RedistributeCards.h"
+
 class TakeTurn : public QWidget
 {
     Q_OBJECT
@@ -11,10 +13,13 @@ class TakeTurn : public QWidget
 public:
     TakeTurn(Controller* pController, std::shared_ptr<const Turn> turn, QWidget* parent = Q_NULLPTR);
     TakeTurn(Controller* pController, const str& detective, const str& probableWitness, QWidget* parent = Q_NULLPTR);
+    ~TakeTurn();
 
 private:
     Ui::TakeTurnObject ui;
     Controller* pController;
+
+    QWidget* pPopUp;
 
     const str detective;
     std::shared_ptr<const Turn> oldTurn;
@@ -22,7 +27,7 @@ private:
 
     size_t nextId();
     bool outcomeChosen();
-    std::shared_ptr<const Turn> getTurnDetails(const size_t id);
+    void handleTurnDetails(const size_t id);
 
 private slots:
     void missedButtonClicked();

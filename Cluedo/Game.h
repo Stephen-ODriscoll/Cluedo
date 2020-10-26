@@ -15,10 +15,7 @@ public:
     Game(Mode mode, int numPlayers, QWidget* parent = Q_NULLPTR);
     ~Game();
 
-    void updateNotes();
-    void moveToBack(const str& playerName);
-    void removePlayerAndAddStage(const str& playerName);
-    void editName(const str& oldName, const str& newName);
+    void refresh();
 
     void critical(const str& title, const str& desc);
     std::wstring openCluedoTextFile(const str& issue);
@@ -29,9 +26,7 @@ private:
     Ui::GameObject ui;
     Controller controller;
     QWidget* pPopUp;
-
-    size_t playersLeft();
-    int findPlayerIndex(const str& playerName);
+    bool hide;
 
 private slots:
     void upButtonClicked();
@@ -39,5 +34,7 @@ private slots:
     void playerInfoButtonClicked();
     void turnButtonClicked();
     void editTurnButtonClicked();
+    void playersListRowChanged(int row);
     void stageBoxChanged(const QString& text);
+    void hideBoxStageChanged(int state);
 };

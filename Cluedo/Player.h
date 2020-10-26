@@ -1,12 +1,17 @@
 #pragma once
 
-#include "Macros.h"
-
 struct Card;
-struct StagePresets
+struct StagePreset
 {
     size_t numCards = 0;
     std::set<Card*> pCardsOwned;
+
+    StagePreset();
+    StagePreset(const std::set<Card*> pCardsOwned);
+    StagePreset(const size_t numCards, const std::set<Card*> pCardsOwned);
+
+    bool numCardsApplies();
+    bool operator==(const StagePreset& stagePreset) const;
 };
 
 // A stage refers to the time between guesses.
@@ -26,19 +31,19 @@ struct PlayerStage
 struct Player
 {
     str name;
-    std::vector<StagePresets> stagePresets = { StagePresets() };
+    std::vector<StagePreset> presets = { StagePreset() };
 
     std::vector<PlayerStage> stages;
 
     Player();
-    void reset();
+    bool reset();
 
     bool processHas(Card* pCard, const size_t stageIndex);
     bool processDoesntHave(const std::vector<Card*>& pCards, const size_t stageIndex);
     bool processHasEither(const std::vector<Card*>& pCards, const size_t stageIndex);
     bool recheck();
 
-    bool processGuessedWrong(Player* pPlayer);
+    bool processGuessedWrong(Player* pPlayer, int cardsReceived = -1);
 
     bool couldHaveCard(Card* pCard, size_t stageIndex);
 

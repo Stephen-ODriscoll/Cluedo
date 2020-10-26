@@ -7,10 +7,11 @@ Controller::Controller(Game* pGame, Mode mode, int numPlayers) :
     m_pGame(pGame)
 {
     g_numStages = 1;
+    g_players.reserve(numPlayers);
     for (int i = 0; i != numPlayers; ++i)
     {
         g_players.emplace_back();
-        g_pPlayersLeft.insert(&g_players.back());
+        g_pPlayersLeft.push_back(&g_players.back());
     }
 
     // Keep trying until we successfully load the file
@@ -26,7 +27,7 @@ Controller::Controller(Game* pGame, Mode mode, int numPlayers) :
                 throw std::invalid_argument(str("Failed to open file ") + inputFile.string());
 
             str line;
-            g_cards.emplace_back();
+            g_categories.emplace_back();
             for (uint32_t category = 0U; std::getline(load, line);)
             {
                 if (NUM_CATEGORIES <= category)
@@ -34,9 +35,9 @@ Controller::Controller(Game* pGame, Mode mode, int numPlayers) :
 
                 if (line.empty())
                 {
-                    if (!g_cards[category].empty())
+                    if (!g_categories[category].cards.empty())
                     {
-                        g_cards.emplace_back();
+                        g_categories.emplace_back();
                         ++category;
                     }
 
@@ -44,17 +45,17 @@ Controller::Controller(Game* pGame, Mode mode, int numPlayers) :
                 }
 
                 std::vector<str> splits = line.split('=');
-                g_cards[category].push_back(Card(splits[0], splits[1], category));
+                g_categories[category].cards.push_back(Card(splits[0], splits[1], category));
             }
 
-            if (g_cards.size() != NUM_CATEGORIES)
+            if (g_categories.size() != NUM_CATEGORIES)
                 throw std::invalid_argument(str("Not enough categories. There should be ") + str(NUM_CATEGORIES));
 
             break;          // This is how we complete the constructor
         }
         catch (const std::invalid_argument& ex)
         {
-            g_cards.clear();
+            g_categories.clear();
 
             inputFile = fs::path(m_pGame->openCluedoTextFile(ex.what()));
             if (inputFile.empty())
@@ -63,18 +64,33 @@ Controller::Controller(Game* pGame, Mode mode, int numPlayers) :
     }
 }
 
-void Controller::processNewTurn(std::shared_ptr<const Turn> pTurn)
+void Controller::processTurn(std::shared_ptr<const Turn> pTurn)
 {
-    g_pTurns.push_back(pTurn);
-
     try
     {
-        analyseTurn(pTurn);
+        // Check if it's a new turn or a previous one edited
+        if (g_pTurns.size() < pTurn->id)
+        {
+            g_pTurns.push_back(pTurn);
+            analyseTurn(pTurn);
+        }
+        else
+        {
+            auto it = std::_Find_pr(g_pTurns.begin(), g_pTurns.end(), *pTurn,
+                [](std::shared_ptr<const Turn> pT, const Turn& t) { return (*pT == t); });
+            if (it == g_pTurns.end())
+                throw std::exception("Failed to find old turn in turns vector");
+
+            *it = pTurn;      // Replace this turn with the updated one
+
+            // Our analysis is may now be wrong so we need to start new
+            reAnalyseTurns();
+        }
     }
     catch (const contradiction& ex) { m_pGame->critical("Contraditory Info Given", ex.what()); }
     catch (const std::exception& ex) { m_pGame->critical("Exception Occured", ex.what()); }
 
-    m_pGame->updateNotes();
+    m_pGame->refresh();
 }
 
 bool Controller::rename(const Player* pPlayer, const str& newName)
@@ -87,10 +103,9 @@ bool Controller::rename(const Player* pPlayer, const str& newName)
         if (std::find(g_players.begin(), g_players.end(), newName) != g_players.end())
             throw std::exception("Player with that name already exists");
 
-        m_pGame->editName(pPlayer->name, newName);
-
         Player& player = const_cast<Player&>(*pPlayer);
         player.name = newName;
+        m_pGame->refresh();
         return true;
     }
     catch (const std::exception& ex) { m_pGame->critical("Exception Occured", ex.what()); }
@@ -98,96 +113,69 @@ bool Controller::rename(const Player* pPlayer, const str& newName)
     return false;
 }
 
-void Controller::updateHasCards(const Player* pPlayer, const std::vector<str>& cardNames, const size_t stageIndex)
+void Controller::updatePresets(const Player* pPlayer, std::vector<StagePreset>& newPresets)
 {
     try
     {
         Player& player = const_cast<Player&>(*pPlayer);
 
-        std::set<Card*> newCardsOwned;
-        for (const str& cardName : cardNames)
+        for (size_t i = 0; i != newPresets.size(); ++i)
         {
-            bool found = false;
-            for (std::vector<Card>& category : g_cards)
+            if (newPresets[i] == player.presets[i])
+                continue;
+
+            // If the new number of cards doesn't apply or the new number is less than or equal to the old number
+            // and no old cards were removed
+            if ((!newPresets[i].numCardsApplies() || newPresets[i].numCards <= player.presets[i].numCards) &&
+                std::includes(newPresets[i].pCardsOwned.begin(), newPresets[i].pCardsOwned.end(),
+                player.presets[i].pCardsOwned.begin(), player.presets[i].pCardsOwned.end()))
             {
-                auto it = std::find(category.begin(), category.end(), cardName);
-                if (it == category.end())
-                    continue;
+                player.presets[i] = newPresets[i];
+                for (Card* pCard : player.presets[i].pCardsOwned)
+                    player.processHas(pCard, g_numStages - 1);
 
-                found = true;
-                newCardsOwned.insert(&*it);
-                break;
+                continueDeducing();
             }
-
-            if (!found)
-                throw std::exception((str("Failed to find card ") + cardName).c_str());
-        }
-
-        std::set<Card*>& pCardsOwned = player.stagePresets[stageIndex].pCardsOwned;
-        if (std::includes(pCardsOwned.begin(), pCardsOwned.end(),
-            newCardsOwned.begin(), newCardsOwned.end()))
-        {
-            pCardsOwned = newCardsOwned;
-            for (Card* pCard : pCardsOwned)
+            else
             {
-                if (player.processHas(pCard, g_numStages - 1))
-                    continueDeducing();
-            }
-        }
-        else
-        {
-            pCardsOwned = newCardsOwned;
+                player.presets[i] = newPresets[i];
 
-            // This info may have been used to make other deductions so we need to start our analysis again
-            reAnalyseTurns();
+                // This info may have been used to make other deductions so we need to start our analysis again
+                reAnalyseTurns();
+            }
         }
     }
     catch (const contradiction& ex) { m_pGame->critical("Contraditory Info Given", ex.what()); }
     catch (const std::exception& ex) { m_pGame->critical("Exception Occured", ex.what()); }
 
-    m_pGame->updateNotes();
-}
-
-void Controller::replaceTurn(std::shared_ptr<const Turn> oldTurn, std::shared_ptr<const Turn> newTurn)
-{
-    try
-    {
-        auto it = std::find(g_pTurns.begin(), g_pTurns.end(), oldTurn);
-        if (it == g_pTurns.end())
-            throw std::exception("Failed to find old turn in turns vector");
-
-        *it = newTurn;      // Replace this turn with the updated one
-
-        // Our analysis is may now be wrong so we need to start new
-        reAnalyseTurns();
-    }
-    catch (const contradiction& ex) { m_pGame->critical("Contraditory Info Given", ex.what()); }
-    catch (const std::exception& ex) { m_pGame->critical("Exception Occured", ex.what()); }
-
-    m_pGame->updateNotes();
-}
-
-size_t Controller::numStages()
-{
-    return g_numStages;
+    m_pGame->refresh();
 }
 
 void Controller::analysesSetup()
 {
     g_numStages = 1;
     m_gameOver = false;
+    g_wrongGuesses.clear();
+    g_progressReport.clear();
 
+    // Reset each category
+    for (Category& category : g_categories)
+        category.reset();
+
+    // Reset each player and add to players left
     g_pPlayersOut.clear();
+    g_pPlayersLeft.clear();
+
+    bool result = false;
     for (Player& player : g_players)
     {
-        player.reset();
-        g_pPlayersLeft.insert(&player);
+        result |= player.reset();
+        g_pPlayersLeft.push_back(&player);
     }
 
-    // reset each cards owner and conviction
-    for (std::vector<Card>& category : g_cards)
-        for (Card& card : category)
-            card.reset();
+    if (result)
+        continueDeducing();
+
 }
 
 void Controller::reAnalyseTurns()
@@ -198,23 +186,31 @@ void Controller::reAnalyseTurns()
         analyseTurn(pTurn);
 }
 
+void Controller::moveToBack(const Player* pPlayer)
+{
+    auto it = std::find(g_pPlayersLeft.begin(), g_pPlayersLeft.end(), pPlayer);
+    if (it == g_pPlayersLeft.end())
+        throw std::exception((str("Failed to find ") + pPlayer->name + str(" in players left")).c_str());
+
+    g_pPlayersLeft.erase(it);
+    g_pPlayersLeft.push_back(const_cast<Player*>(pPlayer));
+}
+
 void Controller::analyseTurn(std::shared_ptr<const Turn> pTurn)
 {
     switch (pTurn->action)
     {
     case Action::MISSED:
-        m_pGame->moveToBack(pTurn->pDetective->name);
+        moveToBack(pTurn->pDetective);
         break;
 
     case Action::ASKED:
         analyseAsked(std::static_pointer_cast<const Asked>(pTurn));
-        m_pGame->moveToBack(pTurn->pDetective->name);
+        moveToBack(pTurn->pDetective);
         break;
 
     case Action::GUESSED:
         analyseGuessed(std::static_pointer_cast<const Guessed>(pTurn));
-        if (!m_gameOver)
-            m_pGame->removePlayerAndAddStage(pTurn->pDetective->name);
         break;
     }
 }
@@ -231,7 +227,7 @@ void Controller::analyseAsked(std::shared_ptr<const Asked> pAsked)
             auto itCard = std::_Find_pr(pAsked->pCards.begin(), pAsked->pCards.end(), pAsked->cardShown,
                 [](const Card* c, const str& s) { return (c->name == s); });
             if (itCard == pAsked->pCards.end())
-                throw std::exception("Card shown not found amongst cards");
+                throw std::exception("Failed to find card shown");
 
             cardDeduced = witness.processHas(*itCard, g_numStages - 1);
         }
@@ -255,19 +251,31 @@ void Controller::analyseGuessed(std::shared_ptr<const Guessed> pGuessed)
     {
         Player& detective = const_cast<Player&>(*pGuessed->pDetective);
 
-        g_pPlayersLeft.erase(&detective);
+        auto it = std::find(g_pPlayersLeft.begin(), g_pPlayersLeft.end(), &detective);
+        if (it == g_pPlayersLeft.end())
+            throw std::exception((str("Failed to find ") + detective.name + str(" in players left")).c_str());
+
+        g_pPlayersLeft.erase(it);
         g_pPlayersOut.push_back(&detective);
 
-        // Create new analysis for every player left
-        for (Player* player : g_pPlayersLeft)
-            player->processGuessedWrong(&detective);
+        // Create new player analyses
+        if (pGuessed->redistribedCards.empty())
+        {
+            for (Player* pPlayerLeft : g_pPlayersLeft)
+                pPlayerLeft->processGuessedWrong(&detective);
+        }
+        else
+        {
+            for (size_t i = 0; i != g_pPlayersLeft.size(); ++i)
+                g_pPlayersLeft[i]->processGuessedWrong(&detective, pGuessed->redistribedCards[i]);
+        }
 
-        for (std::vector<Card>& category : g_cards)
-            for (Card& card : category)
+        for (Category& category : g_categories)
+            for (Card& card : category.cards)
                 card.processGuessedWrong(&detective);
 
-        ++g_numStages;
         g_wrongGuesses.push_back(pGuessed->pCards);
+        ++g_numStages;
     }
 }
 
@@ -278,8 +286,8 @@ void Controller::continueDeducing()
     while (cardDeduced)
     {
         cardDeduced = false;
-        for (auto it = g_players.begin(); it != g_players.end(); ++it)
-            cardDeduced |= it->recheck();
+        for (Player& player : g_players)
+            cardDeduced |= player.recheck();
 
         cardDeduced |= exteriorChecks();
     }
@@ -288,54 +296,26 @@ void Controller::continueDeducing()
 bool Controller::exteriorChecks()
 {
     bool cardDeduced = false;
-    for (std::vector<Card>& category : g_cards)
+    for (Category& category : g_categories)
     {
-        bool guiltyKnown = false;
+        if (category.guiltyKnown)
+            continue;
+
         std::vector<Card*> unknownCards;
-        for (Card& card : category)
+        for (Card& card : category.cards)
         {
             if (card.isUnknown())
                 unknownCards.push_back(&card);
-            else if (card.isGuilty())
-                guiltyKnown = true;
         }
 
-        if (!guiltyKnown)
+        switch (unknownCards.size())
         {
-            switch (unknownCards.size())
-            {
-            case 0:
-                throw contradiction((str("Ruled out all cards in category starting with ") + category.front().name).c_str());
+        case 0:
+            throw contradiction((str("Ruled out all cards in category starting with ") + category.cards.front().name).c_str());
 
-            case 1:
-                // All other cards have been ruled out so this card must be the murder card
-                cardDeduced = true;
-                unknownCards.front()->conviction = Conviction::GUILTY;
-                continue;
-            }
-        }
-
-        for (size_t i = 0; i != g_numStages; ++i)
-        {
-            for (Card* pUnknownCard : unknownCards)
-            {
-                switch (pUnknownCard->stages[i].pPossibleOwners.size())
-                {
-                case 0:
-                    if (guiltyKnown)
-                        throw contradiction((pUnknownCard->name + str(" has been convicted but another card in the same category was already covicted")).c_str());
-
-                    // Nobody can have this card so it must be guilty
-                    cardDeduced = true;
-                    guiltyKnown = true;
-                    pUnknownCard->conviction = Conviction::GUILTY;
-                    break;
-                case 1:
-                    // We know which card is guilty and nobody else can have this card
-                    if (guiltyKnown)
-                        cardDeduced = (*pUnknownCard->stages[i].pPossibleOwners.begin())->processHas(pUnknownCard, i);
-                }
-            }
+        case 1:
+            // All other cards have been ruled out so this card must be the murder card
+            cardDeduced |= unknownCards.front()->processGuilty();
         }
     }
 

@@ -64,6 +64,9 @@
     <ClCompile Include="Globals.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="RedistributeCards.cpp">
+      <Filter>Source Files\GUI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -76,9 +79,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Controller.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Macros.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Card.h">
@@ -102,6 +102,9 @@
       <Filter>Header Files\GUI</Filter>
     </QtMoc>
     <QtMoc Include="PlayerInfo.h">
+      <Filter>Header Files\GUI</Filter>
+    </QtMoc>
+    <QtMoc Include="RedistributeCards.h">
       <Filter>Header Files\GUI</Filter>
     </QtMoc>
   </ItemGroup>

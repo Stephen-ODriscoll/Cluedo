@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Macros.h"
-
 enum class Conviction
 {
     UNKNOWN,
@@ -23,7 +21,7 @@ struct CardStage
     std::set<Player*> pPossibleOwners;
 
     CardStage(std::vector<Player>& players);
-    CardStage(std::set<Player*>& pPlayers);
+    CardStage(std::vector<Player*>& pPlayers);
 };
 
 struct Card
@@ -39,6 +37,8 @@ struct Card
 
     bool processBelongsTo(Player* pPlayer, const size_t stageIndex);
     bool processDoesntBelongTo(Player* pPlayer, const size_t stageIndex);
+    bool processGuilty();
+    bool recheck();
 
     void processGuessedWrong(Player* pPlayer);
 
@@ -54,6 +54,14 @@ struct Card
 
     bool operator<(const Card& card) const;
     bool operator==(const str& n) const;
+};
+
+struct Category
+{
+    bool guiltyKnown = false;
+    std::vector<Card> cards;
+
+    void reset();
 };
 
 #include "Globals.h"
