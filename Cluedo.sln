@@ -4,10 +4,16 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 16.0.29418.71
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Cluedo", "Cluedo\Cluedo.vcxproj", "{0F5B1487-64A3-4387-88A4-6D09C2A800C8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{328BB371-08D7-4F1F-ADE8-E629C8AE66A5} = {328BB371-08D7-4F1F-ADE8-E629C8AE66A5}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Common", "Common\Common\Common.vcxproj", "{328BB371-08D7-4F1F-ADE8-E629C8AE66A5}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Unittests", "Unittests\Unittests.vcxproj", "{07FF9A68-5651-4675-89BC-92764B49E940}"
+	ProjectSection(ProjectDependencies) = postProject
+		{328BB371-08D7-4F1F-ADE8-E629C8AE66A5} = {328BB371-08D7-4F1F-ADE8-E629C8AE66A5}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

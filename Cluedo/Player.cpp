@@ -149,9 +149,9 @@ bool Player::processGuessedWrong(Player* pPlayer, int cardsReceived)
     {
         StagePreset& preset = presets.back();
         if (cardsReceived == -1)
-            presets.emplace_back(preset.pCardsOwned, 0);
+            presets.emplace_back(0, preset.pCardsOwned);
         else
-            presets.emplace_back(preset.pCardsOwned, preset.numCards + cardsReceived);
+            presets.emplace_back(preset.numCards + cardsReceived, preset.pCardsOwned);
     }
     else
     {
@@ -193,10 +193,10 @@ str Player::to_str(size_t stageIndex) const
         return "";
 
     return name +
-        str("\n\thas: ") + str(stages[stageIndex].has, [](const Card* pCard) { return pCard->nickname; }) +
-        str("\n\thas either: ") + str(stages[stageIndex].hasEither, [](const std::vector<Card*> pCards)
-            { return str(pCards, [](const Card* pCard) { return pCard->nickname; }, "/"); }) +
-        str("\n\tdoesn't have: ") + str(stages[stageIndex].doesntHave, [](const Card* pCard) { return pCard->nickname; }) +
+        str("\n\thas: ") + str(stages[stageIndex].has.begin(), stages[stageIndex].has.end(), [](Card* pCard) { return pCard->nickname; }) +
+        str("\n\thas either: ") + str(stages[stageIndex].hasEither.begin(), stages[stageIndex].hasEither.end(), [](std::vector<Card*> pCards)
+            { return str(pCards.begin(), pCards.end(), [](Card* pCard) { return pCard->nickname; }, "/"); }) +
+        str("\n\tdoesn't have: ") + str(stages[stageIndex].doesntHave.begin(), stages[stageIndex].doesntHave.end(), [](Card* pCard) { return pCard->nickname; }) +
         "\n\n";
 }
 

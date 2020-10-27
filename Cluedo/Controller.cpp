@@ -28,7 +28,7 @@ Controller::Controller(Game* pGame, Mode mode, int numPlayers) :
 
             str line;
             g_categories.emplace_back();
-            for (uint32_t category = 0U; std::getline(load, line);)
+            for (size_t category = 0; std::getline(load, line);)
             {
                 if (NUM_CATEGORIES <= category)
                     throw std::invalid_argument(str("Too many categories. There should be ") + str(NUM_CATEGORIES));
@@ -45,7 +45,7 @@ Controller::Controller(Game* pGame, Mode mode, int numPlayers) :
                 }
 
                 std::vector<str> splits = line.split('=');
-                g_categories[category].cards.push_back(Card(splits[0], splits[1], category));
+                g_categories[category].cards.emplace_back(splits[0], splits[1], category);
             }
 
             if (g_categories.size() != NUM_CATEGORIES)
