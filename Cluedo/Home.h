@@ -5,19 +5,22 @@
 
 #include "Controller.h"
 
+class Cluedo;
 class Home : public QWidget
 {
     Q_OBJECT
 
 public:
-    Home(Controller* pController, QWidget* parent = Q_NULLPTR);
+    Home(Cluedo* pCluedo, QWidget* parent = Q_NULLPTR);
 
 private:
     Ui::HomeObject ui;
-    Controller* pController;
+    Cluedo* pCluedo;
 
 private slots:
     void singleModeButtonClicked();
     void groupModeButtonClicked();
     void continueButtonClicked();
 };
+
+#include "Cluedo.h"

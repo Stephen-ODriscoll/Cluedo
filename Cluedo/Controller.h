@@ -1,58 +1,31 @@
 #pragma once
 
-#include "Macros.h"
-
 #include "stdafx.h"
-#include "Card.h"
-#include "Player.h"
-#include "Turn.h"
-#include "Analysis.h"
-
-enum class Mode
-{
-    NONE,
-    SINGLE,
-    GROUP
-};
+#include "Globals.h"
 
 namespace fs = std::filesystem;
 
-class Cluedo;
+class Game;
 class Controller
 {
-    std::vector<std::vector<Card>> m_cards;
-    std::vector<Player> m_players;
-    std::vector<std::shared_ptr<const Turn>> m_pTurns;
-
-    std::vector<Analysis> m_analyses;
-
     Mode m_mode;
     bool m_gameOver;
-    size_t m_numStages;
 
-    Cluedo* m_pGUI;
+    Game* m_pGame;
 
 public:
-    Controller(Cluedo* pGUI, fs::path inputFile = "ClueDo.txt");
-
-    void startGame(Mode mode, int numPlayers);
-    void processNewTurn(std::shared_ptr<const Turn> pTurn);
-
+    Controller(Game* pGame, Mode mode, int numPlayers);
+    
     bool rename(const Player* pPlayer, const str& newName);
-    void updateHasCards(const Player* pPlayer, const std::vector<str>& cardNames, const size_t stageIndex);
-    void replaceTurn(std::shared_ptr<const Turn> oldTurn, std::shared_ptr<const Turn> newTurn);
+    void updatePresets(const Player* pPlayer, std::vector<StagePreset>& newPresets);
 
-    size_t numStages();
-    size_t playersLeft();
-    std::vector<std::vector<Card>>& cards();
-    const std::vector<Player>& players();
-    const std::vector<Analysis>& analyses();
-    const std::vector<std::shared_ptr<const Turn>>& turns();
-
+    void processTurn(std::shared_ptr<const Turn> pTurn);
+    void replaceTurn(std::shared_ptr<const Turn> pOldTurn, std::shared_ptr<const Turn> pNewTurn);
+    
 private:
-    void analysesSetup();
+    void resetAnalysis();
     void reAnalyseTurns();
-    void processHasAtStage(const size_t stageIndex);
+    void moveToBack(const Player* pPlayer);
 
     void analyseTurn(std::shared_ptr<const Turn> pTurn);
     void analyseAsked(std::shared_ptr<const Asked> pAsked);
@@ -61,4 +34,4 @@ private:
     bool exteriorChecks();
 };
 
-#include "Cluedo.h"
+#include "Game.h"

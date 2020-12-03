@@ -129,12 +129,16 @@
     <Link />
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Card.cpp" />
     <ClCompile Include="Cluedo.cpp" />
     <ClCompile Include="Controller.cpp" />
     <ClCompile Include="Game.cpp" />
+    <ClCompile Include="Globals.cpp" />
     <ClCompile Include="Home.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Player.cpp" />
     <ClCompile Include="PlayerInfo.cpp" />
+    <ClCompile Include="RedistributeCards.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
@@ -145,13 +149,12 @@
     <ClInclude Include="Controller.h" />
     <QtMoc Include="Home.h" />
     <QtMoc Include="Game.h" />
-    <ClInclude Include="Macros.h" />
+    <ClInclude Include="Globals.h" />
     <QtMoc Include="TakeTurn.h" />
     <QtMoc Include="PlayerInfo.h" />
-    <ClInclude Include="Stage.h" />
+    <QtMoc Include="RedistributeCards.h" />
     <ClInclude Include="Turn.h" />
     <QtMoc Include="Cluedo.h" />
-    <ClInclude Include="Analysis.h" />
     <ClInclude Include="Card.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="stdafx.h" />
@@ -161,6 +164,7 @@
     <QtUic Include="Game.ui" />
     <QtUic Include="Home.ui" />
     <QtUic Include="PlayerInfo.ui" />
+    <QtUic Include="RedistributeCards.ui" />
     <QtUic Include="TakeTurn.ui" />
   </ItemGroup>
   <ItemGroup>

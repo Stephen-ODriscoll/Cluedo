@@ -1,11 +1,12 @@
 #include "stdafx.h"
 #include "Game.h"
 
-Game::Game(Controller* pController, QWidget* parent) :
-    pController(pController),
+Game::Game(Mode mode, int numPlayers, QWidget* parent) :
+    controller(this, mode, numPlayers),
     pPopUp(nullptr),
     stageDisplayed(1),
-    QWidget(parent)
+    QWidget(parent),
+    hide(false)
 {
     ui.setupUi(this);
 
@@ -35,7 +36,9 @@ Game::Game(Controller* pController, QWidget* parent) :
     connect(ui.playerInfoButton, SIGNAL(clicked()), this, SLOT(playerInfoButtonClicked()));
     connect(ui.turnButton, SIGNAL(clicked()), this, SLOT(turnButtonClicked()));
     connect(ui.editTurnButton, SIGNAL(clicked()), this, SLOT(editTurnButtonClicked()));
+    connect(ui.playersList, SIGNAL(currentRowChanged(int)), this, SLOT(playersListRowChanged(int)));
     connect(ui.stageBox, SIGNAL(currentTextChanged(QString)), this, SLOT(stageBoxChanged(QString)));
+    connect(ui.hideBox, SIGNAL(stateChanged(int)), this, SLOT(hideBoxStageChanged(int)));
 
     ui.playersList->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     ui.playersList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -51,6 +54,22 @@ Game::Game(Controller* pController, QWidget* parent) :
 
     ui.turnList->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     ui.turnList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+    // Constant card names
+    for (const Category& category : g_categories)
+    {
+        for (const Card& card : category.cards)
+            ui.cardList->addItem(card.nickname.c_str());
+
+        ui.cardList->addItem("");
+    }
+
+    ui.cardList->takeItem(ui.cardList->count() - 1);
+
+    ui.stageBox->addItem("1");
+    ui.statusLabel->setText(statusStrings.find(Status::NEEDS_CARD_INFO)->second.c_str());
+
+    refresh();
 }
 
 Game::~Game()
@@ -58,143 +77,106 @@ Game::~Game()
     delete pPopUp;
 }
 
-void Game::startGame()
+void Game::refresh()
 {
-    // Implementation of Bottom-up done using blank boxes (I liked bottom-up better than top-down)
-    const std::vector<Player>& players = pController->players();
-
+    // Overview on players (Bottom-up done using blank boxes)
     ui.playersList->clear();
-    for (size_t i = players.size(); i < MAX_PLAYERS; ++i)
+    for (size_t i = g_pPlayersLeft.size(); i < MAX_PLAYERS; ++i)
         ui.playersList->addItem("");
 
-    for (auto& it = players.rbegin(); it != players.rend(); ++it)
-        ui.playersList->addItem(it->name.c_str());
+    for (auto& it = g_pPlayersLeft.rbegin(); it != g_pPlayersLeft.rend(); ++it)
+        ui.playersList->addItem((*it)->name.c_str());
 
-    ui.stageBox->addItem("1");
-    ui.statusLabel->setText(STATUS_NEEDS_CARD_INFO);
-
-    updateNotes();
-}
-
-void Game::updateNotes()
-{
-    // Notes on cards
-    ui.cardList->clear();
-    ui.cardInfoList->clear();
-    for (const std::vector<Card>& category : pController->cards())
+    // Overview on stages
+    while (ui.stageBox->count() != g_numStages)
     {
-        for (const Card& card : category)
-        {
-            ui.cardList->addItem(card.nickname.c_str());
-
-            if (card.ownerKnown(stageDisplayed - 1))
-                ui.cardInfoList->addItem(card.pOwners[stageDisplayed - 1]->name.c_str());
-            else
-                ui.cardInfoList->addItem(convictionStrings.find(card.conviction)->second.c_str());
-        }
-
-        ui.cardList->addItem("");
-        ui.cardInfoList->addItem("");
+        ui.stageBox->addItem(str(ui.stageBox->count() + 1).c_str());
+        ui.stageBox->setCurrentIndex(ui.stageBox->count() - 1);
     }
 
-    ui.cardList->takeItem(ui.cardList->count() - 1);
-    ui.cardInfoList->takeItem(ui.cardInfoList->count() - 1);
-
-    // Notes on players
-    str status;
-    for (const Analysis& analysis : pController->analyses())
-        status += analysis.to_str(stageDisplayed - 1);
-
-    ui.playersText->setPlainText(status.c_str());
-
-    // Notes on turns
+    // Turns
     ui.turnList->clear();
-    for (std::shared_ptr<const Turn> turn : pController->turns())
+    for (std::shared_ptr<const Turn> turn : g_pTurns)
         ui.turnList->addItem(QString(turn->to_str().c_str()));
 
     bool empty = !ui.turnList->count();
     ui.editTurnButton->setEnabled(!empty);
     if (empty)
         ui.turnList->addItem(QString("No turns to show yet"));
-}
 
-void Game::moveToBack(const str& playerName)
-{
-    int index = findPlayerIndex(playerName);
-    if (index == -1)
-        return;
-
-    ui.playersList->insertItem(MAX_PLAYERS - pController->playersLeft(), ui.playersList->takeItem(index));
-}
-
-void Game::removePlayerAndAddStage(const str& playerName)
-{
-    // Remove Player stuff
-    int index = findPlayerIndex(playerName);
-    if (index == -1)
-        return;
-
-    ui.playersList->insertItem(0, ui.playersList->takeItem(index));
-    ui.playersList->item(0)->setText("");
-
-    // Add stage stuff
-    ui.stageBox->addItem(str(pController->numStages()).c_str());
-    ui.stageBox->setCurrentIndex(ui.stageBox->count() - 1);
-}
-
-void Game::editName(const str& oldName, const str& newName)
-{
-    int index = findPlayerIndex(oldName);
-    if (index == -1)
-        return;
-
-    ui.playersList->item(index)->setText(newName.c_str());
-    updateNotes();
-}
-
-int Game::findPlayerIndex(const str& playerName)
-{
-    // Search backwards as we're more likely to be dealing with the bottom items
-    int end = MAX_PLAYERS - pController->playersLeft() - 1;
-    for (int i = ui.playersList->count() - 1; i != end; --i)
+    // Hide the actual information if user selects it
+    if (hide)
     {
-        if (ui.playersList->item(i)->text() == playerName.c_str())
-            return i;
+        ui.progressReportText->clear();
+        ui.cardInfoList->clear();
+        ui.playersText->clear();
+        return;
     }
 
-    // Should never happen
+    // Progress report
+    ui.progressReportText->setText(g_progressReport.c_str());
+
+    // Notes on cards
+    ui.cardInfoList->clear();
+    for (const Category& category : g_categories)
+    {
+        for (const Card& card : category.cards)
+        {
+            if (card.ownerKnown(stageDisplayed - 1))
+                ui.cardInfoList->addItem(card.stages[stageDisplayed - 1].pOwner->name.c_str());
+            else
+                ui.cardInfoList->addItem(convictionStrings.find(card.conviction)->second.c_str());
+        }
+
+        ui.cardInfoList->addItem("");
+    }
+
+    ui.cardInfoList->takeItem(ui.cardInfoList->count() - 1);
+
+    // Notes on players
+    ui.playersText->clear();
+    for (const Player& player : g_players)
+        ui.playersText->appendPlainText(player.to_str(stageDisplayed - 1).c_str());
+}
+
+void Game::critical(const str& title, const str& desc)
+{
     QMessageBox msgBox;
-    msgBox.critical(0, "Error", "Failed to find player with that name");
-    return -1;
+    msgBox.critical(0, title.c_str(), desc.c_str());
+}
+
+std::wstring Game::openCluedoTextFile(const str& issue)
+{
+    QMessageBox msgBox;
+    msgBox.setWindowTitle("Woops...");
+    msgBox.setText((str("While trying to load Cluedo.txt - ") + issue).c_str());
+    msgBox.exec();
+
+    return QFileDialog::getOpenFileName(this, tr("Open Cluedo.txt"), QDir::currentPath(), tr("Text files (*.txt)")).toStdWString();
 }
 
 void Game::upButtonClicked()
 {
     int row = ui.playersList->currentIndex().row();
-    if (row <= int(MAX_PLAYERS - pController->playersLeft()))
-        return;
-
     ui.playersList->insertItem(row, ui.playersList->takeItem(row - 1));
+
+    playersListRowChanged(ui.playersList->currentIndex().row());
 }
 
 void Game::downButtonClicked()
 {
     int row = ui.playersList->currentIndex().row();
-    if (row < int(MAX_PLAYERS - pController->playersLeft()) || row == MAX_PLAYERS - 1)
-        return;
-
     ui.playersList->insertItem(row, ui.playersList->takeItem(row + 1));
+
+    playersListRowChanged(ui.playersList->currentIndex().row());
 }
 
 void Game::playerInfoButtonClicked()
 {
     int row = ui.playersList->currentIndex().row();
-    if (row < int(MAX_PLAYERS - pController->playersLeft()))
-        return;
 
-    const std::vector<Player>& players = pController->players();
-    auto it = std::find(players.begin(), players.end(), ui.playersList->item(row)->text().toStdString());
-    if (it == players.end())
+    auto it = std::find(g_players.begin(), g_players.end(), ui.playersList->item(row)->text().toStdString());
+    if (it == g_players.end())
     {
         // Should never happen
         QMessageBox msgBox;
@@ -204,7 +186,7 @@ void Game::playerInfoButtonClicked()
 
     delete pPopUp;
 
-    pPopUp = new PlayerInfo(pController, this, &*it, stageDisplayed);
+    pPopUp = new PlayerInfo(&controller, &*it, stageDisplayed);
     pPopUp->show();
 }
 
@@ -212,7 +194,7 @@ void Game::turnButtonClicked()
 {
     delete pPopUp;
 
-    pPopUp = new TakeTurn(pController,
+    pPopUp = new TakeTurn(&controller,
         ui.playersList->item(MAX_PLAYERS - 1)->text().toStdString(),
         ui.playersList->item(MAX_PLAYERS - 2)->text().toStdString());
     pPopUp->show();
@@ -224,11 +206,9 @@ void Game::editTurnButtonClicked()
     if (row == -1)
         return;
 
-    const std::vector<std::shared_ptr<const Turn>>& turns = pController->turns();
-
-    auto it = std::lower_bound(turns.begin(), turns.end(), row + 1,
+    auto it = std::lower_bound(g_pTurns.begin(), g_pTurns.end(), row + 1,
         [](std::shared_ptr<const Turn> item, int target) -> bool { return item->id < target; });
-    if (it == turns.end())
+    if (it == g_pTurns.end())
     {
         // Should never happen
         QMessageBox msgBox;
@@ -238,12 +218,34 @@ void Game::editTurnButtonClicked()
     
     delete pPopUp;
 
-    pPopUp = new TakeTurn(pController, *it);
+    pPopUp = new TakeTurn(&controller, *it);
     pPopUp->show();
+}
+
+void Game::playersListRowChanged(int row)
+{
+    if (row == -1)
+    {
+        ui.upButton->setEnabled(false);
+        ui.downButton->setEnabled(false);
+        ui.playerInfoButton->setEnabled(false);
+    }
+    else
+    {
+        ui.upButton->setEnabled(int(MAX_PLAYERS - g_pPlayersLeft.size()) < row);
+        ui.downButton->setEnabled(int(MAX_PLAYERS - g_pPlayersLeft.size()) <= row && row != MAX_PLAYERS - 1);
+        ui.playerInfoButton->setEnabled(int(MAX_PLAYERS - g_pPlayersLeft.size()) <= row);
+    }
 }
 
 void Game::stageBoxChanged(const QString& text)
 {
     stageDisplayed = str(text.toStdString()).toull();
-    updateNotes();
+    refresh();
+}
+
+void Game::hideBoxStageChanged(int state)
+{
+    hide = ui.hideBox->isChecked();
+    refresh();
 }

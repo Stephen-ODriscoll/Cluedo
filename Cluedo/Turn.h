@@ -1,8 +1,6 @@
 #pragma once
 
-#include "Macros.h"
-#include "Card.h"
-#include "Player.h"
+#include "Globals.h"
 
 enum class Action
 {
@@ -25,6 +23,8 @@ struct Turn
 
     str to_str() const;
     str witness() const;
+
+    bool operator==(const Turn& turn) const { return id == turn.id; }
 };
 
 
@@ -34,10 +34,7 @@ struct Missed : public Turn
         Turn(pDetective, action, id)
     { }
 
-    str to_str() const
-    {
-        return str(id) + str(".) ") + pDetective->name + str(" missed a turn");
-    }
+    str to_str() const { return str(id) + str(".) ") + pDetective->name + str(" missed a turn"); }
 };
 
 
@@ -55,9 +52,7 @@ struct Asked: public Turn
         pCards(pCards),
         shown(shown),
         cardShown(cardShown)
-    {
-        assert(pCards.size() == NUM_CATEGORIES);
-    }
+    { assert(pCards.size() == NUM_CATEGORIES); }
 
     str to_str() const
     {
@@ -76,15 +71,14 @@ struct Guessed : public Turn
 {
     std::vector<Card*> pCards;
     const bool correct;
+    std::vector<int> redistribedCards;
 
     Guessed(const Player* pDetective, const Action action, const size_t id,
             std::vector<Card*> pCards, const bool correct) :
         Turn(pDetective, action, id),
         correct(correct),
         pCards(pCards)
-    {
-        assert(pCards.size() == NUM_CATEGORIES);
-    }
+    { assert(pCards.size() == NUM_CATEGORIES); }
 
     str to_str() const
     {

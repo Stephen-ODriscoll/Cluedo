@@ -67,6 +67,7 @@ TakeTurn::TakeTurn(Controller* pController, const str& detective, const str& pro
     pController(pController),
     detective(detective),
     oldTurn(nullptr),
+    pPopUp(nullptr),
     QWidget(parent)
 {
     ui.setupUi(this);
@@ -78,7 +79,7 @@ TakeTurn::TakeTurn(Controller* pController, const str& detective, const str& pro
         ui.askedBox->setEnabled(false);
 
         // Add players for who is being asked
-        for (const Player& player : pController->players())
+        for (const Player& player : g_players)
             if (player.name != detective)
                 ui.askedBox->addItem(player.name.c_str());
 
@@ -94,12 +95,12 @@ TakeTurn::TakeTurn(Controller* pController, const str& detective, const str& pro
 
         // Adds the cards in each category to each combo box
         auto& it1 = categoryBoxes.begin();
-        for (auto& it2 = pController->cards().begin(); it1 != categoryBoxes.end(); ++it1, ++it2)
+        for (auto& it2 = g_categories.begin(); it1 != categoryBoxes.end(); ++it1, ++it2)
         {
             (*it1)->setEnabled(false);  // Set the combo box as disabled until action is chosen
 
             // Add cards for this category
-            for (auto& item : *it2)
+            for (auto& item : it2->cards)
                 (*it1)->addItem(item.name.c_str());
         }
     }
@@ -125,6 +126,11 @@ TakeTurn::TakeTurn(Controller* pController, const str& detective, const str& pro
 
     connect(ui.cancelButton, SIGNAL(clicked()), this, SLOT(cancelButtonClicked()));
     connect(ui.submitButton, SIGNAL(clicked()), this, SLOT(submitButtonClicked()));
+}
+
+TakeTurn::~TakeTurn()
+{
+    delete pPopUp;
 }
 
 size_t TakeTurn::nextId()
@@ -259,36 +265,29 @@ void TakeTurn::cancelButtonClicked()
 
 void TakeTurn::submitButtonClicked()
 {
-    if (oldTurn)
-        pController->replaceTurn(oldTurn, getTurnDetails(oldTurn->id));
-    else
-        pController->processNewTurn(getTurnDetails(nextId()));
-
+    handleTurnDetails(oldTurn ? oldTurn->id : nextId());
     close();
 }
 
-std::shared_ptr<const Turn> TakeTurn::getTurnDetails(const size_t id)
+void TakeTurn::handleTurnDetails(const size_t id)
 {
-    const std::vector<Player>& players = pController->players();
-
-
-    const auto itDetective = std::find(players.begin(), players.end(), detective);
-    if (itDetective == players.end())
+    const auto itDetective = std::find(g_players.begin(), g_players.end(), detective);
+    if (itDetective == g_players.end())
         throw std::exception((str("Failed to find detective player ") + detective).c_str());
 
 
     // Missed a turn
     if (ui.missedButton->isDefault())
-        return std::make_shared<Missed>(&*itDetective, Action::MISSED, id);
+        return pController->processTurn(std::make_shared<Missed>(&*itDetective, Action::MISSED, id));
 
 
     std::vector<Card*> pCards;
     auto& it1 = categoryBoxes.begin();
-    for (auto& it2 = pController->cards().begin(); it1 != categoryBoxes.end(); ++it1, ++it2)
+    for (auto& it2 = g_categories.begin(); it1 != categoryBoxes.end(); ++it1, ++it2)
     {
         const str card = (*it1)->currentText().toStdString();
-        auto& itCard = std::find(it2->begin(), it2->end(), card);
-        if (itCard == it2->end())
+        auto& itCard = std::find(it2->cards.begin(), it2->cards.end(), card);
+        if (itCard == it2->cards.end())
             throw std::exception((str("Failed to find selected card ") + card).c_str());
 
         pCards.push_back(&*itCard);
@@ -299,20 +298,20 @@ std::shared_ptr<const Turn> TakeTurn::getTurnDetails(const size_t id)
     if (ui.askedButton->isDefault())
     {
         const str witness = ui.askedBox->currentText().toStdString();
-        const auto itWitness = std::find(players.begin(), players.end(), witness);
-        if (itWitness == players.end())
+        const auto itWitness = std::find(g_players.begin(), g_players.end(), witness);
+        if (itWitness == g_players.end())
             throw std::exception((str("Failed to find witness player ") + witness).c_str());
 
         if (ui.outcomeTrue->isChecked())
-            return std::make_shared<Asked>(&*itDetective, Action::ASKED, id, &*itWitness, pCards, true);
+            return pController->processTurn(std::make_shared<Asked>(&*itDetective, Action::ASKED, id, &*itWitness, pCards, true));
         else if (ui.outcomeFalse->isChecked())
-            return std::make_shared<Asked>(&*itDetective, Action::ASKED, id, &*itWitness, pCards, false);
+            return pController->processTurn(std::make_shared<Asked>(&*itDetective, Action::ASKED, id, &*itWitness, pCards, false));
         else if (ui.cat1Shown->isChecked())
-            return std::make_shared<Asked>(&*itDetective, Action::ASKED, id, &*itWitness, pCards, true, ui.cat1Box->currentText().toStdString());
+            return pController->processTurn(std::make_shared<Asked>(&*itDetective, Action::ASKED, id, &*itWitness, pCards, true, ui.cat1Box->currentText().toStdString()));
         else if (ui.cat2Shown->isChecked())
-            return std::make_shared<Asked>(&*itDetective, Action::ASKED, id, &*itWitness, pCards, true, ui.cat2Box->currentText().toStdString());
+            return pController->processTurn(std::make_shared<Asked>(&*itDetective, Action::ASKED, id, &*itWitness, pCards, true, ui.cat2Box->currentText().toStdString()));
         else if (ui.cat3Shown->isChecked())
-            return std::make_shared<Asked>(&*itDetective, Action::ASKED, id, &*itWitness, pCards, true, ui.cat3Box->currentText().toStdString());
+            return pController->processTurn(std::make_shared<Asked>(&*itDetective, Action::ASKED, id, &*itWitness, pCards, true, ui.cat3Box->currentText().toStdString()));
         else
             throw std::exception("Failed to deduce chosen outcome");
     }
@@ -322,9 +321,13 @@ std::shared_ptr<const Turn> TakeTurn::getTurnDetails(const size_t id)
     if (ui.guessedButton->isDefault())
     {
         if (ui.outcomeTrue->isChecked())
-            return std::make_shared<Guessed>(&*itDetective, Action::GUESSED, id, pCards, true);
+            return pController->processTurn(std::make_shared<Guessed>(&*itDetective, Action::GUESSED, id, pCards, true));
         else if (ui.outcomeFalse->isChecked())
-            return std::make_shared<Guessed>(&*itDetective, Action::GUESSED, id, pCards, false);
+        {
+            pPopUp = new RedistributeCards(pController, std::make_shared<Guessed>(&*itDetective, Action::GUESSED, id, pCards, false));
+            pPopUp->show();
+            return;
+        }
         else
             throw std::exception("Failed to deduce guessed outcome");
     }

@@ -1,28 +1,56 @@
 #pragma once
 
-struct CardDetails
+struct Card;
+struct StagePreset
 {
     size_t numCards = 0;
     std::set<Card*> pCardsOwned;
+
+    StagePreset();
+    StagePreset(const std::set<Card*> pCardsOwned);
+    StagePreset(const size_t numCards, const std::set<Card*> pCardsOwned);
+
+    bool isNumCardsKnown();
+    bool operator==(const StagePreset& stagePreset) const;
+};
+
+// A stage refers to the time between guesses.
+// E.g. game starts and we enter stage 1, a player
+// guesses wrong thus the cards get passed around
+// and we enter stage 2.
+struct PlayerStage
+{
+    std::set<Card*> has;
+    std::set<Card*> doesntHave;
+    std::vector<std::vector<Card*>> hasEither;
+
+    PlayerStage();
+    PlayerStage(std::set<Card*> has, std::set<Card*> doesntHave, std::vector<std::vector<Card*>> hasEither);
 };
 
 struct Player
 {
     str name;
-    //str character;      // Unused for now.
-    std::vector<CardDetails> stageCardDetails = { CardDetails() };
+    std::vector<StagePreset> presets = { StagePreset() };
 
-    Player()
-    {
-        static size_t playerCount = 0;
-        name = str("Player ") + str(++playerCount);
-    }
+    std::vector<PlayerStage> stages;
 
-    void updateName(const str& newName)
-    {
-        name = newName;
-    }
+    Player();
+    bool reset();
 
-    bool operator!=(const Player& player) const { return name != player.name; }
-    bool operator==(const str& n) const { return name == n; }
+    bool processHas(Card* pCard, const size_t stageIndex);
+    bool processDoesntHave(const std::vector<Card*>& pCards, const size_t stageIndex);
+    bool processHasEither(const std::vector<Card*>& pCards, const size_t stageIndex);
+    bool recheck();
+
+    bool processGuessedWrong(Player* pPlayer, int cardsReceived = -1);
+
+    bool couldHaveCard(Card* pCard, size_t stageIndex);
+
+    str to_str(size_t stageIndex) const;
+
+    bool operator!=(const Player& player) const;
+    bool operator==(const str& n) const;
 };
+
+#include "Globals.h"

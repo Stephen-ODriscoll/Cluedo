@@ -1,5 +1,5 @@
 //
-// pch.h
+// stdafx.h
 // Header for standard system include files.
 //
 
@@ -8,7 +8,4 @@
 #include "gtest/gtest.h"
 
 #include "../Common/Common/str.h"
-#include "../Cluedo/Card.h"
 #include "../Cluedo/Player.h"
-#include "../Cluedo/Turn.h"
-#include "../Cluedo/Analysis.h"

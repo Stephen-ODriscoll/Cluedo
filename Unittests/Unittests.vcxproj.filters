@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="PlayerTest.cpp" />
+    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="..\Cluedo\Player.cpp">
+      <Filter>CluedoSourceFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Cluedo\Card.cpp">
+      <Filter>CluedoSourceFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Cluedo\Globals.cpp">
+      <Filter>CluedoSourceFiles</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="MockGame.h" />
+    <ClInclude Include="..\Cluedo\Turn.h">
+      <Filter>CluedoSourceFiles</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CluedoSourceFiles">
+      <UniqueIdentifier>{b7ea8815-f746-4d87-a13a-9e7149a9749e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
