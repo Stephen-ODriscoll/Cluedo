@@ -11,6 +11,13 @@ struct contradiction : public std::exception
 };
 
 
+enum class Mode
+{
+    NONE,
+    SINGLE,
+    GROUP
+};
+
 enum class Status
 {
     OKAY,

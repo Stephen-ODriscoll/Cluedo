@@ -10,7 +10,7 @@ struct StagePreset
     StagePreset(const std::set<Card*> pCardsOwned);
     StagePreset(const size_t numCards, const std::set<Card*> pCardsOwned);
 
-    bool numCardsApplies();
+    bool isNumCardsKnown();
     bool operator==(const StagePreset& stagePreset) const;
 };
 

@@ -2,9 +2,9 @@
 
 #include <QtWidgets/QMainWindow>
 #include "ui_TakeTurn.h"
-#include "Controller.h"
 
 #include "RedistributeCards.h"
+#include "Controller.h"
 
 class TakeTurn : public QWidget
 {

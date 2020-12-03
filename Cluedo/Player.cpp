@@ -10,7 +10,7 @@ StagePreset::StagePreset(const size_t numCards, const std::set<Card*> pCardsOwne
     numCards(numCards),
     pCardsOwned(pCardsOwned) { }
 
-bool StagePreset::numCardsApplies() { return numCards; }
+bool StagePreset::isNumCardsKnown() { return numCards; }
 bool StagePreset::operator==(const StagePreset& stagePreset) const { return numCards == stagePreset.numCards && pCardsOwned == stagePreset.pCardsOwned; }
 
 PlayerStage::PlayerStage() { }
@@ -182,7 +182,7 @@ bool Player::processGuessedWrong(Player* pPlayer, int cardsReceived)
 
 bool Player::couldHaveCard(Card* pCard, size_t stageIndex)
 {
-    return (!presets[stageIndex].numCardsApplies() || stages[stageIndex].has.size() < presets[stageIndex].numCards || pCard->ownedBy(this, stageIndex)) &&
+    return (!presets[stageIndex].isNumCardsKnown() || stages[stageIndex].has.size() < presets[stageIndex].numCards || pCard->ownedBy(this, stageIndex)) &&
         (stages[stageIndex].doesntHave.find(pCard) == stages[stageIndex].doesntHave.end() &&
         (pCard->locationUnknown(stageIndex) || pCard->ownedBy(this, stageIndex)));
 }
@@ -192,11 +192,13 @@ str Player::to_str(size_t stageIndex) const
     if (stages.size() <= stageIndex)
         return "";
 
+    const PlayerStage& stage = stages[stageIndex];
+
     return name +
-        str("\n\thas: ") + str(stages[stageIndex].has.begin(), stages[stageIndex].has.end(), [](Card* pCard) { return pCard->nickname; }) +
-        str("\n\thas either: ") + str(stages[stageIndex].hasEither.begin(), stages[stageIndex].hasEither.end(), [](std::vector<Card*> pCards)
+        str("\n\thas: ") + str(stage.has.begin(), stage.has.end(), [](Card* pCard) { return pCard->nickname; }) +
+        str("\n\thas either: ") + str(stage.hasEither.begin(), stage.hasEither.end(), [](std::vector<Card*> pCards)
             { return str(pCards.begin(), pCards.end(), [](Card* pCard) { return pCard->nickname; }, "/"); }) +
-        str("\n\tdoesn't have: ") + str(stages[stageIndex].doesntHave.begin(), stages[stageIndex].doesntHave.end(), [](Card* pCard) { return pCard->nickname; }) +
+        str("\n\tdoesn't have: ") + str(stage.doesntHave.begin(), stage.doesntHave.end(), [](Card* pCard) { return pCard->nickname; }) +
         "\n\n";
 }
 

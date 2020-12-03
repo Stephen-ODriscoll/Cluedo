@@ -33,6 +33,8 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
+    <ClInclude Include="..\Cluedo\Turn.h" />
+    <ClInclude Include="MockGame.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>

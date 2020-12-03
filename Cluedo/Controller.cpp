@@ -68,24 +68,21 @@ void Controller::processTurn(std::shared_ptr<const Turn> pTurn)
 {
     try
     {
-        // Check if it's a new turn or a previous one edited
-        if (g_pTurns.size() < pTurn->id)
-        {
-            g_pTurns.push_back(pTurn);
-            analyseTurn(pTurn);
-        }
-        else
-        {
-            auto it = std::_Find_pr(g_pTurns.begin(), g_pTurns.end(), *pTurn,
-                [](std::shared_ptr<const Turn> pT, const Turn& t) { return (*pT == t); });
-            if (it == g_pTurns.end())
-                throw std::exception("Failed to find old turn in turns vector");
+        g_pTurns.push_back(pTurn);
+        analyseTurn(pTurn);
+    }
+    catch (const contradiction& ex) { m_pGame->critical("Contraditory Info Given", ex.what()); }
+    catch (const std::exception& ex) { m_pGame->critical("Exception Occured", ex.what()); }
 
-            *it = pTurn;      // Replace this turn with the updated one
+    m_pGame->refresh();
+}
 
-            // Our analysis is may now be wrong so we need to start new
-            reAnalyseTurns();
-        }
+void Controller::replaceTurn(std::shared_ptr<const Turn> pOldTurn, std::shared_ptr<const Turn> pNewTurn)
+{
+    try
+    {
+        pOldTurn = pNewTurn;
+        reAnalyseTurns();
     }
     catch (const contradiction& ex) { m_pGame->critical("Contraditory Info Given", ex.what()); }
     catch (const std::exception& ex) { m_pGame->critical("Exception Occured", ex.what()); }
@@ -126,7 +123,7 @@ void Controller::updatePresets(const Player* pPlayer, std::vector<StagePreset>& 
 
             // If the new number of cards doesn't apply or the new number is less than or equal to the old number
             // and no old cards were removed
-            if ((!newPresets[i].numCardsApplies() || newPresets[i].numCards <= player.presets[i].numCards) &&
+            if ((!newPresets[i].isNumCardsKnown() || newPresets[i].numCards <= player.presets[i].numCards) &&
                 std::includes(newPresets[i].pCardsOwned.begin(), newPresets[i].pCardsOwned.end(),
                 player.presets[i].pCardsOwned.begin(), player.presets[i].pCardsOwned.end()))
             {
@@ -151,7 +148,7 @@ void Controller::updatePresets(const Player* pPlayer, std::vector<StagePreset>& 
     m_pGame->refresh();
 }
 
-void Controller::analysesSetup()
+void Controller::resetAnalysis()
 {
     g_numStages = 1;
     m_gameOver = false;
@@ -181,7 +178,7 @@ void Controller::analysesSetup()
 void Controller::reAnalyseTurns()
 {
     // Start our analysis again
-    analysesSetup();
+    resetAnalysis();
     for (std::shared_ptr<const Turn> pTurn : g_pTurns)
         analyseTurn(pTurn);
 }
@@ -235,7 +232,8 @@ void Controller::analyseAsked(std::shared_ptr<const Asked> pAsked)
             cardDeduced = witness.processHasEither(pAsked->pCards, g_numStages - 1);
     }
     else
-        cardDeduced = witness.processDoesntHave(pAsked->pCards, g_numStages - 1) || exteriorChecks();
+        cardDeduced = witness.processDoesntHave(pAsked->pCards, g_numStages - 1)
+            || exteriorChecks();
 
     if (cardDeduced)
         continueDeducing();

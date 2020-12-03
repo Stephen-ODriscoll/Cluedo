@@ -3,13 +3,6 @@
 #include "stdafx.h"
 #include "Globals.h"
 
-enum class Mode
-{
-    NONE,
-    SINGLE,
-    GROUP
-};
-
 namespace fs = std::filesystem;
 
 class Game;
@@ -22,13 +15,15 @@ class Controller
 
 public:
     Controller(Game* pGame, Mode mode, int numPlayers);
-
-    void processTurn(std::shared_ptr<const Turn> pTurn);
+    
     bool rename(const Player* pPlayer, const str& newName);
     void updatePresets(const Player* pPlayer, std::vector<StagePreset>& newPresets);
 
+    void processTurn(std::shared_ptr<const Turn> pTurn);
+    void replaceTurn(std::shared_ptr<const Turn> pOldTurn, std::shared_ptr<const Turn> pNewTurn);
+    
 private:
-    void analysesSetup();
+    void resetAnalysis();
     void reAnalyseTurns();
     void moveToBack(const Player* pPlayer);
 

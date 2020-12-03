@@ -2,26 +2,30 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="PlayerTest.cpp" />
-    <ClCompile Include="..\Cluedo\Card.cpp">
-      <Filter>Cluedo Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Cluedo\Player.cpp">
-      <Filter>Cluedo Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="..\Cluedo\Player.cpp">
+      <Filter>CluedoSourceFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Cluedo\Card.cpp">
+      <Filter>CluedoSourceFiles</Filter>
+    </ClCompile>
     <ClCompile Include="..\Cluedo\Globals.cpp">
-      <Filter>Cluedo Source Files</Filter>
+      <Filter>CluedoSourceFiles</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="Cluedo Source Files">
-      <UniqueIdentifier>{bc16716a-7983-4e8c-a2aa-a9a9d5ea70b7}</UniqueIdentifier>
-    </Filter>
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="MockGame.h" />
+    <ClInclude Include="..\Cluedo\Turn.h">
+      <Filter>CluedoSourceFiles</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="stdafx.h" />
+    <Filter Include="CluedoSourceFiles">
+      <UniqueIdentifier>{b7ea8815-f746-4d87-a13a-9e7149a9749e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>
