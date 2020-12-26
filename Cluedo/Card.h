@@ -1,6 +1,6 @@
 #pragma once
 
-enum class Conviction
+enum class Conviction : uint8_t
 {
     UNKNOWN,
     INNOCENT,

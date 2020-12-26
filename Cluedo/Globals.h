@@ -11,14 +11,14 @@ struct contradiction : public std::exception
 };
 
 
-enum class Mode
+enum class Mode : uint8_t
 {
     NONE,
     SINGLE,
     GROUP
 };
 
-enum class Status
+enum class Status : uint8_t
 {
     OKAY,
     NEEDS_CARD_INFO,

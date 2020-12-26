@@ -1,9 +1,10 @@
 #include "stdafx.h"
 #include "RedistributeCards.h"
 
-RedistributeCards::RedistributeCards(Controller* pController, std::shared_ptr<Guessed> pGuessed, QWidget* parent) :
+RedistributeCards::RedistributeCards(Controller* pController, std::shared_ptr<Guessed> pGuessed, std::shared_ptr<const Turn> pOldTurn, QWidget* parent) :
     pController(pController),
     pGuessed(pGuessed),
+    pOldTurn(pOldTurn),
     QWidget(parent)
 {
     ui.setupUi(this);
@@ -51,6 +52,6 @@ void RedistributeCards::okayButtonClicked()
 
     pGuessed->redistribedCards = redistributedCards;
 
-    pController->processTurn(pGuessed);
+    pController->processTurn(pGuessed, pOldTurn);
     close();
 };

@@ -96,13 +96,13 @@ void Game::refresh()
 
     // Turns
     ui.turnList->clear();
-    for (std::shared_ptr<const Turn> turn : g_pTurns)
-        ui.turnList->addItem(QString(turn->to_str().c_str()));
+    for (size_t i = 0; i != g_pTurns.size(); ++i)
+        ui.turnList->addItem((str(i + 1) + str(".) ") + g_pTurns[i]->to_str()).c_str());
 
     bool empty = !ui.turnList->count();
     ui.editTurnButton->setEnabled(!empty);
     if (empty)
-        ui.turnList->addItem(QString("No turns to show yet"));
+        ui.turnList->addItem("No turns to show yet");
 
     // Hide the actual information if user selects it
     if (hide)
@@ -179,9 +179,7 @@ void Game::playerInfoButtonClicked()
     if (it == g_players.end())
     {
         // Should never happen
-        QMessageBox msgBox;
-        msgBox.critical(0, "Error", "Failed to find the chosen player");
-        return;
+        return critical("Error", "Failed to find the chosen player");
     }
 
     delete pPopUp;
@@ -205,20 +203,10 @@ void Game::editTurnButtonClicked()
     int row = ui.turnList->currentIndex().row();
     if (row == -1)
         return;
-
-    auto it = std::lower_bound(g_pTurns.begin(), g_pTurns.end(), row + 1,
-        [](std::shared_ptr<const Turn> item, int target) -> bool { return item->id < target; });
-    if (it == g_pTurns.end())
-    {
-        // Should never happen
-        QMessageBox msgBox;
-        msgBox.critical(0, "Error", (str("Failed to find turn with id ") + str(row + 1)).c_str());
-        return;
-    }
     
     delete pPopUp;
 
-    pPopUp = new TakeTurn(&controller, *it);
+    pPopUp = new TakeTurn(&controller, g_pTurns[row]);
     pPopUp->show();
 }
 

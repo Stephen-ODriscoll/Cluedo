@@ -19,8 +19,7 @@ public:
     bool rename(const Player* pPlayer, const str& newName);
     void updatePresets(const Player* pPlayer, std::vector<StagePreset>& newPresets);
 
-    void processTurn(std::shared_ptr<const Turn> pTurn);
-    void replaceTurn(std::shared_ptr<const Turn> pOldTurn, std::shared_ptr<const Turn> pNewTurn);
+    void processTurn(std::shared_ptr<const Turn> pNewTurn, std::shared_ptr<const Turn> pOldTurn = nullptr);
     
 private:
     void resetAnalysis();

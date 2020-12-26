@@ -64,25 +64,24 @@ Controller::Controller(Game* pGame, Mode mode, int numPlayers) :
     }
 }
 
-void Controller::processTurn(std::shared_ptr<const Turn> pTurn)
+void Controller::processTurn(std::shared_ptr<const Turn> pNewTurn, std::shared_ptr<const Turn> pOldTurn)
 {
     try
     {
-        g_pTurns.push_back(pTurn);
-        analyseTurn(pTurn);
-    }
-    catch (const contradiction& ex) { m_pGame->critical("Contraditory Info Given", ex.what()); }
-    catch (const std::exception& ex) { m_pGame->critical("Exception Occured", ex.what()); }
+        if (pOldTurn)
+        {
+            auto it = std::find(g_pTurns.begin(), g_pTurns.end(), pOldTurn);
+            if (it == g_pTurns.end())
+                throw std::exception("Failed to find turn in g_pTurns");
 
-    m_pGame->refresh();
-}
-
-void Controller::replaceTurn(std::shared_ptr<const Turn> pOldTurn, std::shared_ptr<const Turn> pNewTurn)
-{
-    try
-    {
-        pOldTurn = pNewTurn;
-        reAnalyseTurns();
+            *it = pNewTurn;
+            reAnalyseTurns();
+        }
+        else
+        {
+            analyseTurn(pNewTurn);
+            g_pTurns.push_back(pNewTurn);
+        }
     }
     catch (const contradiction& ex) { m_pGame->critical("Contraditory Info Given", ex.what()); }
     catch (const std::exception& ex) { m_pGame->critical("Exception Occured", ex.what()); }
@@ -172,7 +171,6 @@ void Controller::resetAnalysis()
 
     if (result)
         continueDeducing();
-
 }
 
 void Controller::reAnalyseTurns()

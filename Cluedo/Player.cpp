@@ -145,7 +145,7 @@ bool Player::recheck()
 bool Player::processGuessedWrong(Player* pPlayer, int cardsReceived)
 {
     bool result = false;
-    if (presets.size() < stages.size())
+    if (presets.size() <= stages.size())
     {
         StagePreset& preset = presets.back();
         if (cardsReceived == -1)

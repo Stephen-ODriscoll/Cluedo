@@ -11,7 +11,7 @@ class TakeTurn : public QWidget
     Q_OBJECT
 
 public:
-    TakeTurn(Controller* pController, std::shared_ptr<const Turn> turn, QWidget* parent = Q_NULLPTR);
+    TakeTurn(Controller* pController, std::shared_ptr<const Turn> pOldTurn, QWidget* parent = Q_NULLPTR);
     TakeTurn(Controller* pController, const str& detective, const str& probableWitness, QWidget* parent = Q_NULLPTR);
     ~TakeTurn();
 
@@ -22,12 +22,12 @@ private:
     QWidget* pPopUp;
 
     const str detective;
-    std::shared_ptr<const Turn> oldTurn;
+    std::shared_ptr<const Turn> pOldTurn;
     std::vector<QComboBox*> categoryBoxes;
 
     size_t nextId();
     bool outcomeChosen();
-    void handleTurnDetails(const size_t id);
+    std::shared_ptr<Turn> getNewTurn();
 
 private slots:
     void missedButtonClicked();
