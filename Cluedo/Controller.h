@@ -14,7 +14,7 @@ public:
     Controller(Mode mode, int numPlayers);
     bool initialize(const fs::path& inputFile);
     
-    bool rename(const Player* pPlayer, const str& newName);
+    void rename(const Player* pPlayer, const str& newName);
     void updatePresets(const Player* pPlayer, std::vector<StagePreset>& newPresets);
 
     void processTurn(std::shared_ptr<const Turn> pNewTurn, std::shared_ptr<const Turn> pOldTurn = nullptr);

@@ -10,14 +10,12 @@ Game::Game(Mode mode, int numPlayers, QWidget* parent) :
 {
     ui.setupUi(this);
 
-    bool initialized = false;
-    fs::path inputFile = "Cluedo.txt";
-    while (!initialized)
+    for (fs::path inputFile = "Cluedo.txt"; true; )
     {
         try
         {
             controller.initialize(inputFile);
-            initialized = true;
+            break;
         }
         catch (const std::invalid_argument& ex)
         {
@@ -157,12 +155,6 @@ void Game::refresh()
         ui.playersText->appendPlainText(player.to_str(stageDisplayed - 1).c_str());
 }
 
-void Game::critical(const str& title, const str& desc)
-{
-    QMessageBox msgBox;
-    msgBox.critical(0, title.c_str(), desc.c_str());
-}
-
 const fs::path Game::openCluedoTextFile(const str& issue)
 {
     QMessageBox msgBox;
@@ -197,12 +189,13 @@ void Game::playerInfoButtonClicked()
     if (it == g_players.end())
     {
         // Should never happen
-        return critical("Error", "Failed to find the chosen player");
+        CRITICAL("Error", "Failed to find the chosen player")
+        return;
     }
 
     delete pPopUp;
 
-    pPopUp = new PlayerInfo(&controller, &*it, stageDisplayed);
+    pPopUp = new PlayerInfo(this, &*it, stageDisplayed);
     pPopUp->show();
 }
 
@@ -210,7 +203,7 @@ void Game::turnButtonClicked()
 {
     delete pPopUp;
 
-    pPopUp = new TakeTurn(&controller,
+    pPopUp = new TakeTurn(this,
         ui.playersList->item(MAX_PLAYERS - 1)->text().toStdString(),
         ui.playersList->item(MAX_PLAYERS - 2)->text().toStdString());
     pPopUp->show();
@@ -224,7 +217,7 @@ void Game::editTurnButtonClicked()
     
     delete pPopUp;
 
-    pPopUp = new TakeTurn(&controller, g_pTurns[row]);
+    pPopUp = new TakeTurn(this, g_pTurns[row]);
     pPopUp->show();
 }
 

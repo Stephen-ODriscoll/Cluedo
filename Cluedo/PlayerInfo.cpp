@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "PlayerInfo.h"
 
-PlayerInfo::PlayerInfo(Controller* pController, const Player* pPlayer, const size_t stageIndexToDisplay, QWidget* parent) :
-    pController(pController),
+PlayerInfo::PlayerInfo(Game* pGame, const Player* pPlayer, const size_t stageIndexToDisplay, QWidget* parent) :
+    pGame(pGame),
     pPlayer(pPlayer),
     stageIndex(std::min(stageIndexToDisplay, pPlayer->presets.size() - 1)),
     QWidget(parent)
@@ -110,10 +110,11 @@ void PlayerInfo::resetButtonClicked()
 void PlayerInfo::applyButtonClicked()
 {
     TRY
-        pController->updatePresets(pPlayer, presets);
-        pController->rename(pPlayer, ui.renameText->toPlainText().toStdString());
+        pGame->controller.updatePresets(pPlayer, presets);
+        pGame->controller.rename(pPlayer, ui.renameText->toPlainText().toStdString());
     CATCH
-    
+
+    pGame->refresh();
     updateInfo();
     close();
 };

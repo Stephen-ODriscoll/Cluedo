@@ -52,85 +52,63 @@ bool Controller::initialize(const fs::path& inputFile)
 
 void Controller::processTurn(std::shared_ptr<const Turn> pNewTurn, std::shared_ptr<const Turn> pOldTurn)
 {
-    try
+    if (pOldTurn)
     {
-        if (pOldTurn)
-        {
-            auto it = std::find(g_pTurns.begin(), g_pTurns.end(), pOldTurn);
-            if (it == g_pTurns.end())
-                throw std::exception("Failed to find turn in g_pTurns");
+        auto it = std::find(g_pTurns.begin(), g_pTurns.end(), pOldTurn);
+        if (it == g_pTurns.end())
+            throw std::exception("Failed to find turn in g_pTurns");
 
-            *it = pNewTurn;
-            reAnalyseTurns();
-        }
-        else
-        {
-            analyseTurn(pNewTurn);
-            g_pTurns.push_back(pNewTurn);
-        }
+        *it = pNewTurn;
+        reAnalyseTurns();
     }
-    catch (const contradiction& ex) { m_pGame->critical("Contraditory Info Given", ex.what()); }
-    catch (const std::exception& ex) { m_pGame->critical("Exception Occured", ex.what()); }
-
-    m_pGame->refresh();
+    else
+    {
+        analyseTurn(pNewTurn);
+        g_pTurns.push_back(pNewTurn);
+    }
 }
 
-bool Controller::rename(const Player* pPlayer, const str& newName)
+void Controller::rename(const Player* pPlayer, const str& newName)
 {
-    try
-    {
-        if (pPlayer->name == newName)
-            return false;
+    if (pPlayer->name == newName)
+        return;
 
-        if (std::find(g_players.begin(), g_players.end(), newName) != g_players.end())
-            throw std::exception("Player with that name already exists");
+    if (std::find(g_players.begin(), g_players.end(), newName) != g_players.end())
+        throw std::exception("Player with that name already exists");
 
-        Player& player = const_cast<Player&>(*pPlayer);
-        player.name = newName;
-        m_pGame->refresh();
-        return true;
-    }
-    catch (const std::exception& ex) { m_pGame->critical("Exception Occured", ex.what()); }
-
-    return false;
+    Player& player = const_cast<Player&>(*pPlayer);
+    player.name = newName;
 }
 
 void Controller::updatePresets(const Player* pPlayer, std::vector<StagePreset>& newPresets)
 {
-    try
+    Player& player = const_cast<Player&>(*pPlayer);
+
+    for (size_t i = 0; i != newPresets.size(); ++i)
     {
-        Player& player = const_cast<Player&>(*pPlayer);
+        if (newPresets[i] == player.presets[i])
+            continue;
 
-        for (size_t i = 0; i != newPresets.size(); ++i)
+        // If the new number of cards doesn't apply or the new number is less than or equal to the old number
+        // and no old cards were removed
+        if ((!newPresets[i].isNumCardsKnown() || newPresets[i].numCards <= player.presets[i].numCards) &&
+            std::includes(newPresets[i].pCardsOwned.begin(), newPresets[i].pCardsOwned.end(),
+            player.presets[i].pCardsOwned.begin(), player.presets[i].pCardsOwned.end()))
         {
-            if (newPresets[i] == player.presets[i])
-                continue;
+            player.presets[i] = newPresets[i];
+            for (Card* pCard : player.presets[i].pCardsOwned)
+                player.processHas(pCard, g_numStages - 1);
 
-            // If the new number of cards doesn't apply or the new number is less than or equal to the old number
-            // and no old cards were removed
-            if ((!newPresets[i].isNumCardsKnown() || newPresets[i].numCards <= player.presets[i].numCards) &&
-                std::includes(newPresets[i].pCardsOwned.begin(), newPresets[i].pCardsOwned.end(),
-                player.presets[i].pCardsOwned.begin(), player.presets[i].pCardsOwned.end()))
-            {
-                player.presets[i] = newPresets[i];
-                for (Card* pCard : player.presets[i].pCardsOwned)
-                    player.processHas(pCard, g_numStages - 1);
+            continueDeducing();
+        }
+        else
+        {
+            player.presets[i] = newPresets[i];
 
-                continueDeducing();
-            }
-            else
-            {
-                player.presets[i] = newPresets[i];
-
-                // This info may have been used to make other deductions so we need to start our analysis again
-                reAnalyseTurns();
-            }
+            // This info may have been used to make other deductions so we need to start our analysis again
+            reAnalyseTurns();
         }
     }
-    catch (const contradiction& ex) { m_pGame->critical("Contraditory Info Given", ex.what()); }
-    catch (const std::exception& ex) { m_pGame->critical("Exception Occured", ex.what()); }
-
-    m_pGame->refresh();
 }
 
 void Controller::resetAnalysis()

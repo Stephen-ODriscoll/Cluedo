@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "TakeTurn.h"
 
-TakeTurn::TakeTurn(Controller* pController, std::shared_ptr<const Turn> pOldTurn, QWidget* parent) :
-    TakeTurn(pController, pOldTurn->pDetective->name, pOldTurn->witness(), parent)  // Call other constructor (I ain't doing everything twice)
+TakeTurn::TakeTurn(Game* pGame, std::shared_ptr<const Turn> pOldTurn, QWidget* parent) :
+    TakeTurn(pGame, pOldTurn->pDetective->name, pOldTurn->witness(), parent)  // Call other constructor (I ain't doing everything twice)
 {
     this->pOldTurn = pOldTurn;
 
@@ -63,8 +63,8 @@ TakeTurn::TakeTurn(Controller* pController, std::shared_ptr<const Turn> pOldTurn
     }
 }
 
-TakeTurn::TakeTurn(Controller* pController, const str& detective, const str& probableWitness, QWidget* parent) :
-    pController(pController),
+TakeTurn::TakeTurn(Game* pGame, const str& detective, const str& probableWitness, QWidget* parent) :
+    pGame(pGame),
     detective(detective),
     pOldTurn(nullptr),
     pPopUp(nullptr),
@@ -269,14 +269,16 @@ void TakeTurn::submitButtonClicked()
 
     if (pNewTurn->shouldRedistribute())
     {
-        pPopUp = new RedistributeCards(pController, std::static_pointer_cast<Guessed>(pNewTurn), pOldTurn);
+        pPopUp = new RedistributeCards(pGame, std::static_pointer_cast<Guessed>(pNewTurn), pOldTurn);
         pPopUp->show();
     }
     else
     {
         TRY
-            pController->processTurn(pNewTurn, pOldTurn);
+            pGame->controller.processTurn(pNewTurn, pOldTurn);
         CATCH
+            
+        pGame->refresh();
     }
 
     close();
