@@ -1,6 +1,5 @@
 #pragma once
 
-#include "stdafx.h"
 #include "Globals.h"
 
 namespace fs = std::filesystem;
@@ -12,7 +11,7 @@ class Controller
 
 public:
     Controller(Mode mode, int numPlayers);
-    bool initialize(const fs::path& inputFile);
+    void initialize(const fs::path& inputFile);
     
     void rename(const Player* pPlayer, const str& newName);
     void updatePresets(const Player* pPlayer, std::vector<StagePreset>& newPresets);

@@ -1,5 +1,5 @@
-
 #include "stdafx.h"
+#include "../Cluedo/Player.h"
 
 struct PlayerTest : testing::Test
 {

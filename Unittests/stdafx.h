@@ -8,4 +8,8 @@
 #include "gtest/gtest.h"
 
 #include "../Common/Common/str.h"
-#include "../Cluedo/Player.h"
+#include <filesystem>
+#include <fstream>
+#include <vector>
+#include <set>
+#include <map>

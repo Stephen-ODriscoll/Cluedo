@@ -14,7 +14,7 @@ Controller::Controller(Mode mode, int numPlayers) :
     }
 }
 
-bool Controller::initialize(const fs::path& inputFile)
+void Controller::initialize(const fs::path& inputFile)
 {
     g_categories.clear();
 
