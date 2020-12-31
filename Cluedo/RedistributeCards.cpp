@@ -52,6 +52,9 @@ void RedistributeCards::okayButtonClicked()
 
     pGuessed->redistribedCards = redistributedCards;
 
-    pController->processTurn(pGuessed, pOldTurn);
+    TRY
+        pController->processTurn(pGuessed, pOldTurn);
+    CATCH
+
     close();
 };

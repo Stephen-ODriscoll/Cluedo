@@ -109,11 +109,11 @@ void PlayerInfo::resetButtonClicked()
 
 void PlayerInfo::applyButtonClicked()
 {
-    pController->updatePresets(pPlayer, presets);
+    TRY
+        pController->updatePresets(pPlayer, presets);
+        pController->rename(pPlayer, ui.renameText->toPlainText().toStdString());
+    CATCH
     
-    // Error message is handled by the Controller calling the main GUI
-    pController->rename(pPlayer, ui.renameText->toPlainText().toStdString());
-   
     updateInfo();
     close();
 };

@@ -1,9 +1,6 @@
 #pragma once
 
-#define MIN_PLAYERS 2
-#define MAX_PLAYERS 6
-#define NUM_CATEGORIES 3
-
+#include "Macros.h"
 
 struct contradiction : public std::exception
 {

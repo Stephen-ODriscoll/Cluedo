@@ -1,67 +1,53 @@
 #include "stdafx.h"
 #include "Controller.h"
 
-Controller::Controller(Game* pGame, Mode mode, int numPlayers) :
+Controller::Controller(Mode mode, int numPlayers) :
     m_gameOver(false),
-    m_mode(mode),
-    m_pGame(pGame)
+    m_mode(mode)
 {
     g_numStages = 1;
-    g_players.reserve(numPlayers);
     for (int i = 0; i != numPlayers; ++i)
     {
         g_players.emplace_back();
         g_pPlayersLeft.push_back(&g_players.back());
     }
+}
 
-    // Keep trying until we successfully load the file
-    for (fs::path inputFile = "Cluedo.txt"; true;)
+bool Controller::initialize(const fs::path& inputFile)
+{
+    g_categories.clear();
+
+    if (!fs::exists(inputFile))
+        throw std::invalid_argument(str("Couldn't find file ") + inputFile.string());
+
+    std::ifstream load(inputFile);
+    if (!load.is_open())
+        throw std::invalid_argument(str("Failed to open file ") + inputFile.string());
+
+    str line;
+    g_categories.emplace_back();
+    for (size_t category = 0; std::getline(load, line);)
     {
-        try
+        if (NUM_CATEGORIES <= category)
+            throw std::invalid_argument(str("Too many categories. There should be ") + str(NUM_CATEGORIES));
+
+        if (line.empty())
         {
-            if (!fs::exists(inputFile))
-                throw std::invalid_argument(str("Couldn't find file ") + inputFile.string());
-
-            std::ifstream load(inputFile);
-            if (!load.is_open())
-                throw std::invalid_argument(str("Failed to open file ") + inputFile.string());
-
-            str line;
-            g_categories.emplace_back();
-            for (size_t category = 0; std::getline(load, line);)
+            if (!g_categories[category].cards.empty())
             {
-                if (NUM_CATEGORIES <= category)
-                    throw std::invalid_argument(str("Too many categories. There should be ") + str(NUM_CATEGORIES));
-
-                if (line.empty())
-                {
-                    if (!g_categories[category].cards.empty())
-                    {
-                        g_categories.emplace_back();
-                        ++category;
-                    }
-
-                    continue;
-                }
-
-                std::vector<str> splits = line.split('=');
-                g_categories[category].cards.emplace_back(splits[0], splits[1], category);
+                g_categories.emplace_back();
+                ++category;
             }
 
-            if (g_categories.size() != NUM_CATEGORIES)
-                throw std::invalid_argument(str("Not enough categories. There should be ") + str(NUM_CATEGORIES));
-
-            break;          // This is how we complete the constructor
+            continue;
         }
-        catch (const std::invalid_argument& ex)
-        {
-            g_categories.clear();
 
-            inputFile = fs::path(m_pGame->openCluedoTextFile(ex.what()));
-            if (inputFile.empty())
-                exit(EXIT_SUCCESS);     // User clicked cancel
-        }
+        std::vector<str> splits = line.split('=');
+        g_categories[category].cards.emplace_back(splits[0], splits[1], category);
     }
+
+    if (g_categories.size() != NUM_CATEGORIES)
+        throw std::invalid_argument(str("Not enough categories. There should be ") + str(NUM_CATEGORIES));
 }
 
 void Controller::processTurn(std::shared_ptr<const Turn> pNewTurn, std::shared_ptr<const Turn> pOldTurn)

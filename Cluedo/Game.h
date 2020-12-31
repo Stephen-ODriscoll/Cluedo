@@ -18,7 +18,7 @@ public:
     void refresh();
 
     void critical(const str& title, const str& desc);
-    std::wstring openCluedoTextFile(const str& issue);
+    const fs::path openCluedoTextFile(const str& issue);
 
 private:
     size_t stageDisplayed;

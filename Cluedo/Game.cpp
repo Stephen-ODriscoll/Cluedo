@@ -2,13 +2,31 @@
 #include "Game.h"
 
 Game::Game(Mode mode, int numPlayers, QWidget* parent) :
-    controller(this, mode, numPlayers),
+    controller(mode, numPlayers),
     pPopUp(nullptr),
     stageDisplayed(1),
     QWidget(parent),
     hide(false)
 {
     ui.setupUi(this);
+
+    bool initialized = false;
+    fs::path inputFile = "Cluedo.txt";
+    while (!initialized)
+    {
+        try
+        {
+            controller.initialize(inputFile);
+            initialized = true;
+        }
+        catch (const std::invalid_argument& ex)
+        {
+            inputFile = openCluedoTextFile(ex.what());
+
+            if (inputFile.empty())
+                exit(EXIT_SUCCESS);     // User clicked cancel
+        }
+    }
 
     // Font stuff
     QFont font;
@@ -145,7 +163,7 @@ void Game::critical(const str& title, const str& desc)
     msgBox.critical(0, title.c_str(), desc.c_str());
 }
 
-std::wstring Game::openCluedoTextFile(const str& issue)
+const fs::path Game::openCluedoTextFile(const str& issue)
 {
     QMessageBox msgBox;
     msgBox.setWindowTitle("Woops...");

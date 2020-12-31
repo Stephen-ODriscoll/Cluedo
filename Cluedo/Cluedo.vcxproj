@@ -153,6 +153,7 @@
     <QtMoc Include="TakeTurn.h" />
     <QtMoc Include="PlayerInfo.h" />
     <QtMoc Include="RedistributeCards.h" />
+    <ClInclude Include="Macros.h" />
     <ClInclude Include="Turn.h" />
     <QtMoc Include="Cluedo.h" />
     <ClInclude Include="Card.h" />

@@ -274,7 +274,9 @@ void TakeTurn::submitButtonClicked()
     }
     else
     {
-        pController->processTurn(pNewTurn, pOldTurn);
+        TRY
+            pController->processTurn(pNewTurn, pOldTurn);
+        CATCH
     }
 
     close();
