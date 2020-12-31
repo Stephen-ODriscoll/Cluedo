@@ -6,6 +6,7 @@ Controller::Controller(Mode mode, int numPlayers) :
     m_mode(mode)
 {
     g_numStages = 1;
+    g_players.reserve(numPlayers);          // Reallocation breaks pointers
     for (int i = 0; i != numPlayers; ++i)
     {
         g_players.emplace_back();
