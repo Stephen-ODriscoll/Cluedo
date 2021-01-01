@@ -41,6 +41,7 @@
     <ClCompile Include="..\Cluedo\Controller.cpp" />
     <ClCompile Include="..\Cluedo\Globals.cpp" />
     <ClCompile Include="..\Cluedo\Player.cpp" />
+    <ClCompile Include="ControllerTest.cpp" />
     <ClCompile Include="PlayerTest.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
