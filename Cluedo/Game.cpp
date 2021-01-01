@@ -2,13 +2,29 @@
 #include "Game.h"
 
 Game::Game(Mode mode, int numPlayers, QWidget* parent) :
-    controller(this, mode, numPlayers),
+    controller(mode, numPlayers),
     pPopUp(nullptr),
     stageDisplayed(1),
     QWidget(parent),
     hide(false)
 {
     ui.setupUi(this);
+
+    for (fs::path inputFile = "Cluedo.txt"; true; )
+    {
+        try
+        {
+            controller.initialize(inputFile);
+            break;
+        }
+        catch (const std::invalid_argument& ex)
+        {
+            inputFile = openCluedoTextFile(ex.what());
+
+            if (inputFile.empty())
+                exit(EXIT_SUCCESS);     // User clicked cancel
+        }
+    }
 
     // Font stuff
     QFont font;
@@ -139,13 +155,7 @@ void Game::refresh()
         ui.playersText->appendPlainText(player.to_str(stageDisplayed - 1).c_str());
 }
 
-void Game::critical(const str& title, const str& desc)
-{
-    QMessageBox msgBox;
-    msgBox.critical(0, title.c_str(), desc.c_str());
-}
-
-std::wstring Game::openCluedoTextFile(const str& issue)
+const fs::path Game::openCluedoTextFile(const str& issue)
 {
     QMessageBox msgBox;
     msgBox.setWindowTitle("Woops...");
@@ -179,12 +189,13 @@ void Game::playerInfoButtonClicked()
     if (it == g_players.end())
     {
         // Should never happen
-        return critical("Error", "Failed to find the chosen player");
+        CRITICAL("Error", "Failed to find the chosen player")
+        return;
     }
 
     delete pPopUp;
 
-    pPopUp = new PlayerInfo(&controller, &*it, stageDisplayed);
+    pPopUp = new PlayerInfo(this, &*it, stageDisplayed);
     pPopUp->show();
 }
 
@@ -192,7 +203,7 @@ void Game::turnButtonClicked()
 {
     delete pPopUp;
 
-    pPopUp = new TakeTurn(&controller,
+    pPopUp = new TakeTurn(this,
         ui.playersList->item(MAX_PLAYERS - 1)->text().toStdString(),
         ui.playersList->item(MAX_PLAYERS - 2)->text().toStdString());
     pPopUp->show();
@@ -206,7 +217,7 @@ void Game::editTurnButtonClicked()
     
     delete pPopUp;
 
-    pPopUp = new TakeTurn(&controller, g_pTurns[row]);
+    pPopUp = new TakeTurn(this, g_pTurns[row]);
     pPopUp->show();
 }
 

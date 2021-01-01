@@ -1,150 +1,115 @@
 #include "stdafx.h"
 #include "Controller.h"
 
-Controller::Controller(Game* pGame, Mode mode, int numPlayers) :
+Controller::Controller(Mode mode, int numPlayers) :
     m_gameOver(false),
-    m_mode(mode),
-    m_pGame(pGame)
+    m_mode(mode)
 {
     g_numStages = 1;
-    g_players.reserve(numPlayers);
+    g_players.reserve(numPlayers);          // Reallocation breaks pointers
     for (int i = 0; i != numPlayers; ++i)
     {
         g_players.emplace_back();
         g_pPlayersLeft.push_back(&g_players.back());
     }
+}
 
-    // Keep trying until we successfully load the file
-    for (fs::path inputFile = "Cluedo.txt"; true;)
+void Controller::initialize(const fs::path& inputFile)
+{
+    g_categories.clear();
+
+    if (!fs::exists(inputFile))
+        throw std::invalid_argument(str("Couldn't find file ") + inputFile.string());
+
+    std::ifstream load(inputFile);
+    if (!load.is_open())
+        throw std::invalid_argument(str("Failed to open file ") + inputFile.string());
+
+    str line;
+    g_categories.emplace_back();
+    for (size_t category = 0; std::getline(load, line);)
     {
-        try
+        if (NUM_CATEGORIES <= category)
+            throw std::invalid_argument(str("Too many categories. There should be ") + str(NUM_CATEGORIES));
+
+        if (line.empty())
         {
-            if (!fs::exists(inputFile))
-                throw std::invalid_argument(str("Couldn't find file ") + inputFile.string());
-
-            std::ifstream load(inputFile);
-            if (!load.is_open())
-                throw std::invalid_argument(str("Failed to open file ") + inputFile.string());
-
-            str line;
-            g_categories.emplace_back();
-            for (size_t category = 0; std::getline(load, line);)
+            if (!g_categories[category].cards.empty())
             {
-                if (NUM_CATEGORIES <= category)
-                    throw std::invalid_argument(str("Too many categories. There should be ") + str(NUM_CATEGORIES));
-
-                if (line.empty())
-                {
-                    if (!g_categories[category].cards.empty())
-                    {
-                        g_categories.emplace_back();
-                        ++category;
-                    }
-
-                    continue;
-                }
-
-                std::vector<str> splits = line.split('=');
-                g_categories[category].cards.emplace_back(splits[0], splits[1], category);
+                g_categories.emplace_back();
+                ++category;
             }
 
-            if (g_categories.size() != NUM_CATEGORIES)
-                throw std::invalid_argument(str("Not enough categories. There should be ") + str(NUM_CATEGORIES));
-
-            break;          // This is how we complete the constructor
+            continue;
         }
-        catch (const std::invalid_argument& ex)
-        {
-            g_categories.clear();
 
-            inputFile = fs::path(m_pGame->openCluedoTextFile(ex.what()));
-            if (inputFile.empty())
-                exit(EXIT_SUCCESS);     // User clicked cancel
-        }
+        std::vector<str> splits = line.split('=');
+        g_categories[category].cards.emplace_back(splits[0], splits[1], category);
     }
+
+    if (g_categories.size() != NUM_CATEGORIES)
+        throw std::invalid_argument(str("Not enough categories. There should be ") + str(NUM_CATEGORIES));
 }
 
 void Controller::processTurn(std::shared_ptr<const Turn> pNewTurn, std::shared_ptr<const Turn> pOldTurn)
 {
-    try
+    if (pOldTurn)
     {
-        if (pOldTurn)
-        {
-            auto it = std::find(g_pTurns.begin(), g_pTurns.end(), pOldTurn);
-            if (it == g_pTurns.end())
-                throw std::exception("Failed to find turn in g_pTurns");
+        auto it = std::find(g_pTurns.begin(), g_pTurns.end(), pOldTurn);
+        if (it == g_pTurns.end())
+            throw std::exception("Failed to find turn in g_pTurns");
 
-            *it = pNewTurn;
-            reAnalyseTurns();
-        }
-        else
-        {
-            analyseTurn(pNewTurn);
-            g_pTurns.push_back(pNewTurn);
-        }
+        *it = pNewTurn;
+        reAnalyseTurns();
     }
-    catch (const contradiction& ex) { m_pGame->critical("Contraditory Info Given", ex.what()); }
-    catch (const std::exception& ex) { m_pGame->critical("Exception Occured", ex.what()); }
-
-    m_pGame->refresh();
+    else
+    {
+        analyseTurn(pNewTurn);
+        g_pTurns.push_back(pNewTurn);
+    }
 }
 
-bool Controller::rename(const Player* pPlayer, const str& newName)
+void Controller::rename(const Player* pPlayer, const str& newName)
 {
-    try
-    {
-        if (pPlayer->name == newName)
-            return false;
+    if (pPlayer->name == newName)
+        return;
 
-        if (std::find(g_players.begin(), g_players.end(), newName) != g_players.end())
-            throw std::exception("Player with that name already exists");
+    if (std::find(g_players.begin(), g_players.end(), newName) != g_players.end())
+        throw std::exception("Player with that name already exists");
 
-        Player& player = const_cast<Player&>(*pPlayer);
-        player.name = newName;
-        m_pGame->refresh();
-        return true;
-    }
-    catch (const std::exception& ex) { m_pGame->critical("Exception Occured", ex.what()); }
-
-    return false;
+    Player& player = const_cast<Player&>(*pPlayer);
+    player.name = newName;
 }
 
 void Controller::updatePresets(const Player* pPlayer, std::vector<StagePreset>& newPresets)
 {
-    try
+    Player& player = const_cast<Player&>(*pPlayer);
+
+    for (size_t i = 0; i != newPresets.size(); ++i)
     {
-        Player& player = const_cast<Player&>(*pPlayer);
+        if (newPresets[i] == player.presets[i])
+            continue;
 
-        for (size_t i = 0; i != newPresets.size(); ++i)
+        // If the new number of cards doesn't apply or the new number is less than or equal to the old number
+        // and no old cards were removed
+        if ((!newPresets[i].isNumCardsKnown() || newPresets[i].numCards <= player.presets[i].numCards) &&
+            std::includes(newPresets[i].pCardsOwned.begin(), newPresets[i].pCardsOwned.end(),
+            player.presets[i].pCardsOwned.begin(), player.presets[i].pCardsOwned.end()))
         {
-            if (newPresets[i] == player.presets[i])
-                continue;
+            player.presets[i] = newPresets[i];
+            for (Card* pCard : player.presets[i].pCardsOwned)
+                player.processHas(pCard, g_numStages - 1);
 
-            // If the new number of cards doesn't apply or the new number is less than or equal to the old number
-            // and no old cards were removed
-            if ((!newPresets[i].isNumCardsKnown() || newPresets[i].numCards <= player.presets[i].numCards) &&
-                std::includes(newPresets[i].pCardsOwned.begin(), newPresets[i].pCardsOwned.end(),
-                player.presets[i].pCardsOwned.begin(), player.presets[i].pCardsOwned.end()))
-            {
-                player.presets[i] = newPresets[i];
-                for (Card* pCard : player.presets[i].pCardsOwned)
-                    player.processHas(pCard, g_numStages - 1);
+            continueDeducing();
+        }
+        else
+        {
+            player.presets[i] = newPresets[i];
 
-                continueDeducing();
-            }
-            else
-            {
-                player.presets[i] = newPresets[i];
-
-                // This info may have been used to make other deductions so we need to start our analysis again
-                reAnalyseTurns();
-            }
+            // This info may have been used to make other deductions so we need to start our analysis again
+            reAnalyseTurns();
         }
     }
-    catch (const contradiction& ex) { m_pGame->critical("Contraditory Info Given", ex.what()); }
-    catch (const std::exception& ex) { m_pGame->critical("Exception Occured", ex.what()); }
-
-    m_pGame->refresh();
 }
 
 void Controller::resetAnalysis()

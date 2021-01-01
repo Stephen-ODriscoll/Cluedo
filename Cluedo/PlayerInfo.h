@@ -3,18 +3,18 @@
 #include <QtWidgets/QMainWindow>
 #include "ui_PlayerInfo.h"
 
-#include "Controller.h"
+#include "Game.h"
 
 class PlayerInfo : public QWidget
 {
     Q_OBJECT
 
 public:
-    PlayerInfo(Controller* pController, const Player* pPlayer, const size_t stageNum, QWidget* parent = Q_NULLPTR);
+    PlayerInfo(Game* pGame, const Player* pPlayer, const size_t stageNum, QWidget* parent = Q_NULLPTR);
 
 private:
+    Game* pGame;
     Ui::PlayerInfoObject ui;
-    Controller* pController;
 
     const Player* pPlayer;
     size_t stageIndex;

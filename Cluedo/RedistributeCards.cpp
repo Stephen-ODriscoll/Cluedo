@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "RedistributeCards.h"
 
-RedistributeCards::RedistributeCards(Controller* pController, std::shared_ptr<Guessed> pGuessed, std::shared_ptr<const Turn> pOldTurn, QWidget* parent) :
-    pController(pController),
+RedistributeCards::RedistributeCards(Game* pGame, std::shared_ptr<Guessed> pGuessed, std::shared_ptr<const Turn> pOldTurn, QWidget* parent) :
+    pGame(pGame),
     pGuessed(pGuessed),
     pOldTurn(pOldTurn),
     QWidget(parent)
@@ -52,6 +52,10 @@ void RedistributeCards::okayButtonClicked()
 
     pGuessed->redistribedCards = redistributedCards;
 
-    pController->processTurn(pGuessed, pOldTurn);
+    TRY
+        pGame->controller.processTurn(pGuessed, pOldTurn);
+    CATCH
+        
+    pGame->refresh();
     close();
 };

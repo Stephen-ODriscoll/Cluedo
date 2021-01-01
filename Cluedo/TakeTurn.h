@@ -3,21 +3,21 @@
 #include <QtWidgets/QMainWindow>
 #include "ui_TakeTurn.h"
 
+#include "Game.h"
 #include "RedistributeCards.h"
-#include "Controller.h"
 
 class TakeTurn : public QWidget
 {
     Q_OBJECT
 
 public:
-    TakeTurn(Controller* pController, std::shared_ptr<const Turn> pOldTurn, QWidget* parent = Q_NULLPTR);
-    TakeTurn(Controller* pController, const str& detective, const str& probableWitness, QWidget* parent = Q_NULLPTR);
+    TakeTurn(Game* pGame, std::shared_ptr<const Turn> pOldTurn, QWidget* parent = Q_NULLPTR);
+    TakeTurn(Game* pGame, const str& detective, const str& probableWitness, QWidget* parent = Q_NULLPTR);
     ~TakeTurn();
 
 private:
+    Game* pGame;
     Ui::TakeTurnObject ui;
-    Controller* pController;
 
     QWidget* pPopUp;
 

@@ -3,31 +3,29 @@
 #include <QtWidgets/QMainWindow>
 #include "ui_Game.h"
 
-#include "TakeTurn.h"
-#include "PlayerInfo.h"
 #include "Controller.h"
 
 class Game : public QWidget
 {
     Q_OBJECT
+        
+    bool hide;
+    size_t stageDisplayed;
+
+    Ui::GameObject ui;
+    QWidget* pPopUp;
+
 
 public:
+    Controller controller;
+
     Game(Mode mode, int numPlayers, QWidget* parent = Q_NULLPTR);
     ~Game();
 
     void refresh();
+    const fs::path openCluedoTextFile(const str& issue);
 
-    void critical(const str& title, const str& desc);
-    std::wstring openCluedoTextFile(const str& issue);
-
-private:
-    size_t stageDisplayed;
-
-    Ui::GameObject ui;
-    Controller controller;
-    QWidget* pPopUp;
-    bool hide;
-
+    
 private slots:
     void upButtonClicked();
     void downButtonClicked();
@@ -38,3 +36,6 @@ private slots:
     void stageBoxChanged(const QString& text);
     void hideBoxStageChanged(int state);
 };
+
+#include "TakeTurn.h"
+#include "PlayerInfo.h"

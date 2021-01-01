@@ -12,6 +12,10 @@
     <ClCompile Include="..\Cluedo\Globals.cpp">
       <Filter>CluedoSourceFiles</Filter>
     </ClCompile>
+    <ClCompile Include="..\Cluedo\Controller.cpp">
+      <Filter>CluedoSourceFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="ControllerTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -19,9 +23,6 @@
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="MockGame.h" />
-    <ClInclude Include="..\Cluedo\Turn.h">
-      <Filter>CluedoSourceFiles</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="CluedoSourceFiles">

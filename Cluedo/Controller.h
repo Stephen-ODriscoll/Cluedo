@@ -1,22 +1,19 @@
 #pragma once
 
-#include "stdafx.h"
 #include "Globals.h"
 
 namespace fs = std::filesystem;
 
-class Game;
 class Controller
 {
     Mode m_mode;
     bool m_gameOver;
 
-    Game* m_pGame;
-
 public:
-    Controller(Game* pGame, Mode mode, int numPlayers);
+    Controller(Mode mode, int numPlayers);
+    void initialize(const fs::path& inputFile);
     
-    bool rename(const Player* pPlayer, const str& newName);
+    void rename(const Player* pPlayer, const str& newName);
     void updatePresets(const Player* pPlayer, std::vector<StagePreset>& newPresets);
 
     void processTurn(std::shared_ptr<const Turn> pNewTurn, std::shared_ptr<const Turn> pOldTurn = nullptr);
@@ -32,5 +29,3 @@ private:
     void continueDeducing();
     bool exteriorChecks();
 };
-
-#include "Game.h"
