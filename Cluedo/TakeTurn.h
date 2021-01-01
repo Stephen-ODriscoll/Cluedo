@@ -25,7 +25,6 @@ private:
     std::shared_ptr<const Turn> pOldTurn;
     std::vector<QComboBox*> categoryBoxes;
 
-    size_t nextId();
     bool outcomeChosen();
     std::shared_ptr<Turn> getNewTurn();
 

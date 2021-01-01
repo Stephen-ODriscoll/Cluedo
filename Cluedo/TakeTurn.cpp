@@ -133,12 +133,6 @@ TakeTurn::~TakeTurn()
     delete pPopUp;
 }
 
-size_t TakeTurn::nextId()
-{
-    static size_t nextId = 0;
-    return ++nextId;
-}
-
 bool TakeTurn::outcomeChosen()
 {
     return ui.outcomeTrue->isChecked() || ui.outcomeFalse->isChecked()
