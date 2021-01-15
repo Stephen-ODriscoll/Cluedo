@@ -94,6 +94,7 @@ Game::~Game()
 
 void Game::refresh()
 {
+    // Prevent multiple refreshing (Changing the stage index will trigger a second refresh)
     if (isRefreshing)
         return;
 
