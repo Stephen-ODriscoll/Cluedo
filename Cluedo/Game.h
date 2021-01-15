@@ -8,8 +8,9 @@
 class Game : public QWidget
 {
     Q_OBJECT
-        
-    bool hide;
+
+    bool hide = false;
+    bool isRefreshing = false;
     size_t stageDisplayed;
 
     Ui::GameObject ui;
