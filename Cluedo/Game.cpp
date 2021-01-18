@@ -138,7 +138,7 @@ void Game::refresh()
         if (empty)
             ui.turnList->addItem("No turns to show yet");
 
-        // Hide the actual information if user selects it
+        // Hide the sensitive information if user decides to
         if (hide)
         {
             ui.progressReportText->clear();
