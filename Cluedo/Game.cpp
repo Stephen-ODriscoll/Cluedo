@@ -98,8 +98,15 @@ void Game::refresh()
     if (isRefreshing)
         return;
 
-    isRefreshing = true;
+    struct Refresher
+    {
+        bool& b;
 
+        Refresher(bool& b) : b(b) { b = true; }
+        ~Refresher() { b = false; }
+    };
+
+    Refresher refresher(isRefreshing);
     {
         // Overview on players (Bottom-up done using blank boxes)
         ui.playersList->clear();
@@ -165,8 +172,6 @@ void Game::refresh()
         for (const Player& player : g_players)
             ui.playersText->appendPlainText(player.to_str(stageDisplayed - 1).c_str());
     }
-
-    isRefreshing = false;
 }
 
 const fs::path Game::openCluedoTextFile(const str& issue)
