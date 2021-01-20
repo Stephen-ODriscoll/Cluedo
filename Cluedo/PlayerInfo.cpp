@@ -24,6 +24,7 @@ PlayerInfo::PlayerInfo(Game* pGame, const Player* pPlayer, const size_t stageInd
     }
     
     connect(ui.stageBox, SIGNAL(currentIndexChanged(int)), this, SLOT(stageBoxChanged(int)));
+    connect(ui.numCardsBox, SIGNAL(valueChanged(int)), this, SLOT(numCardsBoxChanged(int)));
     connect(ui.cat1Box, SIGNAL(currentIndexChanged(int)), this, SLOT(cat1BoxChanged(int)));
     connect(ui.cat2Box, SIGNAL(currentIndexChanged(int)), this, SLOT(cat2BoxChanged(int)));
     connect(ui.cat3Box, SIGNAL(currentIndexChanged(int)), this, SLOT(cat3BoxChanged(int)));
@@ -42,6 +43,8 @@ void PlayerInfo::updateInfo()
 {
     setWindowTitle((pPlayer->name + str("'s Info")).c_str());
     ui.renameText->setText(pPlayer->name.c_str());
+
+    ui.numCardsBox->setValue(presets[stageIndex].numCards);
 
     ui.cardsList->clear();
     for (const Card* pCard : presets[stageIndex].pCardsOwned)
@@ -89,6 +92,8 @@ void PlayerInfo::stageBoxChanged(const int index)
     updateInfo();
 }
 
+void PlayerInfo::numCardsBoxChanged(const int value) { presets[stageIndex].numCards = value; }
+
 void PlayerInfo::cat1BoxChanged(const int index) { setButtonText(g_categories[0].cards[index], ui.cat1Button); }
 void PlayerInfo::cat2BoxChanged(const int index) { setButtonText(g_categories[1].cards[index], ui.cat2Button); }
 void PlayerInfo::cat3BoxChanged(const int index) { setButtonText(g_categories[2].cards[index], ui.cat3Button); }
@@ -105,7 +110,7 @@ void PlayerInfo::resetButtonClicked()
     setButtonText(g_categories[0].cards[ui.cat1Box->currentIndex()], ui.cat1Button);
     setButtonText(g_categories[1].cards[ui.cat2Box->currentIndex()], ui.cat2Button);
     setButtonText(g_categories[2].cards[ui.cat3Box->currentIndex()], ui.cat3Button);
-};
+}
 
 void PlayerInfo::applyButtonClicked()
 {
@@ -117,7 +122,7 @@ void PlayerInfo::applyButtonClicked()
     pGame->refresh();
     updateInfo();
     close();
-};
+}
 
 bool PlayerInfo::eventFilter(QObject* object, QEvent* event)
 {
@@ -127,6 +132,7 @@ bool PlayerInfo::eventFilter(QObject* object, QEvent* event)
         {
         case Qt::Key_Enter:
         case Qt::Key_Return:
+            applyButtonClicked();
             return true;
         }
     }

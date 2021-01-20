@@ -26,6 +26,7 @@ private:
 
 private slots:
     void stageBoxChanged(const int index);
+    void numCardsBoxChanged(const int value);
     void cat1BoxChanged(const int index);
     void cat2BoxChanged(const int index);
     void cat3BoxChanged(const int index);
