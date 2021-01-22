@@ -47,10 +47,21 @@ bool Player::processHas(Card* pCard, const size_t stageIndex)
         
         stages[i].has.insert(pCard);
         result = true;
-    }
 
-    if (result)
+        if (allCardsKnown(i))
+        {
+            for (Category& category : g_categories)
+            {
+                for (Card& card : category.cards)
+                {
+                    if (!card.ownedBy(this, i))
+                        card.processDoesntBelongTo(this, i);
+                }
+            }
+        }
+        
         g_progressReport += name + str(" owns ") + pCard->name + str(" (Stage ") + str(stageIndex + 1) + str(")\n");
+    }
     
     return result;
 }
@@ -200,7 +211,7 @@ str Player::to_str(size_t stageIndex) const
     const PlayerStage& stage = stages[stageIndex];
 
     return name +
-        str("\n\thas: ") + str(stage.has.begin(), stage.has.end(), [](Card* pCard) { return pCard->nickname; }) + str(allCardsKnown(stageIndex) ? " (All)" : "") +
+        str("\n\thas: ") + str(stage.has.begin(), stage.has.end(), [](Card* pCard) { return pCard->nickname; }) + str(allCardsKnown(stageIndex) ? " (All Cards)" : "") +
         str("\n\thas either: ") + str(stage.hasEither.begin(), stage.hasEither.end(), [](std::vector<Card*> pCards)
             { return str(pCards.begin(), pCards.end(), [](Card* pCard) { return pCard->nickname; }, "/"); }) +
         str("\n\tdoesn't have: ") + str(stage.doesntHave.begin(), stage.doesntHave.end(), [](Card* pCard) { return pCard->nickname; }) +
