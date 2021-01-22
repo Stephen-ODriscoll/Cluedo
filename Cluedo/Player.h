@@ -10,7 +10,7 @@ struct StagePreset
     StagePreset(const std::set<Card*> pCardsOwned);
     StagePreset(const size_t numCards, const std::set<Card*> pCardsOwned);
 
-    bool isNumCardsKnown();
+    bool isNumCardsKnown() const;
     bool operator==(const StagePreset& stagePreset) const;
 };
 
@@ -45,7 +45,8 @@ struct Player
 
     bool processGuessedWrong(Player* pPlayer, int cardsReceived = -1);
 
-    bool couldHaveCard(Card* pCard, size_t stageIndex);
+    bool allCardsKnown(size_t stageIndex) const;
+    bool couldHaveCard(Card* pCard, size_t stageIndex) const;
 
     str to_str(size_t stageIndex) const;
 

@@ -10,8 +10,8 @@ StagePreset::StagePreset(const size_t numCards, const std::set<Card*> pCardsOwne
     numCards(numCards),
     pCardsOwned(pCardsOwned) { }
 
-bool StagePreset::isNumCardsKnown() { return numCards; }
-bool StagePreset::operator==(const StagePreset& stagePreset) const { return numCards == stagePreset.numCards && pCardsOwned == stagePreset.pCardsOwned; }
+bool StagePreset::isNumCardsKnown() const { return !!numCards; }
+bool StagePreset::operator==(const StagePreset& stagePreset) const { return (numCards == stagePreset.numCards && pCardsOwned == stagePreset.pCardsOwned); }
 
 PlayerStage::PlayerStage() { }
 PlayerStage::PlayerStage(std::set<Card*> has, std::set<Card*> doesntHave, std::vector<std::vector<Card*>> hasEither) :
@@ -180,11 +180,16 @@ bool Player::processGuessedWrong(Player* pPlayer, int cardsReceived)
     return result;
 }
 
-bool Player::couldHaveCard(Card* pCard, size_t stageIndex)
+bool Player::allCardsKnown(size_t stageIndex) const
 {
-    return (!presets[stageIndex].isNumCardsKnown() || stages[stageIndex].has.size() < presets[stageIndex].numCards || pCard->ownedBy(this, stageIndex)) &&
-        (stages[stageIndex].doesntHave.find(pCard) == stages[stageIndex].doesntHave.end() &&
-        (pCard->locationUnknown(stageIndex) || pCard->ownedBy(this, stageIndex)));
+    return (presets[stageIndex].isNumCardsKnown() && stages[stageIndex].has.size() == presets[stageIndex].numCards);
+}
+
+bool Player::couldHaveCard(Card* pCard, size_t stageIndex) const
+{
+    return pCard->ownedBy(this, stageIndex) ||
+        (pCard->locationUnknown(stageIndex) && !allCardsKnown(stageIndex) &&
+        (stages[stageIndex].doesntHave.find(pCard) == stages[stageIndex].doesntHave.end()));
 }
 
 str Player::to_str(size_t stageIndex) const
@@ -195,7 +200,7 @@ str Player::to_str(size_t stageIndex) const
     const PlayerStage& stage = stages[stageIndex];
 
     return name +
-        str("\n\thas: ") + str(stage.has.begin(), stage.has.end(), [](Card* pCard) { return pCard->nickname; }) +
+        str("\n\thas: ") + str(stage.has.begin(), stage.has.end(), [](Card* pCard) { return pCard->nickname; }) + str(allCardsKnown(stageIndex) ? " (All)" : "") +
         str("\n\thas either: ") + str(stage.hasEither.begin(), stage.hasEither.end(), [](std::vector<Card*> pCards)
             { return str(pCards.begin(), pCards.end(), [](Card* pCard) { return pCard->nickname; }, "/"); }) +
         str("\n\tdoesn't have: ") + str(stage.doesntHave.begin(), stage.doesntHave.end(), [](Card* pCard) { return pCard->nickname; }) +
