@@ -52,6 +52,10 @@ void PlayerInfo::updateInfo()
 
     if (!ui.cardsList->count())
         ui.cardsList->addItem("No preset cards");
+
+    setButtonText(g_categories[0].cards[ui.cat1Box->currentIndex()], ui.cat1Button);
+    setButtonText(g_categories[1].cards[ui.cat2Box->currentIndex()], ui.cat2Button);
+    setButtonText(g_categories[2].cards[ui.cat3Box->currentIndex()], ui.cat3Button);
 }
 
 #define ADD_CARD    "Add Card"
@@ -105,11 +109,7 @@ void PlayerInfo::cat3ButtonClicked() { toggleCardOwned(g_categories[2].cards[ui.
 void PlayerInfo::resetButtonClicked()
 {
     presets = pPlayer->presets;
-
     updateInfo();
-    setButtonText(g_categories[0].cards[ui.cat1Box->currentIndex()], ui.cat1Button);
-    setButtonText(g_categories[1].cards[ui.cat2Box->currentIndex()], ui.cat2Button);
-    setButtonText(g_categories[2].cards[ui.cat3Box->currentIndex()], ui.cat3Button);
 }
 
 void PlayerInfo::applyButtonClicked()
