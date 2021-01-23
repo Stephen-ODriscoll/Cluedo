@@ -20,7 +20,8 @@ enum class Status : uint8_t
     OKAY,
     NEEDS_CARD_INFO,
     CONTRADICTION,
-    EXCEPTION
+    EXCEPTION,
+    COMING_SOON
 };
 
 const std::map<Status, str> statusStrings =
@@ -28,7 +29,8 @@ const std::map<Status, str> statusStrings =
     { Status::OKAY,             "Status: <font color='green'>Okay</font>" },
     { Status::NEEDS_CARD_INFO,  "Status: <font color='yellow'>Needs Card Info</font>" },
     { Status::CONTRADICTION,    "Status: <font color='red'>Contradiction</font>" },
-    { Status::EXCEPTION,        "Status: <font color='red'>Exception</font>" }
+    { Status::EXCEPTION,        "Status: <font color='red'>Exception</font>" },
+    { Status::COMING_SOON,      "Status: <font color='yellow'>Coming Soon</font>" }
 };
 
 

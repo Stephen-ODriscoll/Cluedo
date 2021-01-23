@@ -82,7 +82,7 @@ Game::Game(Mode mode, int numPlayers, QWidget* parent) :
     ui.cardList->takeItem(ui.cardList->count() - 1);
 
     ui.stageBox->addItem("1");
-    ui.statusLabel->setText(statusStrings.find(Status::NEEDS_CARD_INFO)->second.c_str());
+    ui.statusLabel->setText(statusStrings.find(Status::COMING_SOON)->second.c_str());
 
     refresh();
 }
