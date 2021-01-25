@@ -103,14 +103,13 @@ bool Player::processHasEither(const std::vector<Card*>& pCards, const size_t sta
 
     default:
         stages[stageIndex].hasEither.push_back(checkedCards);      // We don't know for sure which card was shown (yet)
+        return false;
     }
-
-    return false;
 }
 
 bool Player::recheck()
 {
-    bool cardFound = false;
+    bool result = false;
     for (size_t i = 0; i != stages.size(); ++i)
     {
         for (auto it = stages[i].doesntHave.begin(); it != stages[i].doesntHave.end();)
@@ -140,7 +139,7 @@ bool Player::recheck()
                 throw contradiction((name + str(" can't have any of the 3 cards they're supposed to")).c_str());
 
             case 1:
-                cardFound |= processHas(it1->front(), i);
+                result |= processHas(it1->front(), i);
                 it1 = stages[i].hasEither.erase(it1);
                 break;
 
@@ -150,7 +149,7 @@ bool Player::recheck()
         }
     }
 
-    return cardFound;
+    return result;
 }
 
 bool Player::processGuessedWrong(Player* pPlayer, int cardsReceived)

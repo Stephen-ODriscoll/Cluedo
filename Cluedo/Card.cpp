@@ -36,7 +36,7 @@ bool Card::processBelongsTo(Player* pPlayer, const size_t stageIndex)
 
         throw contradiction((name + str(" can't be owned by ") + pPlayer->name + str(" and ")
             + (isGuilty() ?
-                str("guilty") :
+                str("be guilty") :
                 stages[stageIndex].pOwner->name)
             ).c_str());
     }

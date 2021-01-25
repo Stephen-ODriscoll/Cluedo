@@ -270,12 +270,11 @@ void TakeTurn::submitButtonClicked()
     {
         TRY
             pGame->controller.processTurn(pNewTurn, pOldTurn);
+            close();
         CATCH
             
         pGame->refresh();
     }
-
-    close();
 }
 
 std::shared_ptr<Turn> TakeTurn::getNewTurn()
