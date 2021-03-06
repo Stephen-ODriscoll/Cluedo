@@ -126,16 +126,11 @@ void Controller::resetAnalysis()
     // Reset each player and add to players left
     g_pPlayersOut.clear();
     g_pPlayersLeft.clear();
-
-    bool result = false;
     for (Player& player : g_players)
     {
-        result |= player.reset();
+        player.reset();
         g_pPlayersLeft.push_back(&player);
     }
-
-    if (result)
-        continueDeducing();
 }
 
 void Controller::reAnalyseTurns()
@@ -179,7 +174,6 @@ void Controller::analyseAsked(std::shared_ptr<const Asked> pAsked)
 {
     Player& witness = const_cast<Player&>(*pAsked->pWitness);
 
-    bool cardDeduced;
     if (pAsked->shown)
     {
         if (!pAsked->cardShown.empty())
@@ -189,17 +183,13 @@ void Controller::analyseAsked(std::shared_ptr<const Asked> pAsked)
             if (itCard == pAsked->pCards.end())
                 throw std::exception("Failed to find card shown");
 
-            cardDeduced = witness.processHas(*itCard, g_numStages - 1);
+            witness.processHas(*itCard, g_numStages - 1);
         }
         else
-            cardDeduced = witness.processHasEither(pAsked->pCards, g_numStages - 1);
+            witness.processHasEither(pAsked->pCards, g_numStages - 1);
     }
     else
-        cardDeduced = witness.processDoesntHave(pAsked->pCards, g_numStages - 1)
-            || exteriorChecks();
-
-    if (cardDeduced)
-        continueDeducing();
+        witness.processDoesntHave(pAsked->pCards, g_numStages - 1);
 }
 
 void Controller::analyseGuessed(std::shared_ptr<const Guessed> pGuessed)
@@ -238,47 +228,4 @@ void Controller::analyseGuessed(std::shared_ptr<const Guessed> pGuessed)
         g_wrongGuesses.push_back(pGuessed->pCards);
         ++g_numStages;
     }
-}
-
-void Controller::continueDeducing()
-{
-    // This could loop a few times. One deduction could lead to another and so on
-    bool cardDeduced = true;
-    while (cardDeduced)
-    {
-        cardDeduced = false;
-        for (Player& player : g_players)
-            cardDeduced |= player.recheck();
-
-        cardDeduced |= exteriorChecks();
-    }
-}
-
-bool Controller::exteriorChecks()
-{
-    bool cardDeduced = false;
-    for (Category& category : g_categories)
-    {
-        if (category.guiltyKnown)
-            continue;
-
-        std::vector<Card*> unknownCards;
-        for (Card& card : category.cards)
-        {
-            if (card.isUnknown())
-                unknownCards.push_back(&card);
-        }
-
-        switch (unknownCards.size())
-        {
-        case 0:
-            throw contradiction((str("Ruled out all cards in category starting with ") + category.cards.front().name).c_str());
-
-        case 1:
-            // All other cards have been ruled out so this card must be the murder card
-            cardDeduced |= unknownCards.front()->processGuilty();
-        }
-    }
-
-    return cardDeduced;
 }

@@ -35,12 +35,15 @@ struct Card
     Card(const str& name, const str& nickname, const size_t categoryIndex);
     void reset();
 
-    bool processBelongsTo(Player* pPlayer, const size_t stageIndex);
-    bool processDoesntBelongTo(Player* pPlayer, const size_t stageIndex);
-    bool processGuilty();
-    bool recheck();
+    void processGuilty();
+    void processInnocent();
 
+    void processBelongsTo(Player* pPlayer, const size_t stageIndex);
+    void processDoesntBelongTo(Player* pPlayer, const size_t stageIndex);
     void processGuessedWrong(Player* pPlayer);
+    void recheck();
+    
+    bool couldBelongTo(Player* pPlayer, const size_t stageIndex) const;
 
     bool isGuilty() const;
     bool isUnknown() const;

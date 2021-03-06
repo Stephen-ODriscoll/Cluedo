@@ -14,7 +14,7 @@ bool StagePreset::isNumCardsKnown() const { return !!numCards; }
 bool StagePreset::operator==(const StagePreset& stagePreset) const { return (numCards == stagePreset.numCards && pCardsOwned == stagePreset.pCardsOwned); }
 
 PlayerStage::PlayerStage() { }
-PlayerStage::PlayerStage(std::set<Card*> has, std::set<Card*> doesntHave, std::vector<std::vector<Card*>> hasEither) :
+PlayerStage::PlayerStage(const std::set<Card*>& has, const std::set<Card*>& doesntHave, const std::vector<std::vector<Card*>>& hasEither) :
     has(has),
     doesntHave(doesntHave),
     hasEither(hasEither) { }
@@ -26,27 +26,24 @@ Player::Player() :
     name = str("Player ") + str(++playerCount);
 }
 
-bool Player::reset()
+void Player::reset()
 {
     stages = { PlayerStage() };
 
-    bool result = false;
     for (Card* pCard : presets.front().pCardsOwned)
-        result |= processHas(pCard, 0);
-
-    return result;
+        processHas(pCard, 0);
 }
 
-bool Player::processHas(Card* pCard, const size_t stageIndex)
+void Player::processHas(Card* pCard, const size_t stageIndex)
 {
-    bool result = false;
+    pCard->processBelongsTo(this, stageIndex);
+
     for (size_t i = stageIndex; i != stages.size(); ++i)
     {
-        if (!pCard->processBelongsTo(this, stageIndex))
-            return result;
-        
+        if (stages[i].has.find(pCard) == stages[i].has.end())
+            return;
+
         stages[i].has.insert(pCard);
-        result = true;
 
         if (allCardsKnown(i))
         {
@@ -62,16 +59,13 @@ bool Player::processHas(Card* pCard, const size_t stageIndex)
         
         g_progressReport += name + str(" owns ") + pCard->name + str(" (Stage ") + str(stageIndex + 1) + str(")\n");
     }
-    
-    return result;
 }
 
-bool Player::processDoesntHave(const std::vector<Card*>& pCards, const size_t stageIndex)
+void Player::processDoesntHave(const std::vector<Card*>& pCards, const size_t stageIndex)
 {
-    bool result = false;
     for (Card* pCard : pCards)
     {
-        result |= pCard->processDoesntBelongTo(this, stageIndex);
+        pCard->processDoesntBelongTo(this, stageIndex);
 
         for (size_t i = 0; i != stageIndex + 1; ++i)
         {
@@ -80,16 +74,15 @@ bool Player::processDoesntHave(const std::vector<Card*>& pCards, const size_t st
         }
     } 
     
-    result |= recheck();
-    return result;
+    recheck();
 }
 
-bool Player::processHasEither(const std::vector<Card*>& pCards, const size_t stageIndex)
+void Player::processHasEither(const std::vector<Card*>& pCards, const size_t stageIndex)
 {
     std::vector<Card*> checkedCards;
     for (Card* pCard : pCards)
     {
-        if (couldHaveCard(pCard, stageIndex))
+        if (pCard->couldBelongTo(this, stageIndex))
             checkedCards.emplace_back(pCard);
     }
 
@@ -99,62 +92,16 @@ bool Player::processHasEither(const std::vector<Card*>& pCards, const size_t sta
         throw contradiction((name + str(" can't have any of those cards")).c_str());
 
     case 1:
-        return processHas(checkedCards.front(), stageIndex);
+        processHas(checkedCards.front(), stageIndex);
+        break;
 
     default:
-        stages[stageIndex].hasEither.push_back(checkedCards);      // We don't know for sure which card was shown (yet)
-        return false;
+        stages[stageIndex].hasEither.push_back(checkedCards);       // We don't know for sure which card was shown (yet)
     }
 }
 
-bool Player::recheck()
+void Player::processGuessedWrong(Player* pGuesser, int cardsReceived)
 {
-    bool result = false;
-    for (size_t i = 0; i != stages.size(); ++i)
-    {
-        for (auto it = stages[i].doesntHave.begin(); it != stages[i].doesntHave.end();)
-        {
-            // If card location is known remove it from doesn't have.
-            // We already know they don't have it because someone else does.
-            if ((*it)->locationKnown(i))
-                it = stages[i].doesntHave.erase(it);
-            else
-                ++it;
-        }
-
-        // Recheck past cards with this new info
-        for (auto it1 = stages[i].hasEither.begin(); it1 != stages[i].hasEither.end();)
-        {
-            for (auto it2 = it1->begin(); it2 != it1->end();)
-            {
-                if (couldHaveCard(*it2, i))
-                    ++it2;
-                else
-                    it2 = it1->erase(it2);
-            }
-
-            switch (it1->size())
-            {
-            case 0:
-                throw contradiction((name + str(" can't have any of the 3 cards they're supposed to")).c_str());
-
-            case 1:
-                result |= processHas(it1->front(), i);
-                it1 = stages[i].hasEither.erase(it1);
-                break;
-
-            default:
-                ++it1;
-            }
-        }
-    }
-
-    return result;
-}
-
-bool Player::processGuessedWrong(Player* pPlayer, int cardsReceived)
-{
-    bool result = false;
     if (presets.size() <= stages.size())
     {
         StagePreset& preset = presets.back();
@@ -166,15 +113,15 @@ bool Player::processGuessedWrong(Player* pPlayer, int cardsReceived)
     else
     {
         for (Card* pCard : presets[stages.size() - 1].pCardsOwned)
-            result |= processHas(pCard, stages.size() - 1);
+            processHas(pCard, stages.size() - 1);
     }
 
     if (presets[stages.size()].numCards)
     {
         std::set<Card*> newDoesntHave;
         std::set_intersection(
-            pPlayer->stages.back().doesntHave.begin(),
-            pPlayer->stages.back().doesntHave.end(),
+            pGuesser->stages.back().doesntHave.begin(),
+            pGuesser->stages.back().doesntHave.end(),
             stages.back().doesntHave.begin(),
             stages.back().doesntHave.end(),
             std::inserter(newDoesntHave, newDoesntHave.begin())
@@ -186,20 +133,52 @@ bool Player::processGuessedWrong(Player* pPlayer, int cardsReceived)
     {
         stages.emplace_back(stages.back());
     }
+}
 
-    return result;
+void Player::recheck()
+{
+    for (size_t i = 0; i != stages.size(); ++i)
+    {
+        // Remove cards that we know the location of from doesn't have
+        for (auto it = stages[i].doesntHave.begin(); it != stages[i].doesntHave.end();)
+        {
+            if ((*it)->locationKnown(i))
+                it = stages[i].doesntHave.erase(it);
+            else
+                ++it;
+        }
+
+        // Recheck cards from past turns
+        for (auto it1 = stages[i].hasEither.begin(); it1 != stages[i].hasEither.end();)
+        {
+            for (auto it2 = it1->begin(); it2 != it1->end();)
+            {
+                if ((*it2)->couldBelongTo(this, i))
+                    ++it2;
+                else
+                    it2 = it1->erase(it2);
+            }
+
+            switch (it1->size())
+            {
+            case 0:
+                throw contradiction((name + str(" can't have any of the 3 cards they're supposed to")).c_str());
+
+            case 1:
+                it1 = stages[i].hasEither.erase(it1);
+                processHas(it1->front(), i);
+                break;
+
+            default:
+                ++it1;
+            }
+        }
+    }
 }
 
 bool Player::allCardsKnown(size_t stageIndex) const
 {
     return (presets[stageIndex].isNumCardsKnown() && stages[stageIndex].has.size() == presets[stageIndex].numCards);
-}
-
-bool Player::couldHaveCard(Card* pCard, size_t stageIndex) const
-{
-    return pCard->ownedBy(this, stageIndex) ||
-        (pCard->locationUnknown(stageIndex) && !allCardsKnown(stageIndex) &&
-        (stages[stageIndex].doesntHave.find(pCard) == stages[stageIndex].doesntHave.end()));
 }
 
 str Player::to_str(size_t stageIndex) const
@@ -217,5 +196,5 @@ str Player::to_str(size_t stageIndex) const
         "\n\n";
 }
 
-bool Player::operator!=(const Player& player) const { return name != player.name; }
+bool Player::operator!=(const Player& p) const { return name != p.name; }
 bool Player::operator==(const str& n) const { return name == n; }

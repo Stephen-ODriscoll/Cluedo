@@ -25,7 +25,7 @@ struct PlayerStage
     std::vector<std::vector<Card*>> hasEither;
 
     PlayerStage();
-    PlayerStage(std::set<Card*> has, std::set<Card*> doesntHave, std::vector<std::vector<Card*>> hasEither);
+    PlayerStage(const std::set<Card*>& has, const std::set<Card*>& doesntHave, const std::vector<std::vector<Card*>>& hasEither);
 };
 
 struct Player
@@ -36,17 +36,15 @@ struct Player
     std::vector<PlayerStage> stages;
 
     Player();
-    bool reset();
+    void reset();
 
-    bool processHas(Card* pCard, const size_t stageIndex);
-    bool processDoesntHave(const std::vector<Card*>& pCards, const size_t stageIndex);
-    bool processHasEither(const std::vector<Card*>& pCards, const size_t stageIndex);
-    bool recheck();
-
-    bool processGuessedWrong(Player* pPlayer, int cardsReceived = -1);
+    void processHas(Card* pCard, const size_t stageIndex);
+    void processDoesntHave(const std::vector<Card*>& pCards, const size_t stageIndex);
+    void processHasEither(const std::vector<Card*>& pCards, const size_t stageIndex);
+    void processGuessedWrong(Player* pPlayer, int cardsReceived = -1);
+    void recheck();
 
     bool allCardsKnown(size_t stageIndex) const;
-    bool couldHaveCard(Card* pCard, size_t stageIndex) const;
 
     str to_str(size_t stageIndex) const;
 
