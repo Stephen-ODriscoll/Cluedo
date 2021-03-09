@@ -14,7 +14,7 @@ bool StagePreset::isNumCardsKnown() const { return !!numCards; }
 bool StagePreset::operator==(const StagePreset& stagePreset) const { return (numCards == stagePreset.numCards && pCardsOwned == stagePreset.pCardsOwned); }
 
 PlayerStage::PlayerStage() { }
-PlayerStage::PlayerStage(std::set<Card*> has, std::set<Card*> doesntHave, std::vector<std::vector<Card*>> hasEither) :
+PlayerStage::PlayerStage(const std::set<Card*>& has, const std::set<Card*>& doesntHave, const std::vector<std::vector<Card*>>& hasEither) :
     has(has),
     doesntHave(doesntHave),
     hasEither(hasEither) { }

@@ -25,7 +25,7 @@ struct PlayerStage
     std::vector<std::vector<Card*>> hasEither;
 
     PlayerStage();
-    PlayerStage(std::set<Card*> has, std::set<Card*> doesntHave, std::vector<std::vector<Card*>> hasEither);
+    PlayerStage(const std::set<Card*>& has, const std::set<Card*>& doesntHave, const std::vector<std::vector<Card*>>& hasEither);
 };
 
 #include "Perspective.h"
