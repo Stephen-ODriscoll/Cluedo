@@ -39,11 +39,11 @@ struct Card : public Perspective
 
     bool processGuilty();
     bool processInnocent();
+
     bool processBelongsTo(Player* pPlayer, const size_t stageIndex);
     bool processDoesntBelongTo(Player* pPlayer, const size_t stageIndex);
-    bool recheck();
-
     void processGuessedWrong(Player* pPlayer);
+    bool recheck();
 
     bool isGuilty() const;
     bool isUnknown() const;

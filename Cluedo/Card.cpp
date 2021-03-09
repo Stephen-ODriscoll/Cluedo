@@ -130,6 +130,15 @@ bool Card::processDoesntBelongTo(Player* pPlayer, const size_t stageIndex)
     return recheck();
 }
 
+void Card::processGuessedWrong(Player* pPlayer)
+{
+    // If the player that's out couldn't have had this card then our info doesn't change
+    if (stages.back().pPossibleOwners.find(pPlayer) == stages.back().pPossibleOwners.end())
+        stages.push_back(stages.back());
+    else
+        stages.push_back(g_pPlayersLeft);   // Otherwise anyone left can have it now
+}
+
 bool Card::recheck()
 {
     bool cardDeduced = false;
@@ -153,15 +162,6 @@ bool Card::recheck()
     }
 
     return cardDeduced;
-}
-
-void Card::processGuessedWrong(Player* pPlayer)
-{
-    // If the player that's out couldn't have had this card then our info doesn't change
-    if (stages.back().pPossibleOwners.find(pPlayer) == stages.back().pPossibleOwners.end())
-        stages.push_back(stages.back());
-    else
-        stages.push_back(g_pPlayersLeft);   // Otherwise anyone left can have it now
 }
 
 bool Card::isGuilty() const { return conviction == Conviction::GUILTY; }
