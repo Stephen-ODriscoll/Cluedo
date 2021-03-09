@@ -5,6 +5,8 @@
 struct contradiction : public std::exception
 {
     using std::exception::exception;
+
+    contradiction(const std::string& message) : contradiction(message.c_str()) { }
 };
 
 

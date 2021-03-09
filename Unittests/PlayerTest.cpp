@@ -11,9 +11,11 @@ struct PlayerTest : testing::Test
         const std::vector<size_t> categorySizes = { 6, 6, 9 };
         for (const size_t categorySize : categorySizes)
         {
-            g_categories.emplace_back();
+            std::vector<Card> cards;
             for (size_t i = 0; i != categorySize; ++i)
-                g_categories.back().cards.emplace_back("", "", g_categories.size() - 1);
+                cards.emplace_back("", "", g_categories.size() - 1);
+            
+            g_categories.emplace_back(cards);
         }
     }
 };

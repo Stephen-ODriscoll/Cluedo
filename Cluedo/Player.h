@@ -25,10 +25,12 @@ struct PlayerStage
     std::vector<std::vector<Card*>> hasEither;
 
     PlayerStage();
-    PlayerStage(std::set<Card*> has, std::set<Card*> doesntHave, std::vector<std::vector<Card*>> hasEither);
+    PlayerStage(const std::set<Card*>& has, const std::set<Card*>& doesntHave, const std::vector<std::vector<Card*>>& hasEither);
 };
 
-struct Player
+#include "Perspective.h"
+
+struct Player : public Perspective
 {
     str name;
     std::vector<StagePreset> presets = { StagePreset() };
@@ -41,12 +43,10 @@ struct Player
     bool processHas(Card* pCard, const size_t stageIndex);
     bool processDoesntHave(const std::vector<Card*>& pCards, const size_t stageIndex);
     bool processHasEither(const std::vector<Card*>& pCards, const size_t stageIndex);
+    bool processGuessedWrong(Player* pPlayer, int cardsReceived = -1);
     bool recheck();
 
-    bool processGuessedWrong(Player* pPlayer, int cardsReceived = -1);
-
     bool allCardsKnown(size_t stageIndex) const;
-    bool couldHaveCard(Card* pCard, size_t stageIndex) const;
 
     str to_str(size_t stageIndex) const;
 
