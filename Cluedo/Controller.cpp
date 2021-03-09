@@ -44,7 +44,10 @@ void Controller::initialize(const fs::path& inputFile)
         cards.emplace_back(splits[0], splits[1], g_categories.size());
     }
 
+    if (!cards.empty())
+        g_categories.emplace_back(cards);
     
+
     if (g_categories.size() != NUM_CATEGORIES)
     {
         if (g_categories.size() < NUM_CATEGORIES)
