@@ -89,7 +89,7 @@ bool Player::processHasEither(const std::vector<Card*>& pCards, const size_t sta
     std::vector<Card*> checkedCards;
     for (Card* pCard : pCards)
     {
-        if (couldHaveCard(pCard, stageIndex))
+        if (pCard->couldBelongTo(this, stageIndex))
             checkedCards.emplace_back(pCard);
     }
 
@@ -127,7 +127,7 @@ bool Player::recheck()
         {
             for (auto it2 = it1->begin(); it2 != it1->end();)
             {
-                if (couldHaveCard(*it2, i))
+                if ((*it2)->couldBelongTo(this, i))
                     ++it2;
                 else
                     it2 = it1->erase(it2);
@@ -193,13 +193,6 @@ bool Player::processGuessedWrong(Player* pPlayer, int cardsReceived)
 bool Player::allCardsKnown(size_t stageIndex) const
 {
     return (presets[stageIndex].isNumCardsKnown() && stages[stageIndex].has.size() == presets[stageIndex].numCards);
-}
-
-bool Player::couldHaveCard(Card* pCard, size_t stageIndex) const
-{
-    return pCard->ownedBy(this, stageIndex) ||
-        (pCard->locationUnknown(stageIndex) && !allCardsKnown(stageIndex) &&
-        (stages[stageIndex].doesntHave.find(pCard) == stages[stageIndex].doesntHave.end()));
 }
 
 str Player::to_str(size_t stageIndex) const

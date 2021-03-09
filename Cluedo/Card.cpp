@@ -80,9 +80,8 @@ bool Card::processBelongsTo(Player* pPlayer, const size_t stageIndex)
         return false;
 
     processInnocent();
-    if (stages[stageIndex].pPossibleOwners.find(pPlayer) == stages[stageIndex].pPossibleOwners.end())
-        throw contradiction((name + str(" can't be owned by ") + pPlayer->name
-        + str(" because this has already been ruled out")).c_str());
+    if (!couldBelongTo(pPlayer, stageIndex))
+        throw contradiction(name + str(" can't be owned by ") + pPlayer->name + str(" (Stage " + stageIndex + str(")")));
     
     stages[stageIndex].pOwner = pPlayer;
     stages[stageIndex].pPossibleOwners = { pPlayer };
@@ -93,7 +92,7 @@ bool Card::processBelongsTo(Player* pPlayer, const size_t stageIndex)
         pPossibleOwners.insert(g_pPlayersOut[i]);
         for (auto it = pPossibleOwners.begin(); it != pPossibleOwners.end();)
         {
-            if (stages[i].pPossibleOwners.find(*it) == stages[i].pPossibleOwners.end() || !(*it)->couldHaveCard(this, i))
+            if (!couldBelongTo(*it, i))
                 it = pPossibleOwners.erase(it);
             else
                 ++it;
@@ -130,10 +129,10 @@ bool Card::processDoesntBelongTo(Player* pPlayer, const size_t stageIndex)
     return recheck();
 }
 
-void Card::processGuessedWrong(Player* pPlayer)
+void Card::processGuessedWrong(Player* pGuesser)
 {
     // If the player that's out couldn't have had this card then our info doesn't change
-    if (stages.back().pPossibleOwners.find(pPlayer) == stages.back().pPossibleOwners.end())
+    if (couldBelongTo(pGuesser, stages.size() - 1))
         stages.push_back(stages.back());
     else
         stages.push_back(g_pPlayersLeft);   // Otherwise anyone left can have it now
@@ -162,6 +161,12 @@ bool Card::recheck()
     }
 
     return cardDeduced;
+}
+
+
+bool Card::couldBelongTo(Player* pPlayer, const size_t stageIndex) const
+{
+    return (stages[stageIndex].pPossibleOwners.find(pPlayer) != stages[stageIndex].pPossibleOwners.end());
 }
 
 bool Card::isGuilty() const { return conviction == Conviction::GUILTY; }

@@ -45,6 +45,8 @@ struct Card : public Perspective
     void processGuessedWrong(Player* pPlayer);
     bool recheck();
 
+    bool couldBelongTo(Player* pPlayer, const size_t stageIndex) const;
+
     bool isGuilty() const;
     bool isUnknown() const;
     bool isInnocent() const;

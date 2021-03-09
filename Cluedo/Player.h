@@ -48,7 +48,6 @@ struct Player : public Perspective
     bool processGuessedWrong(Player* pPlayer, int cardsReceived = -1);
 
     bool allCardsKnown(size_t stageIndex) const;
-    bool couldHaveCard(Card* pCard, size_t stageIndex) const;
 
     str to_str(size_t stageIndex) const;
 
