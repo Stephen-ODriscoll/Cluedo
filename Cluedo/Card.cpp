@@ -163,7 +163,6 @@ bool Card::recheck()
     return cardDeduced;
 }
 
-
 bool Card::couldBelongTo(Player* pPlayer, const size_t stageIndex) const
 {
     return (stages[stageIndex].pPossibleOwners.find(pPlayer) != stages[stageIndex].pPossibleOwners.end());
