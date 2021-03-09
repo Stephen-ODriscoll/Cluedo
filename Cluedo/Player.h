@@ -43,9 +43,8 @@ struct Player : public Perspective
     bool processHas(Card* pCard, const size_t stageIndex);
     bool processDoesntHave(const std::vector<Card*>& pCards, const size_t stageIndex);
     bool processHasEither(const std::vector<Card*>& pCards, const size_t stageIndex);
-    bool recheck();
-
     bool processGuessedWrong(Player* pPlayer, int cardsReceived = -1);
+    bool recheck();
 
     bool allCardsKnown(size_t stageIndex) const;
 

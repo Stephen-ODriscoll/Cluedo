@@ -107,6 +107,44 @@ bool Player::processHasEither(const std::vector<Card*>& pCards, const size_t sta
     }
 }
 
+bool Player::processGuessedWrong(Player* pPlayer, int cardsReceived)
+{
+    bool result = false;
+    if (presets.size() <= stages.size())
+    {
+        StagePreset& preset = presets.back();
+        if (cardsReceived == -1)
+            presets.emplace_back(0, preset.pCardsOwned);
+        else
+            presets.emplace_back(preset.numCards + cardsReceived, preset.pCardsOwned);
+    }
+    else
+    {
+        for (Card* pCard : presets[stages.size() - 1].pCardsOwned)
+            result |= processHas(pCard, stages.size() - 1);
+    }
+
+    if (presets[stages.size()].numCards)
+    {
+        std::set<Card*> newDoesntHave;
+        std::set_intersection(
+            pPlayer->stages.back().doesntHave.begin(),
+            pPlayer->stages.back().doesntHave.end(),
+            stages.back().doesntHave.begin(),
+            stages.back().doesntHave.end(),
+            std::inserter(newDoesntHave, newDoesntHave.begin())
+        );
+
+        stages.emplace_back(stages.back().has, newDoesntHave, stages.back().hasEither);
+    }
+    else
+    {
+        stages.emplace_back(stages.back());
+    }
+
+    return result;
+}
+
 bool Player::recheck()
 {
     bool result = false;
@@ -147,44 +185,6 @@ bool Player::recheck()
                 ++it1;
             }
         }
-    }
-
-    return result;
-}
-
-bool Player::processGuessedWrong(Player* pPlayer, int cardsReceived)
-{
-    bool result = false;
-    if (presets.size() <= stages.size())
-    {
-        StagePreset& preset = presets.back();
-        if (cardsReceived == -1)
-            presets.emplace_back(0, preset.pCardsOwned);
-        else
-            presets.emplace_back(preset.numCards + cardsReceived, preset.pCardsOwned);
-    }
-    else
-    {
-        for (Card* pCard : presets[stages.size() - 1].pCardsOwned)
-            result |= processHas(pCard, stages.size() - 1);
-    }
-
-    if (presets[stages.size()].numCards)
-    {
-        std::set<Card*> newDoesntHave;
-        std::set_intersection(
-            pPlayer->stages.back().doesntHave.begin(),
-            pPlayer->stages.back().doesntHave.end(),
-            stages.back().doesntHave.begin(),
-            stages.back().doesntHave.end(),
-            std::inserter(newDoesntHave, newDoesntHave.begin())
-        );
-
-        stages.emplace_back(stages.back().has, newDoesntHave, stages.back().hasEither);
-    }
-    else
-    {
-        stages.emplace_back(stages.back());
     }
 
     return result;
