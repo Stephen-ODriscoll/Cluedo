@@ -26,26 +26,64 @@ void Card::reset()
     conviction = Conviction::UNKNOWN;
 }
 
-bool Card::processBelongsTo(Player* pPlayer, const size_t stageIndex)
+bool Card::processGuilty()
 {
-    if (locationKnown(stageIndex))
+    switch (conviction)
     {
-        // We already know that this person owns this card, no new info
-        if (ownedBy(pPlayer, stageIndex))
-            return false;
+    case Conviction::GUILTY:
+        return false;
 
-        throw contradiction((name + str(" can't be owned by ") + pPlayer->name + str(" and ")
-            + (isGuilty() ?
-                str("be guilty") :
-                stages[stageIndex].pOwner->name)
-            ).c_str());
+    case Conviction::INNOCENT:
+        throw contradiction((str("Deduced that ") + name + str(" is guilty but this card is already innocent")).c_str());
+
+    case Conviction::UNKNOWN:
+        for (Card& card : g_categories[categoryIndex].cards)
+        {
+            if (&card != this)
+                card.processInnocent();
+        }
+
+        conviction = Conviction::GUILTY;
+        g_progressReport += name + str(" has been convicted\n");
     }
 
+    return true;
+}
+
+bool Card::processInnocent()
+{
+    switch (conviction)
+    {
+    case Conviction::GUILTY:
+        throw contradiction((str("Deduced that ") + name + str(" is innocent but this card is already guilty")).c_str());
+
+    case Conviction::INNOCENT:
+        return false;
+
+    case Conviction::UNKNOWN:
+        auto it = g_categories[categoryIndex].pPossibleGuilty.find(this);
+        if (it == g_categories[categoryIndex].pPossibleGuilty.end())
+            throw std::exception((str("Previously unknown card ") + name + str(" not found in list of possible guilty cards")).c_str());
+
+        conviction = Conviction::INNOCENT;
+        g_categories[categoryIndex].pPossibleGuilty.erase(it);
+        g_progressReport += name + str(" has been marked innocent\n");
+    }
+
+    return true;
+}
+
+bool Card::processBelongsTo(Player* pPlayer, const size_t stageIndex)
+{
+    // We already know that this person owns this card, no new info
+    if (ownedBy(pPlayer, stageIndex))
+        return false;
+
+    processInnocent();
     if (stages[stageIndex].pPossibleOwners.find(pPlayer) == stages[stageIndex].pPossibleOwners.end())
         throw contradiction((name + str(" can't be owned by ") + pPlayer->name
         + str(" because this has already been ruled out")).c_str());
-        
-    conviction = Conviction::INNOCENT;
+    
     stages[stageIndex].pOwner = pPlayer;
     stages[stageIndex].pPossibleOwners = { pPlayer };
 
@@ -90,34 +128,6 @@ bool Card::processDoesntBelongTo(Player* pPlayer, const size_t stageIndex)
         stages[i].pPossibleOwners.erase(pPlayer);
     
     return recheck();
-}
-
-bool Card::processGuilty()
-{
-    switch (conviction)
-    {
-    case Conviction::GUILTY:
-        return false;
-
-    case Conviction::INNOCENT:
-        throw contradiction((str("Deduced that ") + name + str(" is guilty but this card is already innocent")).c_str());
-
-    case Conviction::UNKNOWN:
-        if (g_categories[categoryIndex].guiltyKnown)
-            throw contradiction((name + str(" has been convicted but another card in the same category was already covicted")).c_str());
-
-        conviction = Conviction::GUILTY;
-        g_categories[categoryIndex].guiltyKnown = true;
-        g_progressReport += name + str(" has been convicted\n");
-
-        for (Card& card : g_categories[categoryIndex].cards)
-        {
-            if (&card != this)
-                card.conviction = Conviction::INNOCENT;
-        }
-    }
-
-    return true;
 }
 
 bool Card::recheck()
@@ -167,10 +177,33 @@ bool Card::locationUnknown(const size_t stageIndex) const { return !locationKnow
 bool Card::operator<(const Card& card) const { return name < card.name; }
 bool Card::operator==(const str& n) const { return name == n; }
 
+Category::Category(const std::vector<Card>& cards) :
+    cards(cards)
+{
+    for (Card& card : this->cards)
+        pPossibleGuilty.insert(&card);
+}
 
 void Category::reset()
 {
-    guiltyKnown = false;
     for (Card& card : cards)
+    {
         card.reset();
+        pPossibleGuilty.insert(&card);
+    }
+}
+
+bool Category::recheck()
+{
+    switch (pPossibleGuilty.size())
+    {
+    case 0:
+        throw contradiction((str("Ruled out all cards in category starting with ") + cards.front().name).c_str());
+
+    case 1:
+        // All other cards have been ruled out so this card must be the murder card
+        return (*pPossibleGuilty.begin())->processGuilty();
+    }
+
+    return false;
 }

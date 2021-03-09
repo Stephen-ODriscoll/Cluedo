@@ -158,6 +158,7 @@
     <QtMoc Include="PlayerInfo.h" />
     <QtMoc Include="RedistributeCards.h" />
     <ClInclude Include="Macros.h" />
+    <ClInclude Include="Perspective.h" />
     <ClInclude Include="Turn.h" />
     <QtMoc Include="Cluedo.h" />
     <ClInclude Include="Card.h" />

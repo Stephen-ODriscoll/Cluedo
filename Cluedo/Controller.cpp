@@ -26,29 +26,32 @@ void Controller::initialize(const fs::path& inputFile)
         throw std::invalid_argument(str("Failed to open file ") + inputFile.string());
 
     str line;
-    g_categories.emplace_back();
-    for (size_t category = 0; std::getline(load, line);)
+    std::vector<Card> cards;
+    while (std::getline(load, line))
     {
-        if (NUM_CATEGORIES <= category)
-            throw std::invalid_argument(str("Too many categories. There should be ") + str(NUM_CATEGORIES));
-
         if (line.empty())
         {
-            if (!g_categories[category].cards.empty())
+            if (!cards.empty())
             {
-                g_categories.emplace_back();
-                ++category;
+                g_categories.emplace_back(cards);
+                cards.clear();
             }
 
             continue;
         }
 
         std::vector<str> splits = line.split('=');
-        g_categories[category].cards.emplace_back(splits[0], splits[1], category);
+        cards.emplace_back(splits[0], splits[1], g_categories.size());
     }
 
+    
     if (g_categories.size() != NUM_CATEGORIES)
-        throw std::invalid_argument(str("Not enough categories. There should be ") + str(NUM_CATEGORIES));
+    {
+        if (g_categories.size() < NUM_CATEGORIES)
+            throw std::invalid_argument(str("Not enough categories. There should be ") + str(NUM_CATEGORIES));
+        
+        throw std::invalid_argument(str("Too many categories. There should be ") + str(NUM_CATEGORIES));
+    }
 }
 
 void Controller::processTurn(std::shared_ptr<const Turn> pNewTurn, std::shared_ptr<const Turn> pOldTurn)
@@ -258,27 +261,7 @@ bool Controller::exteriorChecks()
 {
     bool cardDeduced = false;
     for (Category& category : g_categories)
-    {
-        if (category.guiltyKnown)
-            continue;
-
-        std::vector<Card*> unknownCards;
-        for (Card& card : category.cards)
-        {
-            if (card.isUnknown())
-                unknownCards.push_back(&card);
-        }
-
-        switch (unknownCards.size())
-        {
-        case 0:
-            throw contradiction((str("Ruled out all cards in category starting with ") + category.cards.front().name).c_str());
-
-        case 1:
-            // All other cards have been ruled out so this card must be the murder card
-            cardDeduced |= unknownCards.front()->processGuilty();
-        }
-    }
+        cardDeduced |= category.recheck();
 
     return cardDeduced;
 }

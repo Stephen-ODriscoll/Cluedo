@@ -28,7 +28,9 @@ struct PlayerStage
     PlayerStage(std::set<Card*> has, std::set<Card*> doesntHave, std::vector<std::vector<Card*>> hasEither);
 };
 
-struct Player
+#include "Perspective.h"
+
+struct Player : public Perspective
 {
     str name;
     std::vector<StagePreset> presets = { StagePreset() };
