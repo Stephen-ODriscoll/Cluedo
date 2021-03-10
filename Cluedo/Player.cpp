@@ -37,6 +37,9 @@ bool Player::reset()
     return result;
 }
 
+/*
+* If a player gets a card, they always hold it until they're out.
+*/
 bool Player::processHas(Card* pCard, const size_t stageIndex)
 {
     bool result = false;
@@ -66,6 +69,10 @@ bool Player::processHas(Card* pCard, const size_t stageIndex)
     return result;
 }
 
+/*
+* Once a player gets a card they hold it until they're out.
+* If a Player doesn't have a card, they can't have had it earlier.
+*/
 bool Player::processDoesntHave(const std::vector<Card*>& pCards, const size_t stageIndex)
 {
     bool result = false;
@@ -73,9 +80,9 @@ bool Player::processDoesntHave(const std::vector<Card*>& pCards, const size_t st
     {
         result |= pCard->processDoesntBelongTo(this, stageIndex);
 
-        for (size_t i = 0; i != stageIndex + 1; ++i)
+        for (size_t i = stageIndex + 1; i != 0;)
         {
-            if (pCard->locationUnknown(i))
+            if (pCard->locationUnknown(--i))
                 stages[i].doesntHave.insert(pCard);
         }
     } 
@@ -84,6 +91,9 @@ bool Player::processDoesntHave(const std::vector<Card*>& pCards, const size_t st
     return result;
 }
 
+/*
+* Process of elimination until we find the card that was shown by this player.
+*/
 bool Player::processHasEither(const std::vector<Card*>& pCards, const size_t stageIndex)
 {
     std::vector<Card*> checkedCards;
@@ -102,12 +112,15 @@ bool Player::processHasEither(const std::vector<Card*>& pCards, const size_t sta
         return processHas(checkedCards.front(), stageIndex);
 
     default:
-        stages[stageIndex].hasEither.push_back(checkedCards);      // We don't know for sure which card was shown (yet)
+        stages[stageIndex].hasEither.push_back(checkedCards);
         return false;
     }
 }
 
-bool Player::processGuessedWrong(Player* pPlayer, int cardsReceived)
+/*
+* If a player receives cards from the guesser they still can't have any cards that both them and the guesser couldn't have had earlier.
+*/
+bool Player::processGuessedWrong(Player* pGuesser, int cardsReceived)
 {
     bool result = false;
     if (presets.size() <= stages.size())
@@ -128,12 +141,11 @@ bool Player::processGuessedWrong(Player* pPlayer, int cardsReceived)
     {
         std::set<Card*> newDoesntHave;
         std::set_intersection(
-            pPlayer->stages.back().doesntHave.begin(),
-            pPlayer->stages.back().doesntHave.end(),
+            pGuesser->stages.back().doesntHave.begin(),
+            pGuesser->stages.back().doesntHave.end(),
             stages.back().doesntHave.begin(),
             stages.back().doesntHave.end(),
-            std::inserter(newDoesntHave, newDoesntHave.begin())
-        );
+            std::inserter(newDoesntHave, newDoesntHave.begin()));
 
         stages.emplace_back(stages.back().has, newDoesntHave, stages.back().hasEither);
     }
@@ -145,6 +157,9 @@ bool Player::processGuessedWrong(Player* pPlayer, int cardsReceived)
     return result;
 }
 
+/*
+* Process of elimination until we find a card that was shown by this player.
+*/
 bool Player::recheck()
 {
     bool result = false;
@@ -152,15 +167,12 @@ bool Player::recheck()
     {
         for (auto it = stages[i].doesntHave.begin(); it != stages[i].doesntHave.end();)
         {
-            // If card location is known remove it from doesn't have.
-            // We already know they don't have it because someone else does.
             if ((*it)->locationKnown(i))
                 it = stages[i].doesntHave.erase(it);
             else
                 ++it;
         }
 
-        // Recheck past cards with this new info
         for (auto it1 = stages[i].hasEither.begin(); it1 != stages[i].hasEither.end();)
         {
             for (auto it2 = it1->begin(); it2 != it1->end();)

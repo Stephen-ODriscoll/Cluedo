@@ -73,9 +73,11 @@ bool Card::processInnocent()
     return true;
 }
 
+/*
+* If a player owns this card, then the only players who can have owned it earlier are this player and any players who are now out.
+*/
 bool Card::processBelongsTo(Player* pPlayer, const size_t stageIndex)
 {
-    // We already know that this person owns this card, no new info
     if (ownedBy(pPlayer, stageIndex))
         return false;
 
@@ -87,20 +89,9 @@ bool Card::processBelongsTo(Player* pPlayer, const size_t stageIndex)
     stages[stageIndex].pPossibleOwners = { pPlayer };
 
     std::set<Player*> pPossibleOwners = { pPlayer };
-    for (int64_t i = int64_t(stageIndex) - 1; i != -1; --i)
+    for (size_t i = stageIndex; i != 0;)
     {
-        pPossibleOwners.insert(g_pPlayersOut[i]);
-        for (auto it = pPossibleOwners.begin(); it != pPossibleOwners.end();)
-        {
-            if (!couldBelongTo(*it, i))
-                it = pPossibleOwners.erase(it);
-            else
-                ++it;
-        }
-
-        // Break here if we already know all this
-        if (stages[i].pPossibleOwners == pPossibleOwners)
-            break;
+        pPossibleOwners.insert(g_pPlayersOut[--i]);
 
         std::set<Player*> pImpossibleOwners;
         std::set_difference(
@@ -108,8 +99,10 @@ bool Card::processBelongsTo(Player* pPlayer, const size_t stageIndex)
             stages[i].pPossibleOwners.end(),
             pPossibleOwners.begin(),
             pPossibleOwners.end(),
-            std::inserter(pImpossibleOwners, pImpossibleOwners.begin())
-        );
+            std::inserter(pImpossibleOwners, pImpossibleOwners.begin()));
+
+        if (pImpossibleOwners.empty())
+            break;
 
         for (Player* pImpossibleOwner : pImpossibleOwners)
             pImpossibleOwner->processDoesntHave({ this }, i);
@@ -118,26 +111,35 @@ bool Card::processBelongsTo(Player* pPlayer, const size_t stageIndex)
     return true;
 }
 
+/*
+* If this card doesn't belong to a player, they can't have had it earlier.
+* Once a player gets a card they hold it until they're out.
+*/
 bool Card::processDoesntBelongTo(Player* pPlayer, const size_t stageIndex)
 {
     if (ownedBy(pPlayer, stageIndex))
         throw contradiction((str("Previous info says ") + pPlayer->name + str(" has ") + name).c_str());
 
-    for (size_t i = 0; i != stageIndex + 1; ++i)
-        stages[i].pPossibleOwners.erase(pPlayer);
+    for (size_t i = stageIndex + 1; i != 0;)
+        stages[--i].pPossibleOwners.erase(pPlayer);
     
     return recheck();
 }
 
+/*
+* If the player that's out couldn't have had this card then our info doesn't change otherwise anyone left can have this card now.
+*/
 void Card::processGuessedWrong(Player* pGuesser)
 {
-    // If the player that's out couldn't have had this card then our info doesn't change
     if (couldBelongTo(pGuesser, stages.size() - 1))
         stages.push_back(stages.back());
     else
-        stages.push_back(g_pPlayersLeft);   // Otherwise anyone left can have it now
+        stages.push_back(g_pPlayersLeft);
 }
 
+/*
+* At every stage check if the card can only be guilty or only be owned by one person.
+*/
 bool Card::recheck()
 {
     bool cardDeduced = false;
@@ -149,12 +151,10 @@ bool Card::recheck()
         switch (stages[i].pPossibleOwners.size())
         {
         case 0:
-            // Nobody can have this card so it must be guilty
             cardDeduced |= processGuilty();
             break;
 
         case 1:
-            // If this card is innocent then we know it's only possible owner is it's owner
             if (isInnocent())
                 cardDeduced |= (*stages[i].pPossibleOwners.begin())->processHas(this, i);
         }
@@ -163,6 +163,9 @@ bool Card::recheck()
     return cardDeduced;
 }
 
+/*
+* Keeping a list of all possible owners makes this check a lot more efficient.
+*/
 bool Card::couldBelongTo(Player* pPlayer, const size_t stageIndex) const
 {
     return (stages[stageIndex].pPossibleOwners.find(pPlayer) != stages[stageIndex].pPossibleOwners.end());
@@ -197,6 +200,9 @@ void Category::reset()
     }
 }
 
+/*
+* If All other cards have been ruled ou the only card left must be guilty
+*/
 bool Category::recheck()
 {
     switch (pPossibleGuilty.size())
@@ -205,7 +211,6 @@ bool Category::recheck()
         throw contradiction((str("Ruled out all cards in category starting with ") + cards.front().name).c_str());
 
     case 1:
-        // All other cards have been ruled out so this card must be the murder card
         return (*pPossibleGuilty.begin())->processGuilty();
     }
 
