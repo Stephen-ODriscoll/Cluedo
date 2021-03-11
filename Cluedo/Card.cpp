@@ -68,6 +68,8 @@ bool Card::processInnocent()
         conviction = Conviction::INNOCENT;
         g_categories[categoryIndex].pPossibleGuilty.erase(it);
         g_progressReport += name + str(" has been marked innocent\n");
+
+        recheck();
     }
 
     return true;
@@ -84,28 +86,12 @@ bool Card::processBelongsTo(Player* pPlayer, const size_t stageIndex)
     processInnocent();
     if (!couldBelongTo(pPlayer, stageIndex))
         throw contradiction(name + str(" can't be owned by ") + pPlayer->name + str(" (Stage " + stageIndex + str(")")));
-    
-    stages[stageIndex].pOwner = pPlayer;
-    stages[stageIndex].pPossibleOwners = { pPlayer };
 
-    std::set<Player*> pPossibleOwners = { pPlayer };
-    for (size_t i = stageIndex; i != 0;)
+    std::set<Player*> pPossibleOwners = stages[stageIndex].pPossibleOwners;
+    for (Player* pPossibleOwner : pPossibleOwners)
     {
-        pPossibleOwners.insert(g_pPlayersOut[--i]);
-
-        std::set<Player*> pImpossibleOwners;
-        std::set_difference(
-            stages[i].pPossibleOwners.begin(),
-            stages[i].pPossibleOwners.end(),
-            pPossibleOwners.begin(),
-            pPossibleOwners.end(),
-            std::inserter(pImpossibleOwners, pImpossibleOwners.begin()));
-
-        if (pImpossibleOwners.empty())
-            break;
-
-        for (Player* pImpossibleOwner : pImpossibleOwners)
-            pImpossibleOwner->processDoesntHave({ this }, i);
+        if (pPossibleOwner != pPlayer)
+            pPossibleOwner->processDoesntHave({ this }, stageIndex);
     }
 
     return true;
