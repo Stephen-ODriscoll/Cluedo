@@ -24,9 +24,7 @@ struct CardStage
     CardStage(std::vector<Player*>& pPlayers);
 };
 
-#include "Perspective.h"
-
-struct Card : public Perspective
+struct Card
 {
     const str name, nickname;
     const size_t categoryIndex;
@@ -37,13 +35,13 @@ struct Card : public Perspective
     Card(const str& name, const str& nickname, const size_t categoryIndex);
     void reset();
 
-    bool processGuilty();
-    bool processInnocent();
+    void processGuilty();
+    void processInnocent();
 
-    bool processBelongsTo(Player* pPlayer, const size_t stageIndex);
-    bool processDoesntBelongTo(Player* pPlayer, const size_t stageIndex);
-    void processGuessedWrong(Player* pPlayer);
-    bool recheck();
+    void processBelongsTo(Player* pPlayer, const size_t stageIndex);
+    void processDoesntBelongTo(Player* pPlayer, const size_t stageIndex);
+    void processGuessedWrong(Player* pGuesser);
+    void recheckLocation();
 
     bool couldBelongTo(Player* pPlayer, const size_t stageIndex) const;
 
@@ -61,7 +59,7 @@ struct Card : public Perspective
     bool operator==(const str& n) const;
 };
 
-struct Category : public Perspective
+struct Category
 {
     std::vector<Card> cards;
     std::set<Card*> pPossibleGuilty;
@@ -69,7 +67,7 @@ struct Category : public Perspective
     Category(const std::vector<Card> &cards);
 
     void reset();
-    bool recheck();
+    void recheckGuilty();
 };
 
 #include "Globals.h"

@@ -26,6 +26,4 @@ private:
     void analyseTurn(std::shared_ptr<const Turn> pTurn);
     void analyseAsked(std::shared_ptr<const Asked> pAsked);
     void analyseGuessed(std::shared_ptr<const Guessed> pGuessed);
-    void continueDeducing();
-    bool exteriorChecks();
 };
