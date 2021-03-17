@@ -8,12 +8,13 @@ struct PlayerTest : testing::Test
         g_players = std::vector<Player>(6, Player());
 
         g_categories.clear();
+        g_categories.reserve(3);
         const std::vector<size_t> categorySizes = { 6, 6, 9 };
         for (const size_t categorySize : categorySizes)
         {
             std::vector<Card> cards;
             for (size_t i = 0; i != categorySize; ++i)
-                cards.emplace_back("", "", g_categories.size() - 1);
+                cards.emplace_back("", "", g_categories.size());
             
             g_categories.emplace_back(cards);
         }
@@ -97,12 +98,7 @@ TEST_F(PlayerTest, process_has_either_throws_after_process_doesnt_have)
     EXPECT_THROW(g_players[0].processHasEither(pCards, 0), contradiction);
 }
 
-TEST_F(PlayerTest, recheck_does_nothing_when_nothing_needs_to_be_done)
-{
-    EXPECT_FALSE(g_players[0].recheck());
-}
-
-TEST_F(PlayerTest, recheck_cards_removes_known_cards_from_doesnt_have)
+TEST_F(PlayerTest, process_doesnt_have_removes_known_cards_from_doesnt_have)
 {
     g_players[0].processDoesntHave({ &g_categories[0].cards[0], &g_categories[1].cards[0], &g_categories[2].cards[0] }, 0);
 
@@ -110,11 +106,11 @@ TEST_F(PlayerTest, recheck_cards_removes_known_cards_from_doesnt_have)
     g_players[1].processHas(&g_categories[1].cards[0], 0);
     g_players[1].processHas(&g_categories[2].cards[0], 0);
 
-    EXPECT_FALSE(g_players[0].recheck());
+    g_players[0].processDoesntHave({ &g_categories[0].cards[0], &g_categories[1].cards[0], &g_categories[2].cards[0] }, 0);
     EXPECT_TRUE(g_players[0].stages[0].doesntHave.empty());
 }
 
-TEST_F(PlayerTest, recheck_cards_finds_cards_after_has_either)
+TEST_F(PlayerTest, recheck_has_either_finds_cards_after_has_either)
 {
     g_players[0].processHasEither({ &g_categories[0].cards[0], &g_categories[1].cards[0], &g_categories[2].cards[0] }, 0);
     g_players[0].processHasEither({ &g_categories[0].cards[1], &g_categories[1].cards[1], &g_categories[2].cards[1] }, 0);
@@ -127,6 +123,6 @@ TEST_F(PlayerTest, recheck_cards_finds_cards_after_has_either)
     g_players[1].processHas(&g_categories[2].cards[0], 0);
     g_players[1].processHas(&g_categories[2].cards[1], 0);
 
-    EXPECT_TRUE(g_players[0].recheck());
+    g_players[0].recheckHasEither(0);
     EXPECT_EQ(g_players[0].stages[0].has, std::set<Card*>({ &g_categories[0].cards[0], &g_categories[1].cards[1], &g_categories[2].cards[2] }));
 }
