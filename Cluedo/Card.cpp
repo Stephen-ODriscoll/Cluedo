@@ -34,8 +34,7 @@ void Card::processGuilty()
         throw contradiction((str("Deduced that ") + name + str(" is guilty but this card is already innocent")).c_str());
 
     case Conviction::UNKNOWN:
-        auto it = g_categories[categoryIndex].pPossibleGuilty.find(this);
-        if (it == g_categories[categoryIndex].pPossibleGuilty.end())
+        if (g_categories[categoryIndex].pPossibleGuilty.find(this) == g_categories[categoryIndex].pPossibleGuilty.end())
             throw std::exception((str("Guilty card ") + name + str(" not found in list of possible guilty cards")).c_str());
 
         conviction = Conviction::GUILTY;
@@ -57,12 +56,10 @@ void Card::processInnocent()
         throw contradiction((str("Deduced that ") + name + str(" is innocent but this card is already guilty")).c_str());
 
     case Conviction::UNKNOWN:
-        auto it = g_categories[categoryIndex].pPossibleGuilty.find(this);
-        if (it == g_categories[categoryIndex].pPossibleGuilty.end())
+        if (!g_categories[categoryIndex].pPossibleGuilty.erase(this))
             throw std::exception((str("Innocent card ") + name + str(" not found in list of possible guilty cards")).c_str());
 
         conviction = Conviction::INNOCENT;
-        g_categories[categoryIndex].pPossibleGuilty.erase(it);
         g_progressReport += name + str(" has been marked innocent\n");
 
         recheckLocation();
