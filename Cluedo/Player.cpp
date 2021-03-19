@@ -160,9 +160,7 @@ void Player::processGuessedWrong(Player* pGuesser, const int cardsReceived)
 */
 void Player::recheckHasEither(const size_t stageIndex)
 {
-   std::vector<std::vector<Card*>> HasEither = stages[stageIndex].hasEither;
-
-    for (auto it1 = HasEither.begin(); it1 != HasEither.end();)
+    for (auto it1 = stages[stageIndex].hasEither.begin(); it1 != stages[stageIndex].hasEither.end();)
     {
         for (auto it2 = it1->begin(); it2 != it1->end();)
         {
@@ -179,7 +177,7 @@ void Player::recheckHasEither(const size_t stageIndex)
 
         case 1:
             processHas(it1->front(), stageIndex);
-            it1 = HasEither.erase(it1);
+            it1 = stages[stageIndex].hasEither.erase(it1);
             break;
 
         default:
