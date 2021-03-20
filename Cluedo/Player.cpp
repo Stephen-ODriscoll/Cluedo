@@ -43,10 +43,8 @@ void Player::processHas(Card* pCard, const size_t stageIndex)
 
     for (size_t i = stageIndex; isIn(i); ++i)
     {
-        if (stages[i].has.find(pCard) != stages[i].has.end())
+        if (!stages[i].has.insert(pCard).second)
             return;
-        
-        stages[i].has.insert(pCard);
 
         if (allCardsKnown(i))
         {
