@@ -8,8 +8,6 @@ Cluedo::Cluedo(QWidget *parent) :
 
 {
     ui.setupUi(this);
-    this->setAttribute(Qt::WA_DeleteOnClose);
-    
     ui.stackedWidget->addWidget(pHome);
 }
 
@@ -25,4 +23,10 @@ void Cluedo::startGame(Mode mode, int numPlayers)
 
     ui.stackedWidget->addWidget(pGame);
     ui.stackedWidget->setCurrentWidget(pGame);
+}
+
+void Cluedo::closeEvent(QCloseEvent* event)
+{
+    event->accept();
+    qApp->quit();
 }

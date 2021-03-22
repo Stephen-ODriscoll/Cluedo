@@ -27,6 +27,7 @@ private:
 
     bool outcomeChosen();
     std::shared_ptr<Turn> getNewTurn();
+    void closeEvent(QCloseEvent* event) override;
 
 private slots:
     void missedButtonClicked();

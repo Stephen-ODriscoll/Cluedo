@@ -17,6 +17,7 @@ public:
     ~Cluedo();
 
     void startGame(Mode mode, int numPlayers);
+    void closeEvent(QCloseEvent* event) override;
 
 private:
     Ui::CluedoObject ui;

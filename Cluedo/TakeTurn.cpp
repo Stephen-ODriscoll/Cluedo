@@ -139,6 +139,14 @@ bool TakeTurn::outcomeChosen()
         || (ui.askedButton->isDefault() && (ui.cat1Shown->isChecked() || ui.cat2Shown->isChecked() || ui.cat3Shown->isChecked()));
 }
 
+void TakeTurn::closeEvent(QCloseEvent* event)
+{
+    if (pPopUp)
+        pPopUp->close();
+
+    event->accept();
+}
+
 void TakeTurn::missedButtonClicked()
 {
     ui.missedButton->setDefault(true);
@@ -263,6 +271,7 @@ void TakeTurn::submitButtonClicked()
 
     if (pNewTurn->shouldRedistribute())
     {
+        delete pPopUp;
         pPopUp = new RedistributeCards(pGame, std::static_pointer_cast<Guessed>(pNewTurn), pOldTurn);
         pPopUp->show();
     }
