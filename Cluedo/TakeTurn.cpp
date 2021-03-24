@@ -139,6 +139,68 @@ bool TakeTurn::outcomeChosen()
         || (ui.askedButton->isDefault() && (ui.cat1Shown->isChecked() || ui.cat2Shown->isChecked() || ui.cat3Shown->isChecked()));
 }
 
+std::shared_ptr<Turn> TakeTurn::getNewTurn()
+{
+    const auto itDetective = std::find(g_players.begin(), g_players.end(), detective);
+    if (itDetective == g_players.end())
+        throw std::exception((str("Failed to find detective player ") + detective).c_str());
+
+
+    // Missed a turn
+    if (ui.missedButton->isDefault())
+        return std::make_shared<Missed>(&*itDetective);
+
+
+    std::vector<Card*> pCards;
+    auto& it1 = categoryBoxes.begin();
+    for (auto& it2 = g_categories.begin(); it1 != categoryBoxes.end(); ++it1, ++it2)
+    {
+        const str card = (*it1)->currentText().toStdString();
+        auto& itCard = std::find(it2->cards.begin(), it2->cards.end(), card);
+        if (itCard == it2->cards.end())
+            throw std::exception((str("Failed to find selected card ") + card).c_str());
+
+        pCards.push_back(&*itCard);
+    }
+
+
+    // Asked a question
+    if (ui.askedButton->isDefault())
+    {
+        const str witness = ui.askedBox->currentText().toStdString();
+        const auto itWitness = std::find(g_players.begin(), g_players.end(), witness);
+        if (itWitness == g_players.end())
+            throw std::exception((str("Failed to find witness player ") + witness).c_str());
+
+        if (ui.outcomeTrue->isChecked())
+            return std::make_shared<Asked>(&*itDetective, &*itWitness, pCards, true);
+        else if (ui.outcomeFalse->isChecked())
+            return std::make_shared<Asked>(&*itDetective, &*itWitness, pCards, false);
+        else if (ui.cat1Shown->isChecked())
+            return std::make_shared<Asked>(&*itDetective, &*itWitness, pCards, true, ui.cat1Box->currentText().toStdString());
+        else if (ui.cat2Shown->isChecked())
+            return std::make_shared<Asked>(&*itDetective, &*itWitness, pCards, true, ui.cat2Box->currentText().toStdString());
+        else if (ui.cat3Shown->isChecked())
+            return std::make_shared<Asked>(&*itDetective, &*itWitness, pCards, true, ui.cat3Box->currentText().toStdString());
+        else
+            throw std::exception("Failed to deduce chosen outcome");
+    }
+
+
+    // Made a guess
+    if (ui.guessedButton->isDefault())
+    {
+        if (ui.outcomeTrue->isChecked())
+            return std::make_shared<Guessed>(&*itDetective, pCards, true);
+        else if (ui.outcomeFalse->isChecked())
+            return std::make_shared<Guessed>(&*itDetective, pCards, false);
+        else
+            throw std::exception("Failed to deduce guessed outcome");
+    }
+
+    throw std::exception("Failed to deduce chosen action");
+}
+
 void TakeTurn::closeEvent(QCloseEvent* event)
 {
     if (pPopUp)
@@ -284,66 +346,4 @@ void TakeTurn::submitButtonClicked()
             
         pGame->refresh();
     }
-}
-
-std::shared_ptr<Turn> TakeTurn::getNewTurn()
-{
-    const auto itDetective = std::find(g_players.begin(), g_players.end(), detective);
-    if (itDetective == g_players.end())
-        throw std::exception((str("Failed to find detective player ") + detective).c_str());
-
-
-    // Missed a turn
-    if (ui.missedButton->isDefault())
-        return std::make_shared<Missed>(&*itDetective);
-
-
-    std::vector<Card*> pCards;
-    auto& it1 = categoryBoxes.begin();
-    for (auto& it2 = g_categories.begin(); it1 != categoryBoxes.end(); ++it1, ++it2)
-    {
-        const str card = (*it1)->currentText().toStdString();
-        auto& itCard = std::find(it2->cards.begin(), it2->cards.end(), card);
-        if (itCard == it2->cards.end())
-            throw std::exception((str("Failed to find selected card ") + card).c_str());
-
-        pCards.push_back(&*itCard);
-    }
-
-
-    // Asked a question
-    if (ui.askedButton->isDefault())
-    {
-        const str witness = ui.askedBox->currentText().toStdString();
-        const auto itWitness = std::find(g_players.begin(), g_players.end(), witness);
-        if (itWitness == g_players.end())
-            throw std::exception((str("Failed to find witness player ") + witness).c_str());
-
-        if (ui.outcomeTrue->isChecked())
-            return std::make_shared<Asked>(&*itDetective, &*itWitness, pCards, true);
-        else if (ui.outcomeFalse->isChecked())
-            return std::make_shared<Asked>(&*itDetective, &*itWitness, pCards, false);
-        else if (ui.cat1Shown->isChecked())
-            return std::make_shared<Asked>(&*itDetective, &*itWitness, pCards, true, ui.cat1Box->currentText().toStdString());
-        else if (ui.cat2Shown->isChecked())
-            return std::make_shared<Asked>(&*itDetective, &*itWitness, pCards, true, ui.cat2Box->currentText().toStdString());
-        else if (ui.cat3Shown->isChecked())
-            return std::make_shared<Asked>(&*itDetective, &*itWitness, pCards, true, ui.cat3Box->currentText().toStdString());
-        else
-            throw std::exception("Failed to deduce chosen outcome");
-    }
-
-
-    // Made a guess
-    if (ui.guessedButton->isDefault())
-    {
-        if (ui.outcomeTrue->isChecked())
-            return std::make_shared<Guessed>(&*itDetective, pCards, true);
-        else if (ui.outcomeFalse->isChecked())
-            return std::make_shared<Guessed>(&*itDetective, pCards, false);
-        else
-            throw std::exception("Failed to deduce guessed outcome");
-    }
-
-    throw std::exception("Failed to deduce chosen action");
 }

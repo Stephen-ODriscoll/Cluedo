@@ -16,7 +16,6 @@ class Game : public QWidget
     Ui::GameObject ui;
     QWidget* pPopUp;
 
-
 public:
     Controller controller;
 
@@ -26,7 +25,6 @@ public:
     void refresh();
     const fs::path openCluedoTextFile(const str& issue);
 
-    
 private slots:
     void upButtonClicked();
     void downButtonClicked();
