@@ -42,6 +42,7 @@ struct Player
     void processDoesntHave(const std::vector<Card*>& pCards, const size_t stageIndex);
     void processHasEither(const std::vector<Card*>& pCards, const size_t stageIndex);
     void processGuessedWrong(Player* pGuesser, const int cardsReceived = -1);
+    void filterDoesntHave(Card* pCard, const size_t stageIndex);
     void recheckHasEither(const size_t stageIndex);
 
     bool isIn(const size_t stageIndex);

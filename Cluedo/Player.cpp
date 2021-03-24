@@ -72,20 +72,15 @@ void Player::processDoesntHave(const std::vector<Card*>& pCards, const size_t st
     {
         pCard->processDoesntBelongTo(this, stageIndex);
 
-        bool updated = true;
-        for (size_t i = stageIndex + 1; i != 0 && updated;)
+        for (size_t i = stageIndex + 1; i != 0;)
         {
-            if (pCard->locationKnown(--i) || allCardsKnown(i))
-            {
-                updated = stages[i].doesntHave.erase(pCard);
-            }
-            else
-            {
-                updated = stages[i].doesntHave.insert(pCard).second;
+            if (stages[--i].doesntHave.find(pCard) != stages[i].doesntHave.end())
+                break;
 
-                if (updated)
-                    recheckHasEither(i);
-            }
+            if (pCard->locationUnknown(i) && !allCardsKnown(i))
+                stages[i].doesntHave.insert(pCard);
+            
+            recheckHasEither(i);
         }
     }
 }
@@ -150,6 +145,18 @@ void Player::processGuessedWrong(Player* pGuesser, const int cardsReceived)
     else
     {
         stages.emplace_back(stages.back());
+    }
+}
+
+/*
+* If a card's location is known remove it from other players information.
+*/
+void Player::filterDoesntHave(Card* pCard, const size_t stageIndex)
+{
+    for (size_t i = stageIndex + 1; i != 0;)
+    {
+        if (pCard->locationKnown(--i) || allCardsKnown(i))
+            stages[i].doesntHave.erase(pCard);
     }
 }
 

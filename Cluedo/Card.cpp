@@ -45,6 +45,11 @@ void Card::processGuilty()
             if (&card != this)
                 card.processInnocent();
         }
+
+        for (Player& player : g_players)
+        {
+            processDoesntBelongTo(&player, player.stages.size() - 1);
+        }
     }
 }
 
@@ -83,11 +88,10 @@ void Card::processBelongsTo(Player* pPlayer, const size_t stageIndex)
     {
         stages[i].pOwner = pPlayer;
 
-        std::set<Player*> pPossibleOwners = stages[i].pPossibleOwners;
-        for (Player* pPossibleOwner : pPossibleOwners)
+        for (Player* pPlayerLeft : g_pPlayersLeft)
         {
-            if (pPossibleOwner != pPlayer)
-                processDoesntBelongTo(pPossibleOwner, i);
+            if (pPlayerLeft != pPlayer)
+                processDoesntBelongTo(pPlayerLeft, i);
         }
     }
 
@@ -101,7 +105,7 @@ void Card::processBelongsTo(Player* pPlayer, const size_t stageIndex)
 void Card::processDoesntBelongTo(Player* pPlayer, const size_t stageIndex)
 {
     if (!couldBelongTo(pPlayer, stageIndex))
-        return;
+        return pPlayer->filterDoesntHave(this, stageIndex);
 
     if (ownedBy(pPlayer, stageIndex))
         throw contradiction((str("Previous info says ") + pPlayer->name + str(" has ") + name).c_str());
