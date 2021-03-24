@@ -100,7 +100,7 @@ void Player::processHasEither(const std::vector<Card*>& pCards, const size_t sta
     switch (checkedCards.size())
     {
     case 0:
-        throw contradiction((name + str(" can't have any of those cards")).c_str());
+        throw contradiction(name + str(" can't have any of those cards"));
 
     case 1:
         processHas(checkedCards.front(), stageIndex);
@@ -178,7 +178,7 @@ void Player::recheckHasEither(const size_t stageIndex)
         switch (it1->size())
         {
         case 0:
-            throw contradiction((name + str(" can't have any of the 3 cards they're supposed to")).c_str());
+            throw contradiction(name + str(" can't have any of the 3 cards they're supposed to"));
 
         case 1:
             processHas(it1->front(), stageIndex);

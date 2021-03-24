@@ -31,7 +31,7 @@ void Card::processGuilty()
     switch (conviction)
     {
     case Conviction::INNOCENT:
-        throw contradiction((str("Deduced that ") + name + str(" is guilty but this card is already innocent")).c_str());
+        throw contradiction(str("Deduced that ") + name + str(" is guilty but this card is already innocent"));
 
     case Conviction::UNKNOWN:
         if (g_categories[categoryIndex].pPossibleGuilty.find(this) == g_categories[categoryIndex].pPossibleGuilty.end())
@@ -58,7 +58,7 @@ void Card::processInnocent()
     switch (conviction)
     {
     case Conviction::GUILTY:
-        throw contradiction((str("Deduced that ") + name + str(" is innocent but this card is already guilty")).c_str());
+        throw contradiction(str("Deduced that ") + name + str(" is innocent but this card is already guilty"));
 
     case Conviction::UNKNOWN:
         if (!g_categories[categoryIndex].pPossibleGuilty.erase(this))
@@ -108,7 +108,7 @@ void Card::processDoesntBelongTo(Player* pPlayer, const size_t stageIndex)
         return pPlayer->filterDoesntHave(this, stageIndex);
 
     if (ownedBy(pPlayer, stageIndex))
-        throw contradiction((str("Previous info says ") + pPlayer->name + str(" has ") + name).c_str());
+        throw contradiction(str("Previous info says ") + pPlayer->name + str(" has ") + name);
 
     for (size_t i = stageIndex + 1; i != 0;)
     {
@@ -199,7 +199,7 @@ void Category::recheckGuilty()
     switch (pPossibleGuilty.size())
     {
     case 0:
-        throw contradiction((str("Ruled out all cards in category starting with ") + cards.front().name).c_str());
+        throw contradiction(str("Ruled out all cards in category starting with ") + cards.front().name);
 
     case 1:
         (*pPossibleGuilty.begin())->processGuilty();
