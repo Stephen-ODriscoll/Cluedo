@@ -26,30 +26,25 @@ Player::Player() :
     name = str("Player ") + str(++playerCount);
 }
 
-bool Player::reset()
+void Player::reset()
 {
     stages = { PlayerStage() };
 
-    bool result = false;
     for (Card* pCard : presets.front().pCardsOwned)
-        result |= processHas(pCard, 0);
-
-    return result;
+        processHas(pCard, 0);
 }
 
 /*
 * If a player gets a card, they always hold it until they're out.
 */
-bool Player::processHas(Card* pCard, const size_t stageIndex)
+void Player::processHas(Card* pCard, const size_t stageIndex)
 {
-    bool result = false;
-    for (size_t i = stageIndex; i != stages.size(); ++i)
+    pCard->processBelongsTo(this, stageIndex);
+
+    for (size_t i = stageIndex; isIn(i); ++i)
     {
-        if (!pCard->processBelongsTo(this, stageIndex))
-            return result;
-        
-        stages[i].has.insert(pCard);
-        result = true;
+        if (!stages[i].has.insert(pCard).second)
+            return;
 
         if (allCardsKnown(i))
         {
@@ -58,43 +53,42 @@ bool Player::processHas(Card* pCard, const size_t stageIndex)
                 for (Card& card : category.cards)
                 {
                     if (!card.ownedBy(this, i))
-                        card.processDoesntBelongTo(this, i);
+                        processDoesntHave({ &card }, i);
                 }
             }
         }
         
         g_progressReport += name + str(" owns ") + pCard->name + str(" (Stage ") + str(stageIndex + 1) + str(")\n");
     }
-    
-    return result;
 }
 
 /*
 * Once a player gets a card they hold it until they're out.
 * If a Player doesn't have a card, they can't have had it earlier.
 */
-bool Player::processDoesntHave(const std::vector<Card*>& pCards, const size_t stageIndex)
+void Player::processDoesntHave(const std::vector<Card*>& pCards, const size_t stageIndex)
 {
-    bool result = false;
     for (Card* pCard : pCards)
     {
-        result |= pCard->processDoesntBelongTo(this, stageIndex);
+        pCard->processDoesntBelongTo(this, stageIndex);
 
         for (size_t i = stageIndex + 1; i != 0;)
         {
-            if (pCard->locationUnknown(--i))
+            if (stages[--i].doesntHave.find(pCard) != stages[i].doesntHave.end())
+                break;
+
+            if (pCard->locationUnknown(i) && !allCardsKnown(i))
                 stages[i].doesntHave.insert(pCard);
+            
+            recheckHasEither(i);
         }
-    } 
-    
-    result |= recheck();
-    return result;
+    }
 }
 
 /*
 * Process of elimination until we find the card that was shown by this player.
 */
-bool Player::processHasEither(const std::vector<Card*>& pCards, const size_t stageIndex)
+void Player::processHasEither(const std::vector<Card*>& pCards, const size_t stageIndex)
 {
     std::vector<Card*> checkedCards;
     for (Card* pCard : pCards)
@@ -109,20 +103,19 @@ bool Player::processHasEither(const std::vector<Card*>& pCards, const size_t sta
         throw contradiction((name + str(" can't have any of those cards")).c_str());
 
     case 1:
-        return processHas(checkedCards.front(), stageIndex);
+        processHas(checkedCards.front(), stageIndex);
+        break;
 
     default:
         stages[stageIndex].hasEither.push_back(checkedCards);
-        return false;
     }
 }
 
 /*
 * If a player receives cards from the guesser they still can't have any cards that both them and the guesser couldn't have had earlier.
 */
-bool Player::processGuessedWrong(Player* pGuesser, int cardsReceived)
+void Player::processGuessedWrong(Player* pGuesser, const int cardsReceived)
 {
-    bool result = false;
     if (presets.size() <= stages.size())
     {
         StagePreset& preset = presets.back();
@@ -134,7 +127,7 @@ bool Player::processGuessedWrong(Player* pGuesser, int cardsReceived)
     else
     {
         for (Card* pCard : presets[stages.size() - 1].pCardsOwned)
-            result |= processHas(pCard, stages.size() - 1);
+            processHas(pCard, stages.size() - 1);
     }
 
     if (presets[stages.size()].numCards)
@@ -153,61 +146,67 @@ bool Player::processGuessedWrong(Player* pGuesser, int cardsReceived)
     {
         stages.emplace_back(stages.back());
     }
+}
 
-    return result;
+/*
+* If a card's location is known remove it from other players information.
+*/
+void Player::filterDoesntHave(Card* pCard, const size_t stageIndex)
+{
+    for (size_t i = stageIndex + 1; i != 0;)
+    {
+        if (pCard->locationKnown(--i) || allCardsKnown(i))
+            stages[i].doesntHave.erase(pCard);
+    }
 }
 
 /*
 * Process of elimination until we find a card that was shown by this player.
 */
-bool Player::recheck()
+void Player::recheckHasEither(const size_t stageIndex)
 {
-    bool result = false;
-    for (size_t i = 0; i != stages.size(); ++i)
+    for (auto it1 = stages[stageIndex].hasEither.begin(); it1 != stages[stageIndex].hasEither.end();)
     {
-        for (auto it = stages[i].doesntHave.begin(); it != stages[i].doesntHave.end();)
+        for (auto it2 = it1->begin(); it2 != it1->end();)
         {
-            if ((*it)->locationKnown(i))
-                it = stages[i].doesntHave.erase(it);
+            if ((*it2)->couldBelongTo(this, stageIndex))
+                ++it2;
             else
-                ++it;
+                it2 = it1->erase(it2);
         }
 
-        for (auto it1 = stages[i].hasEither.begin(); it1 != stages[i].hasEither.end();)
+        switch (it1->size())
         {
-            for (auto it2 = it1->begin(); it2 != it1->end();)
-            {
-                if ((*it2)->couldBelongTo(this, i))
-                    ++it2;
-                else
-                    it2 = it1->erase(it2);
-            }
+        case 0:
+            throw contradiction((name + str(" can't have any of the 3 cards they're supposed to")).c_str());
 
-            switch (it1->size())
-            {
-            case 0:
-                throw contradiction((name + str(" can't have any of the 3 cards they're supposed to")).c_str());
+        case 1:
+            processHas(it1->front(), stageIndex);
+            it1 = stages[stageIndex].hasEither.erase(it1);
+            break;
 
-            case 1:
-                result |= processHas(it1->front(), i);
-                it1 = stages[i].hasEither.erase(it1);
-                break;
-
-            default:
-                ++it1;
-            }
+        default:
+            ++it1;
         }
     }
-
-    return result;
 }
 
-bool Player::allCardsKnown(size_t stageIndex) const
+bool Player::isIn(const size_t stageIndex)
+{
+    return (stageIndex < stages.size());
+}
+
+bool Player::isOut(const size_t stageIndex)
+{
+    return !isIn(stageIndex);
+}
+
+bool Player::allCardsKnown(const size_t stageIndex) const
 {
     return (presets[stageIndex].isNumCardsKnown() && stages[stageIndex].has.size() == presets[stageIndex].numCards);
 }
 
-str Player::to_str(size_t stageIndex) const
+str Player::to_str(const size_t stageIndex) const
 {
     if (stages.size() <= stageIndex)
         return "";

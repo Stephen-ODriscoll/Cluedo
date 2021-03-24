@@ -16,14 +16,15 @@ Controller::Controller(Mode mode, int numPlayers) :
 
 void Controller::initialize(const fs::path& inputFile)
 {
-    g_categories.clear();
-
     if (!fs::exists(inputFile))
         throw std::invalid_argument(str("Couldn't find file ") + inputFile.string());
 
     std::ifstream load(inputFile);
     if (!load.is_open())
         throw std::invalid_argument(str("Failed to open file ") + inputFile.string());
+
+    g_categories.clear();
+    g_categories.reserve(NUM_CATEGORIES);
 
     str line;
     std::vector<Card> cards;
@@ -105,8 +106,6 @@ void Controller::updatePresets(const Player* pPlayer, std::vector<StagePreset>& 
             player.presets[i] = newPresets[i];
             for (Card* pCard : player.presets[i].pCardsOwned)
                 player.processHas(pCard, g_numStages - 1);
-
-            continueDeducing();
         }
         else
         {
@@ -133,15 +132,11 @@ void Controller::resetAnalysis()
     g_pPlayersOut.clear();
     g_pPlayersLeft.clear();
 
-    bool result = false;
     for (Player& player : g_players)
     {
-        result |= player.reset();
+        player.reset();
         g_pPlayersLeft.push_back(&player);
     }
-
-    if (result)
-        continueDeducing();
 }
 
 void Controller::reAnalyseTurns()
@@ -185,7 +180,6 @@ void Controller::analyseAsked(std::shared_ptr<const Asked> pAsked)
 {
     Player& witness = const_cast<Player&>(*pAsked->pWitness);
 
-    bool cardDeduced;
     if (pAsked->shown)
     {
         if (!pAsked->cardShown.empty())
@@ -195,17 +189,13 @@ void Controller::analyseAsked(std::shared_ptr<const Asked> pAsked)
             if (itCard == pAsked->pCards.end())
                 throw std::exception("Failed to find card shown");
 
-            cardDeduced = witness.processHas(*itCard, g_numStages - 1);
+            witness.processHas(*itCard, g_numStages - 1);
         }
         else
-            cardDeduced = witness.processHasEither(pAsked->pCards, g_numStages - 1);
+            witness.processHasEither(pAsked->pCards, g_numStages - 1);
     }
     else
-        cardDeduced = witness.processDoesntHave(pAsked->pCards, g_numStages - 1)
-            || exteriorChecks();
-
-    if (cardDeduced)
-        continueDeducing();
+        witness.processDoesntHave(pAsked->pCards, g_numStages - 1);
 }
 
 void Controller::analyseGuessed(std::shared_ptr<const Guessed> pGuessed)
@@ -244,27 +234,4 @@ void Controller::analyseGuessed(std::shared_ptr<const Guessed> pGuessed)
         g_wrongGuesses.push_back(pGuessed->pCards);
         ++g_numStages;
     }
-}
-
-void Controller::continueDeducing()
-{
-    // This could loop a few times. One deduction could lead to another and so on
-    bool cardDeduced = true;
-    while (cardDeduced)
-    {
-        cardDeduced = false;
-        for (Player& player : g_players)
-            cardDeduced |= player.recheck();
-
-        cardDeduced |= exteriorChecks();
-    }
-}
-
-bool Controller::exteriorChecks()
-{
-    bool cardDeduced = false;
-    for (Category& category : g_categories)
-        cardDeduced |= category.recheck();
-
-    return cardDeduced;
 }

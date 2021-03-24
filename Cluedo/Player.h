@@ -28,9 +28,7 @@ struct PlayerStage
     PlayerStage(const std::set<Card*>& has, const std::set<Card*>& doesntHave, const std::vector<std::vector<Card*>>& hasEither);
 };
 
-#include "Perspective.h"
-
-struct Player : public Perspective
+struct Player
 {
     str name;
     std::vector<StagePreset> presets = { StagePreset() };
@@ -38,17 +36,20 @@ struct Player : public Perspective
     std::vector<PlayerStage> stages;
 
     Player();
-    bool reset();
+    void reset();
 
-    bool processHas(Card* pCard, const size_t stageIndex);
-    bool processDoesntHave(const std::vector<Card*>& pCards, const size_t stageIndex);
-    bool processHasEither(const std::vector<Card*>& pCards, const size_t stageIndex);
-    bool processGuessedWrong(Player* pPlayer, int cardsReceived = -1);
-    bool recheck();
+    void processHas(Card* pCard, const size_t stageIndex);
+    void processDoesntHave(const std::vector<Card*>& pCards, const size_t stageIndex);
+    void processHasEither(const std::vector<Card*>& pCards, const size_t stageIndex);
+    void processGuessedWrong(Player* pGuesser, const int cardsReceived = -1);
+    void filterDoesntHave(Card* pCard, const size_t stageIndex);
+    void recheckHasEither(const size_t stageIndex);
 
-    bool allCardsKnown(size_t stageIndex) const;
+    bool isIn(const size_t stageIndex);
+    bool isOut(const size_t stageIndex);
+    bool allCardsKnown(const size_t stageIndex) const;
 
-    str to_str(size_t stageIndex) const;
+    str to_str(const size_t stageIndex) const;
 
     bool operator!=(const Player& player) const;
     bool operator==(const str& n) const;
