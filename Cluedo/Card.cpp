@@ -38,7 +38,7 @@ void Card::processGuilty()
             throw std::exception((str("Guilty card ") + name + str(" not found in list of possible guilty cards")).c_str());
 
         conviction = Conviction::GUILTY;
-        g_progressReport += name + str(" has been convicted\n");
+        g_progressReport += name + str(" has been marked guilty\n");
 
         for (Card& card : g_categories[categoryIndex].cards)
         {
