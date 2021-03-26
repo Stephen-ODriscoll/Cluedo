@@ -148,29 +148,16 @@ void Card::recheckLocation()
             break;
 
         case 1:
-            if (isInnocent())
+            if (conviction == Conviction::INNOCENT)
                 processBelongsTo(*stages[i].pPossibleOwners.begin(), i);
         }
     }
 }
 
-/*
-* Keeping a list of all possible owners makes this check a lot more efficient.
-*/
-bool Card::couldBelongTo(Player* pPlayer, const size_t stageIndex) const
-{
-    return (stages[stageIndex].pPossibleOwners.find(pPlayer) != stages[stageIndex].pPossibleOwners.end());
-}
-
-bool Card::isGuilty() const { return conviction == Conviction::GUILTY; }
-bool Card::isUnknown() const { return conviction == Conviction::UNKNOWN; }
-bool Card::isInnocent() const { return conviction == Conviction::INNOCENT; }
-
 bool Card::ownerKnown(const size_t stageIndex) const { return stages[stageIndex].pOwner; }
-bool Card::ownerUnknown(const size_t stageIndex) const { return !stages[stageIndex].pOwner; }
+bool Card::locationKnown(const size_t stageIndex) const { return ownerKnown(stageIndex) || conviction == Conviction::GUILTY; }
+bool Card::couldBelongTo(Player* pPlayer, const size_t stageIndex) const { return (stages[stageIndex].pPossibleOwners.find(pPlayer) != stages[stageIndex].pPossibleOwners.end()); }
 bool Card::ownedBy(const Player* pPlayer, const size_t stageIndex) const { return stages[stageIndex].pOwner == pPlayer; }
-bool Card::locationKnown(const size_t stageIndex) const { return ownerKnown(stageIndex) || isGuilty(); }
-bool Card::locationUnknown(const size_t stageIndex) const { return !locationKnown(stageIndex); }
 
 bool Card::operator<(const Card& card) const { return name < card.name; }
 bool Card::operator==(const str& n) const { return name == n; }

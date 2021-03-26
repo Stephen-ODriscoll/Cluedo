@@ -46,7 +46,6 @@ struct Player
     void recheckHasEither(const size_t stageIndex);
 
     bool isIn(const size_t stageIndex);
-    bool isOut(const size_t stageIndex);
     bool allCardsKnown(const size_t stageIndex) const;
 
     str to_str(const size_t stageIndex) const;

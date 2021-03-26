@@ -43,17 +43,10 @@ struct Card
     void processGuessedWrong(Player* pGuesser);
     void recheckLocation();
 
-    bool couldBelongTo(Player* pPlayer, const size_t stageIndex) const;
-
-    bool isGuilty() const;
-    bool isUnknown() const;
-    bool isInnocent() const;
-
     bool ownerKnown(const size_t stageIndex) const;
-    bool ownerUnknown(const size_t stageIndex) const;
-    bool ownedBy(const Player* pPlayer, const size_t stageIndex) const;
     bool locationKnown(const size_t stageIndex) const;
-    bool locationUnknown(const size_t stageIndex) const;
+    bool couldBelongTo(Player* pPlayer, const size_t stageIndex) const;
+    bool ownedBy(const Player* pPlayer, const size_t stageIndex) const;
 
     bool operator<(const Card& card) const;
     bool operator==(const str& n) const;

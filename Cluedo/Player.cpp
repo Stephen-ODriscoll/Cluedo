@@ -77,7 +77,7 @@ void Player::processDoesntHave(const std::vector<Card*>& pCards, const size_t st
             if (stages[--i].doesntHave.find(pCard) != stages[i].doesntHave.end())
                 break;
 
-            if (pCard->locationUnknown(i) && !allCardsKnown(i))
+            if (!pCard->locationKnown(i) && !allCardsKnown(i))
                 stages[i].doesntHave.insert(pCard);
             
             recheckHasEither(i);
@@ -194,11 +194,6 @@ void Player::recheckHasEither(const size_t stageIndex)
 bool Player::isIn(const size_t stageIndex)
 {
     return (stageIndex < stages.size());
-}
-
-bool Player::isOut(const size_t stageIndex)
-{
-    return !isIn(stageIndex);
 }
 
 bool Player::allCardsKnown(const size_t stageIndex) const
