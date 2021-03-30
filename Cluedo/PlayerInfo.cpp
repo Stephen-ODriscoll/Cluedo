@@ -74,7 +74,13 @@ void PlayerInfo::toggleCardOwned(Card& card, QPushButton* button)
     if (it == presets[stageIndex].pCardsOwned.end())
     {
         for (size_t i = stageIndex; i != pPlayer->stages.size(); ++i)
+        {
             presets[i].pCardsOwned.insert(&card);
+
+            const int value = ui.numCardsBox->value();
+            if (value && value < presets[i].pCardsOwned.size())
+                ui.numCardsBox->setValue(presets[i].pCardsOwned.size());
+        }
 
         button->setText(REMOVE_CARD);
     }
@@ -96,7 +102,18 @@ void PlayerInfo::stageBoxChanged(const int index)
     updateInfo();
 }
 
-void PlayerInfo::numCardsBoxChanged(const int value) { presets[stageIndex].numCards = value; }
+void PlayerInfo::numCardsBoxChanged(const int value)
+{
+    if (value && value < presets[stageIndex].pCardsOwned.size())
+    {
+        ui.numCardsBox->setValue((value < presets[stageIndex].numCards) ?
+            0 : presets[stageIndex].pCardsOwned.size());
+    }
+    else
+    {
+        presets[stageIndex].numCards = value;
+    }
+}
 
 void PlayerInfo::cat1BoxChanged(const int index) { setButtonText(g_categories[0].cards[index], ui.cat1Button); }
 void PlayerInfo::cat2BoxChanged(const int index) { setButtonText(g_categories[1].cards[index], ui.cat2Button); }
