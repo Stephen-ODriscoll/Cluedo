@@ -107,7 +107,7 @@ void Controller::updatePresets(const Player* pPlayer, std::vector<StagePreset>& 
         {
             player.presets[i] = newPresets[i];
             for (Card* pCard : player.presets[i].pCardsOwned)
-                player.processHas(pCard, g_numStages - 1);
+                player.processHas(pCard, i);
         }
         else
         {
