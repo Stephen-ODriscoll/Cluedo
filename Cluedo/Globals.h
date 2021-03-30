@@ -35,6 +35,8 @@ const std::map<Status, str> statusStrings =
     { Status::COMING_SOON,      "Status: <font color='yellow'>Coming Soon</font>" }
 };
 
+constexpr char START_MESSAGE[] = "Cluedo Analyser started successfully";
+
 
 struct Player;
 struct Card;

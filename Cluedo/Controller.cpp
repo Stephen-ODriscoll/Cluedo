@@ -56,6 +56,8 @@ void Controller::initialize(const fs::path& inputFile)
         
         throw std::invalid_argument(str("Too many categories. There should be ") + str(NUM_CATEGORIES));
     }
+
+    g_progressReport = START_MESSAGE;
 }
 
 void Controller::processTurn(std::shared_ptr<const Turn> pNewTurn, std::shared_ptr<const Turn> pOldTurn)
@@ -122,7 +124,7 @@ void Controller::resetAnalysis()
     g_numStages = 1;
     m_gameOver = false;
     g_wrongGuesses.clear();
-    g_progressReport.clear();
+    g_progressReport = START_MESSAGE;
 
     // Reset each category
     for (Category& category : g_categories)
