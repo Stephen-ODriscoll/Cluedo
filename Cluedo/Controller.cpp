@@ -93,29 +93,14 @@ void Controller::rename(const Player* pPlayer, const str& newName)
 void Controller::updatePresets(const Player* pPlayer, std::vector<StagePreset>& newPresets)
 {
     Player& player = const_cast<Player&>(*pPlayer);
+    if (newPresets == player.presets)
+        return;
 
     for (size_t i = 0; i != newPresets.size(); ++i)
     {
-        if (newPresets[i] == player.presets[i])
-            continue;
-
-        // If the new number of cards doesn't apply or the new number is less than or equal to the old number
-        // and no old cards were removed
-        if ((!newPresets[i].isNumCardsKnown() || newPresets[i].numCards <= player.presets[i].numCards) &&
-            std::includes(newPresets[i].pCardsOwned.begin(), newPresets[i].pCardsOwned.end(),
-            player.presets[i].pCardsOwned.begin(), player.presets[i].pCardsOwned.end()))
-        {
-            player.presets[i] = newPresets[i];
-            for (Card* pCard : player.presets[i].pCardsOwned)
-                player.processHas(pCard, i);
-        }
-        else
-        {
-            player.presets[i] = newPresets[i];
-
-            // This info may have been used to make other deductions so we need to start our analysis again
-            reAnalyseTurns();
-        }
+        // This info may have been used to make other deductions so we need to start our analysis again
+        player.presets[i] = newPresets[i];
+        reAnalyseTurns();
     }
 }
 
