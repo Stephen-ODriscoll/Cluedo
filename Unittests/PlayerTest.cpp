@@ -123,6 +123,6 @@ TEST_F(PlayerTest, recheck_has_either_finds_cards_after_has_either)
     g_players[1].processHas(&g_categories[2].cards[0], 0);
     g_players[1].processHas(&g_categories[2].cards[1], 0);
 
-    g_players[0].recheckHasEither(0);
+    g_players[0].recheckHasEither();
     EXPECT_EQ(g_players[0].stages[0].has, std::set<Card*>({ &g_categories[0].cards[0], &g_categories[1].cards[1], &g_categories[2].cards[2] }));
 }
