@@ -52,7 +52,7 @@ Game::Game(Mode mode, int numPlayers, QWidget* parent) :
     connect(ui.editTurnButton, SIGNAL(clicked()), this, SLOT(editTurnButtonClicked()));
     connect(ui.playersList, SIGNAL(currentRowChanged(int)), this, SLOT(playersListRowChanged(int)));
     connect(ui.stageBox, SIGNAL(currentIndexChanged(int)), this, SLOT(stageBoxChanged(int)));
-    connect(ui.hideBox, SIGNAL(stateChanged(int)), this, SLOT(hideBoxStageChanged()));
+    connect(ui.hideBox, SIGNAL(stateChanged(int)), this, SLOT(hideBoxStateChanged()));
 
     ui.playersList->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     ui.playersList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -260,7 +260,7 @@ void Game::stageBoxChanged(const int index)
     refresh();
 }
 
-void Game::hideBoxStageChanged()
+void Game::hideBoxStateChanged()
 {
     hide = ui.hideBox->isChecked();
     refresh();

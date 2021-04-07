@@ -33,7 +33,7 @@ private slots:
     void editTurnButtonClicked();
     void playersListRowChanged(const int row);
     void stageBoxChanged(const int index);
-    void hideBoxStageChanged();
+    void hideBoxStateChanged();
 };
 
 #include "TakeTurn.h"
