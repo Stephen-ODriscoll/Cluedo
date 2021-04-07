@@ -10,7 +10,7 @@ class PlayerInfo : public QWidget
     Q_OBJECT
 
 public:
-    PlayerInfo(Game* pGame, const Player* pPlayer, const size_t stageNum, QWidget* parent = Q_NULLPTR);
+    PlayerInfo(Game* pGame, const Player* pPlayer, const size_t stageIndexSelected, QWidget* parent = Q_NULLPTR);
 
 private:
     Game* pGame;

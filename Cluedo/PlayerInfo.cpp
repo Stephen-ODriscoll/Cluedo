@@ -1,10 +1,10 @@
 #include "stdafx.h"
 #include "PlayerInfo.h"
 
-PlayerInfo::PlayerInfo(Game* pGame, const Player* pPlayer, const size_t stageIndexToDisplay, QWidget* parent) :
+PlayerInfo::PlayerInfo(Game* pGame, const Player* pPlayer, const size_t stageIndexSelected, QWidget* parent) :
     pGame(pGame),
     pPlayer(pPlayer),
-    stageIndex(std::min(stageIndexToDisplay, pPlayer->presets.size() - 1)),
+    stageIndex(std::min(stageIndexSelected, pPlayer->presets.size() - 1)),
     QWidget(parent)
 {
     ui.setupUi(this);

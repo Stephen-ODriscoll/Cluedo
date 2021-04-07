@@ -11,7 +11,7 @@ class Game : public QWidget
 
     bool hide = false;
     bool isRefreshing = false;
-    size_t stageDisplayed;
+    size_t stageIndex = 0;
 
     Ui::GameObject ui;
     QWidget* pPopUp;
@@ -31,9 +31,9 @@ private slots:
     void playerInfoButtonClicked();
     void turnButtonClicked();
     void editTurnButtonClicked();
-    void playersListRowChanged(int row);
-    void stageBoxChanged(const QString& text);
-    void hideBoxStageChanged(int state);
+    void playersListRowChanged(const int row);
+    void stageBoxChanged(const int index);
+    void hideBoxStageChanged();
 };
 
 #include "TakeTurn.h"

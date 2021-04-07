@@ -4,7 +4,6 @@
 Game::Game(Mode mode, int numPlayers, QWidget* parent) :
     controller(mode, numPlayers),
     pPopUp(nullptr),
-    stageDisplayed(1),
     QWidget(parent)
 {
     ui.setupUi(this);
@@ -52,8 +51,8 @@ Game::Game(Mode mode, int numPlayers, QWidget* parent) :
     connect(ui.turnButton, SIGNAL(clicked()), this, SLOT(turnButtonClicked()));
     connect(ui.editTurnButton, SIGNAL(clicked()), this, SLOT(editTurnButtonClicked()));
     connect(ui.playersList, SIGNAL(currentRowChanged(int)), this, SLOT(playersListRowChanged(int)));
-    connect(ui.stageBox, SIGNAL(currentTextChanged(QString)), this, SLOT(stageBoxChanged(QString)));
-    connect(ui.hideBox, SIGNAL(stateChanged(int)), this, SLOT(hideBoxStageChanged(int)));
+    connect(ui.stageBox, SIGNAL(currentIndexChanged(int)), this, SLOT(stageBoxChanged(int)));
+    connect(ui.hideBox, SIGNAL(stateChanged(int)), this, SLOT(hideBoxStageChanged()));
 
     ui.playersList->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     ui.playersList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -81,7 +80,6 @@ Game::Game(Mode mode, int numPlayers, QWidget* parent) :
 
     ui.cardList->takeItem(ui.cardList->count() - 1);
 
-    ui.stageBox->addItem("1");
     ui.statusLabel->setText(statusStrings.find(Status::COMING_SOON)->second.c_str());
 
     refresh();
@@ -156,8 +154,8 @@ void Game::refresh()
         {
             for (const Card& card : category.cards)
             {
-                if (card.ownerKnown(stageDisplayed - 1))
-                    ui.cardInfoList->addItem(card.stages[stageDisplayed - 1].pOwner->name.c_str());
+                if (card.ownerKnown(stageIndex))
+                    ui.cardInfoList->addItem(card.stages[stageIndex].pOwner->name.c_str());
                 else
                     ui.cardInfoList->addItem(convictionStrings.find(card.conviction)->second.c_str());
             }
@@ -170,7 +168,7 @@ void Game::refresh()
         // Notes on players
         ui.playersText->clear();
         for (const Player& player : g_players)
-            ui.playersText->appendPlainText(player.to_str(stageDisplayed - 1).c_str());
+            ui.playersText->appendPlainText(player.to_str(stageIndex).c_str());
     }
 }
 
@@ -214,7 +212,7 @@ void Game::playerInfoButtonClicked()
 
     delete pPopUp;
 
-    pPopUp = new PlayerInfo(this, &*it, stageDisplayed);
+    pPopUp = new PlayerInfo(this, &*it, stageIndex);
     pPopUp->show();
 }
 
@@ -240,7 +238,7 @@ void Game::editTurnButtonClicked()
     pPopUp->show();
 }
 
-void Game::playersListRowChanged(int row)
+void Game::playersListRowChanged(const int row)
 {
     if (row == -1)
     {
@@ -256,13 +254,13 @@ void Game::playersListRowChanged(int row)
     }
 }
 
-void Game::stageBoxChanged(const QString& text)
+void Game::stageBoxChanged(const int index)
 {
-    stageDisplayed = str(text.toStdString()).toull();
+    stageIndex = size_t(index);
     refresh();
 }
 
-void Game::hideBoxStageChanged(int state)
+void Game::hideBoxStageChanged()
 {
     hide = ui.hideBox->isChecked();
     refresh();
