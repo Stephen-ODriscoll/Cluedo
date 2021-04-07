@@ -69,7 +69,7 @@ void Controller::processTurn(std::shared_ptr<const Turn> pNewTurn, std::shared_p
             throw std::exception("Failed to find turn in g_pTurns");
 
         *it = pNewTurn;
-        reAnalyseTurns();
+        reAnalyseAll();
     }
     else
     {
@@ -96,40 +96,29 @@ void Controller::updatePresets(const Player* pPlayer, std::vector<StagePreset>& 
     if (newPresets == player.presets)
         return;
 
-    for (size_t i = 0; i != newPresets.size(); ++i)
-    {
-        // This info may have been used to make other deductions so we need to start our analysis again
-        player.presets[i] = newPresets[i];
-        reAnalyseTurns();
-    }
+    player.presets = newPresets;
+    reAnalyseAll();
 }
 
-void Controller::resetAnalysis()
+void Controller::reAnalyseAll()
 {
     g_numStages = 1;
     m_gameOver = false;
+    g_pPlayersOut.clear();
+    g_pPlayersLeft.clear();
     g_wrongGuesses.clear();
     g_progressReport = START_MESSAGE;
 
-    // Reset each category
     for (Category& category : g_categories)
         category.reset();
-
-    // Reset each player and add to players left
-    g_pPlayersOut.clear();
-    g_pPlayersLeft.clear();
 
     for (Player& player : g_players)
     {
         player.reset();
         g_pPlayersLeft.push_back(&player);
     }
-}
 
-void Controller::reAnalyseTurns()
-{
-    // Start our analysis again
-    resetAnalysis();
+    // Start analysis again
     for (std::shared_ptr<const Turn> pTurn : g_pTurns)
         analyseTurn(pTurn);
 }
