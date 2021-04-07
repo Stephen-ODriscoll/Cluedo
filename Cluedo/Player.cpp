@@ -72,17 +72,17 @@ void Player::processDoesntHave(const std::vector<Card*>& pCards, const size_t st
     {
         pCard->processDoesntBelongTo(this, stageIndex);
 
-        for (size_t i = stageIndex + 1; i != 0;)
+        bool loop = true;
+        for (size_t i = stageIndex + 1; i != 0 && loop;)
         {
-            if (stages[--i].doesntHave.find(pCard) != stages[i].doesntHave.end())
-                break;
-
-            if (!pCard->locationKnown(i) && !allCardsKnown(i))
-                stages[i].doesntHave.insert(pCard);
-            
-            recheckHasEither(i);
+            if (pCard->locationKnown(--i) || allCardsKnown(i))
+                loop = stages[i].doesntHave.erase(pCard);
+            else
+                loop = stages[i].doesntHave.insert(pCard).second;
         }
     }
+
+    recheckHasEither();
 }
 
 /*
@@ -149,44 +149,35 @@ void Player::processGuessedWrong(Player* pGuesser, const int cardsReceived)
 }
 
 /*
-* If a card's location is known remove it from other players information.
-*/
-void Player::filterDoesntHave(Card* pCard, const size_t stageIndex)
-{
-    for (size_t i = stageIndex + 1; i != 0;)
-    {
-        if (pCard->locationKnown(--i) || allCardsKnown(i))
-            stages[i].doesntHave.erase(pCard);
-    }
-}
-
-/*
 * Process of elimination until we find a card that was shown by this player.
 */
-void Player::recheckHasEither(const size_t stageIndex)
+void Player::recheckHasEither()
 {
-    for (auto it1 = stages[stageIndex].hasEither.begin(); it1 != stages[stageIndex].hasEither.end();)
+    for (size_t i = 0; i != stages.size(); ++i)
     {
-        for (auto it2 = it1->begin(); it2 != it1->end();)
+        for (auto it1 = stages[i].hasEither.begin(); it1 != stages[i].hasEither.end();)
         {
-            if ((*it2)->couldBelongTo(this, stageIndex))
-                ++it2;
-            else
-                it2 = it1->erase(it2);
-        }
+            for (auto it2 = it1->begin(); it2 != it1->end();)
+            {
+                if ((*it2)->couldBelongTo(this, i))
+                    ++it2;
+                else
+                    it2 = it1->erase(it2);
+            }
 
-        switch (it1->size())
-        {
-        case 0:
-            throw contradiction(name + str(" can't have any of the 3 cards they're supposed to"));
+            switch (it1->size())
+            {
+            case 0:
+                throw contradiction(name + str(" can't have any of the 3 cards they're supposed to"));
 
-        case 1:
-            processHas(it1->front(), stageIndex);
-            it1 = stages[stageIndex].hasEither.erase(it1);
-            break;
+            case 1:
+                processHas(it1->front(), i);
+                it1 = stages[i].hasEither.erase(it1);
+                break;
 
-        default:
-            ++it1;
+            default:
+                ++it1;
+            }
         }
     }
 }

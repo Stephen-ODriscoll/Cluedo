@@ -69,7 +69,7 @@ void Controller::processTurn(std::shared_ptr<const Turn> pNewTurn, std::shared_p
             throw std::exception("Failed to find turn in g_pTurns");
 
         *it = pNewTurn;
-        reAnalyseTurns();
+        reAnalyseAll();
     }
     else
     {
@@ -93,58 +93,32 @@ void Controller::rename(const Player* pPlayer, const str& newName)
 void Controller::updatePresets(const Player* pPlayer, std::vector<StagePreset>& newPresets)
 {
     Player& player = const_cast<Player&>(*pPlayer);
+    if (newPresets == player.presets)
+        return;
 
-    for (size_t i = 0; i != newPresets.size(); ++i)
-    {
-        if (newPresets[i] == player.presets[i])
-            continue;
-
-        // If the new number of cards doesn't apply or the new number is less than or equal to the old number
-        // and no old cards were removed
-        if ((!newPresets[i].isNumCardsKnown() || newPresets[i].numCards <= player.presets[i].numCards) &&
-            std::includes(newPresets[i].pCardsOwned.begin(), newPresets[i].pCardsOwned.end(),
-            player.presets[i].pCardsOwned.begin(), player.presets[i].pCardsOwned.end()))
-        {
-            player.presets[i] = newPresets[i];
-            for (Card* pCard : player.presets[i].pCardsOwned)
-                player.processHas(pCard, i);
-        }
-        else
-        {
-            player.presets[i] = newPresets[i];
-
-            // This info may have been used to make other deductions so we need to start our analysis again
-            reAnalyseTurns();
-        }
-    }
+    player.presets = newPresets;
+    reAnalyseAll();
 }
 
-void Controller::resetAnalysis()
+void Controller::reAnalyseAll()
 {
     g_numStages = 1;
     m_gameOver = false;
+    g_pPlayersOut.clear();
+    g_pPlayersLeft.clear();
     g_wrongGuesses.clear();
     g_progressReport = START_MESSAGE;
 
-    // Reset each category
     for (Category& category : g_categories)
         category.reset();
-
-    // Reset each player and add to players left
-    g_pPlayersOut.clear();
-    g_pPlayersLeft.clear();
 
     for (Player& player : g_players)
     {
         player.reset();
         g_pPlayersLeft.push_back(&player);
     }
-}
 
-void Controller::reAnalyseTurns()
-{
-    // Start our analysis again
-    resetAnalysis();
+    // Start analysis again
     for (std::shared_ptr<const Turn> pTurn : g_pTurns)
         analyseTurn(pTurn);
 }

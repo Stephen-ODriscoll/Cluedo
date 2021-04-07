@@ -48,7 +48,7 @@ void Card::processGuilty()
 
         for (Player& player : g_players)
         {
-            processDoesntBelongTo(&player, player.stages.size() - 1);
+            player.processDoesntHave({ this }, player.stages.size() - 1);
         }
     }
 }
@@ -73,6 +73,8 @@ void Card::processInnocent()
 }
 
 /*
+* Always call processHas, this call will be handled
+* 
 * If a player owns this card, then the only players who can have owned it earlier are this player and any players who are now out.
 */
 void Card::processBelongsTo(Player* pPlayer, const size_t stageIndex)
@@ -91,21 +93,21 @@ void Card::processBelongsTo(Player* pPlayer, const size_t stageIndex)
         for (Player* pPlayerLeft : g_pPlayersLeft)
         {
             if (pPlayerLeft != pPlayer)
-                processDoesntBelongTo(pPlayerLeft, i);
+                pPlayerLeft->processDoesntHave({ this }, i);
         }
     }
-
-    pPlayer->processHas(this, stageIndex);
 }
 
 /*
+* Always call processDoesntHave, this call will be handled
+* 
 * If this card doesn't belong to a player, they can't have had it earlier.
 * Once a player gets a card they hold it until they're out.
 */
 void Card::processDoesntBelongTo(Player* pPlayer, const size_t stageIndex)
 {
     if (!couldBelongTo(pPlayer, stageIndex))
-        return pPlayer->filterDoesntHave(this, stageIndex);
+        return;
 
     if (ownedBy(pPlayer, stageIndex))
         throw contradiction(str("Previous info says ") + pPlayer->name + str(" has ") + name);
@@ -117,7 +119,6 @@ void Card::processDoesntBelongTo(Player* pPlayer, const size_t stageIndex)
     }
     
     recheckLocation();
-    pPlayer->processDoesntHave({ this }, stageIndex);
 }
 
 /*
@@ -149,7 +150,7 @@ void Card::recheckLocation()
 
         case 1:
             if (conviction == Conviction::INNOCENT)
-                processBelongsTo(*stages[i].pPossibleOwners.begin(), i);
+                (*stages[i].pPossibleOwners.begin())->processHas(this, i);
         }
     }
 }

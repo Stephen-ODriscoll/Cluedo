@@ -19,8 +19,7 @@ public:
     void processTurn(std::shared_ptr<const Turn> pNewTurn, std::shared_ptr<const Turn> pOldTurn = nullptr);
     
 private:
-    void resetAnalysis();
-    void reAnalyseTurns();
+    void reAnalyseAll();
     void moveToBack(const Player* pPlayer);
 
     void analyseTurn(std::shared_ptr<const Turn> pTurn);
