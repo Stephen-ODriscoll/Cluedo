@@ -15,8 +15,8 @@ PlayerInfo::PlayerInfo(Game* pGame, const Player* pPlayer, const size_t stageInd
     ui.stageBox->setCurrentIndex(stageIndex);
 
     std::vector<QComboBox*> categoryBoxes = { ui.cat1Box, ui.cat2Box, ui.cat3Box };
-    auto& it1 = categoryBoxes.begin();
-    for (auto& it2 = g_categories.begin(); it1 != categoryBoxes.end(); ++it1, ++it2)
+    auto it1 = categoryBoxes.begin();
+    for (auto it2 = g_categories.begin(); it1 != categoryBoxes.end(); ++it1, ++it2)
     {
         // Add cards for this category
         for (auto& item : it2->cards)

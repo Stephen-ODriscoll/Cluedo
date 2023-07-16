@@ -18,8 +18,8 @@ TakeTurn::TakeTurn(Game* pGame, std::shared_ptr<const Turn> pOldTurn, QWidget* p
 
         std::shared_ptr<const Asked> pOldAsked = std::static_pointer_cast<const Asked>(pOldTurn);
 
-        auto& it1 = categoryBoxes.begin();
-        for (auto& it2 = pOldAsked->pCards.begin(); it1 != categoryBoxes.end(); ++it1, ++it2)
+        auto it1 = categoryBoxes.begin();
+        for (auto it2 = pOldAsked->pCards.begin(); it1 != categoryBoxes.end(); ++it1, ++it2)
             (*it1)->setCurrentIndex((*it1)->findText((*it2)->name.c_str()));
 
         if (pOldAsked->shown)
@@ -50,8 +50,8 @@ TakeTurn::TakeTurn(Game* pGame, std::shared_ptr<const Turn> pOldTurn, QWidget* p
 
         std::shared_ptr<const Guessed> pOldGuessed = std::static_pointer_cast<const Guessed>(pOldTurn);
 
-        auto& it1 = categoryBoxes.begin();
-        for (auto& it2 = pOldGuessed->pCards.begin(); it1 != categoryBoxes.end(); ++it1, ++it2)
+        auto it1 = categoryBoxes.begin();
+        for (auto it2 = pOldGuessed->pCards.begin(); it1 != categoryBoxes.end(); ++it1, ++it2)
             (*it1)->setCurrentIndex((*it1)->findText((*it2)->name.c_str()));
 
         if (pOldGuessed->correct)
@@ -94,8 +94,8 @@ TakeTurn::TakeTurn(Game* pGame, const str& detective, const str& probableWitness
         assert(categoryBoxes.size() == NUM_CATEGORIES);
 
         // Adds the cards in each category to each combo box
-        auto& it1 = categoryBoxes.begin();
-        for (auto& it2 = g_categories.begin(); it1 != categoryBoxes.end(); ++it1, ++it2)
+        auto it1 = categoryBoxes.begin();
+        for (auto it2 = g_categories.begin(); it1 != categoryBoxes.end(); ++it1, ++it2)
         {
             (*it1)->setEnabled(false);  // Set the combo box as disabled until action is chosen
 
@@ -152,11 +152,11 @@ std::shared_ptr<Turn> TakeTurn::getNewTurn()
 
 
     std::vector<Card*> pCards;
-    auto& it1 = categoryBoxes.begin();
-    for (auto& it2 = g_categories.begin(); it1 != categoryBoxes.end(); ++it1, ++it2)
+    auto it1 = categoryBoxes.begin();
+    for (auto it2 = g_categories.begin(); it1 != categoryBoxes.end(); ++it1, ++it2)
     {
         const str card = (*it1)->currentText().toStdString();
-        auto& itCard = std::find(it2->cards.begin(), it2->cards.end(), card);
+        auto itCard = std::find(it2->cards.begin(), it2->cards.end(), card);
         if (itCard == it2->cards.end())
             throw std::exception((str("Failed to find selected card ") + card).c_str());
 

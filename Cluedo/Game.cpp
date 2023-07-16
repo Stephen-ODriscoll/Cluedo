@@ -111,7 +111,7 @@ void Game::refresh()
         for (size_t i = g_pPlayersLeft.size(); i < MAX_PLAYERS; ++i)
             ui.playersList->addItem("");
 
-        for (auto& it = g_pPlayersLeft.rbegin(); it != g_pPlayersLeft.rend(); ++it)
+        for (auto it = g_pPlayersLeft.rbegin(); it != g_pPlayersLeft.rend(); ++it)
             ui.playersList->addItem((*it)->name.c_str());
 
         // Overview on stages
